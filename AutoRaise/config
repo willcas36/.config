@@ -1,0 +1,13 @@
+#AutoRaise config file
+pollMillis=20
+delay=2
+focusDelay=2
+scale=1.0
+altTaskSwitcher=true
+ignoreSpaceChanged=false
+invertIgnoreApps=false
+ignoreApps=""
+ignoreTitles=""
+stayFocusedBundleIds="com.apple.SecurityAgent,..."
+disableKey="control"
+mouseDelta=0.1

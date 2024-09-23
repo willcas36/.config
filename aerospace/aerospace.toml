@@ -1,0 +1,156 @@
+
+
+start-at-login = false
+# Reference: https://github.com/i3/i3/blob/next/etc/config
+accordion-padding = 30
+
+default-root-container-layout = 'tiles'
+default-root-container-orientation = 'auto'
+
+enable-normalization-flatten-containers = false
+enable-normalization-opposite-orientation-for-nested-containers = false
+
+[gaps]
+inner.horizontal = 5
+inner.vertical =   5
+outer.left =       0
+outer.bottom =     0
+outer.top =        0
+outer.right =      0
+
+[mode.main.binding]
+ctrl-alt-r = 'flatten-workspace-tree'
+
+#alt-j = 'focus left --boundaries all-monitors-outer-frame --boundaries-action wrap-around-all-monitors'
+#alt-k = 'focus right --boundaries all-monitors-outer-frame --boundaries-action wrap-around-all-monitors'
+alt-j = 'focus left --boundaries-action stop'
+alt-l = 'focus down'
+alt-h = 'focus up'
+alt-k = 'focus right --boundaries-action stop'
+
+alt-u = 'focus-monitor prev'
+alt-i = 'focus-monitor next'
+
+alt-shift-j = 'move left'
+alt-shift-l = 'move down'
+alt-shift-h = 'move up'
+alt-shift-k = 'move right'
+
+
+
+alt-shift-u = ['move-node-to-monitor --wrap-around left', 'focus-monitor left']
+alt-shift-i = ['move-node-to-monitor --wrap-around right', 'focus-monitor right']
+alt-shift-comma = ['move-node-to-workspace --wrap-around next']
+alt-shift-m = ['move-node-to-workspace --wrap-around prev']
+
+
+alt-shift-minus = 'resize smart -50' 
+alt-shift-equal = 'resize smart +50'
+
+
+alt-q = 'split horizontal' 
+alt-w = 'split vertical'
+
+alt-f = 'fullscreen'
+
+alt-s = 'layout v_accordion' # 'layout stacking' in i3
+alt-a = 'layout h_accordion' # 'layout tabbed' in i3
+alt-e = 'layout tiles horizontal vertical' # 'layout toggle split' in i3
+
+alt-shift-space = 'layout floating tiling' # 'floating toggle' in i3
+
+# Not supported, because this command is redundant in AeroSpace mental model.
+# See: https://nikitabobko.github.io/AeroSpace/guide#floating-windows
+#alt-space = 'focus toggle_tiling_floating'
+
+# `focus parent`/`focus child` are not yet supported, and it's not clear whether they
+# should be supported at all https://github.com/nikitabobko/AeroSpace/issues/5
+# alt-a = 'focus parent'
+
+alt-1 = ['workspace 01']
+alt-2 = ['workspace 02']
+alt-3 = ['workspace 03']
+alt-4 = ['workspace 04']
+alt-5 = ['workspace 05']
+alt-6 = ['workspace 06']
+alt-7 = ['workspace 07']
+alt-8 = ['workspace 08']
+alt-9 = ['workspace 09']
+alt-0 = ['workspace 1']
+
+alt-tab = ['workspace-back-and-forth']
+alt-comma = ['workspace next']
+alt-m = ['workspace prev']
+
+alt-shift-1 = ['move-node-to-workspace 01', 'workspace 01']
+alt-shift-2 = ['move-node-to-workspace 02', 'workspace 02']
+alt-shift-3 = ['move-node-to-workspace 03', 'workspace 03']
+alt-shift-4 = ['move-node-to-workspace 04', 'workspace 04']
+alt-shift-5 = ['move-node-to-workspace 05', 'workspace 05']
+alt-shift-6 = ['move-node-to-workspace 06', 'workspace 06']
+alt-shift-7 = ['move-node-to-workspace 07', 'workspace 07']
+alt-shift-8 = ['move-node-to-workspace 08', 'workspace 08']
+alt-shift-9 = ['move-node-to-workspace 09', 'workspace 09']
+
+alt-shift-w = 'move-workspace-to-monitor --wrap-around prev'
+
+alt-shift-c = 'reload-config'
+
+alt-c = 'mode resize'
+
+
+[mode.resize.binding]
+j = 'resize width -50'
+l = 'resize height +50'
+h = 'resize height -50'
+k = 'resize width +50'
+
+enter = 'mode main'
+esc = 'mode main'
+alt-space = 'mode main'
+
+# aerospace list-apps
+
+[[on-window-detected]]
+if.app-id = 'com.linguee.DeepLCopyTranslator'
+run = 'layout floating'
+[[on-window-detected]]
+if.app-id = 'net.ankiweb.dtop'
+run = 'layout floating'
+[[on-window-detected]]
+if.app-id = 'com.macpomodoro'
+run = 'layout floating'
+[[on-window-detected]]
+if.app-id = 'com.apple.finder'
+run = 'layout floating'
+[[on-window-detected]]
+if.app-id = 'net.freemacsoft.AppCleaner'
+run = 'layout floating'
+[[on-window-detected]]
+if.app-id = 'org.pqrs.Karabiner-Elements.Settings'
+run = 'layout floating'
+[[on-window-detected]]
+if.app-id = 'org.pqrs.Karabiner-EventViewer'
+run = 'layout floating'
+[[on-window-detected]]
+if.app-id = 'com.econtechnologies.chronosync'
+run = 'layout floating'
+[[on-window-detected]]
+if.app-id = 'com.apple.TextEdit'
+run = 'layout floating'
+[[on-window-detected]]
+if.app-id = 'com.IdeaPunch.ColorSlurp'
+run = 'layout floating'
+
+
+[workspace-to-monitor-force-assignment]
+01 = ['main','secondary']
+02 = ['main','secondary']
+03 = ['main','secondary']
+04 = ['main','secondary']
+05 = ['main','secondary']
+06 = ['secondary','main'] 
+07 = ['secondary','main']
+08 = ['secondary','main']
+09 = ['secondary','main']
+1 = ['secondary','main']

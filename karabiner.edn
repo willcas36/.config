@@ -1,0 +1,362 @@
+{   :profiles {:Default {;; "default true means" rules default goes into this rule if no profiles specified
+                      :default true
+                      ;; simlayer is implemented with to_if_alone and simultaneous key press feature
+                      :sim     50
+                      ;; to_delayed_action_delay_milliseconds
+                      :delay   500
+                      ;; affects to_if_alone behavior
+                      :alone   1000
+                      ;; to_if_held_down_threshold_milliseconds
+                      :held    500}} 
+    :applications {
+                :safari     ["^com\\.apple\\.Safari$"]
+                :chrome     ["^com\\.google\\.Chrome$"]
+                :finder     ["^com\\.apple\\.finder$"]
+                :obsidian   ["^md\\.obsidian$"]
+                :notion     ["^notion\\.id$"]
+                :music      ["^com\\.apple\\.Music"]
+                :code       ["^com\\.visualstudio\\.code\\.oss$"
+                             "^com\\.microsoft\\.VSCode(Insiders)?$"
+                             "^com\\.microsoft\\.VSCode?$"]
+                :terminals  ["^com\\.apple\\.Terminal$"
+                             "^com\\.googlecode\\.iterm2$"]
+                :mail       ["^com\\.apple\\.mail$"]
+                :notes      ["^com\\.apple\\.Notes$"]
+                :calendar   ["^com\\.apple\\.iCal$"]
+                :preview1   ["^com\\.apple\\.Preview$" :previewsidebar]
+                :preview0   ["^com\\.apple\\.Preview$" :!previewsidebar]
+                :terminal   ["^com\\.apple\\.Terminal$"]
+                :intelliJ ["^com\\.jetbrains\\.intellij.ce$"]}
+
+    :templates {:yabai "/opt/homebrew/bin/yabai -m %s"
+                :launch-app "open -a '%s'"
+                :open "open -n '/Applications/%s.app'"}
+    :layers {
+                :hyper-mode {:key :caps_lock :alone {:key :return_or_enter}} 
+            }
+    :simlayers {
+             :launch-mode {:key :slash}
+             :tmux-winmove-mode {:key :q :condi :Terminals}
+             :period-mode {:key :period}
+             :comma-mode {:key :comma} 
+             :z-mode {:key :z} 
+             :x-mode {:key :x} 
+             }
+    :main,[
+
+            {:des, "Yabai keybinds", :rules[
+                ;;====NAVIGATION====
+                ;;Focus Spaces
+                [:!O1 [:!O1 [:yabai "display --focus prev"]]]
+                [:!O3 [:!O3 [:yabai "display --focus prev"]]]
+                [:!O4 [:!O4 [:yabai "display --focus prev"]]]
+                [:!O5 [:!O5 [:yabai "display --focus prev"]]]
+                [:!Om [:!Om [:yabai "display --focus next"]]]
+                [:!Ocomma [:!Ocomma [:yabai "display --focus next"]]]
+                [:!Operiod [:!Operiod [:yabai "display --focus next"]]]
+                [:!Oslash [:!Oslash [:yabai "display --focus next"]]]
+;; El :fn es para simular una tecla presionada y muestrear el sonido en Klack
+                ;;Windows focus
+                [:!Osemicolon [:yabai "window --focus south"]]
+                [:!Oj [:yabai "window --focus north"]]
+                [:!Ok [:yabai "window --focus west"]]
+                [:!Ol [:yabai "window --focus east"]]
+
+                ;;Focus Displays
+                [:!Oi [:yabai "display --focus next"]]
+                [:!Oo [:yabai "display --focus prev"]]
+
+                ;;Focus Spaces
+                [:!O1 :!O1 nil {:afterup [:yabai "display --focus prev"]}]
+                [:!O2 :!O2 nil {:afterup [:yabai "display --focus prev"]}]
+                [:!O3 :!O3 nil {:afterup [:yabai "display --focus prev"]}]
+                [:!O4 :!O4 nil {:afterup [:yabai "display --focus prev"]}]
+                [:!O5 :!O5 nil {:afterup [:yabai "display --focus prev"]}]
+
+                ;;==== Modification ====
+                ;;Move window relatively
+                [:!TOsemicolon [:yabai "window --warp south"]]
+                [:!TOj  [:yabai "window --warp north"]]
+                [:!TOk  [:yabai "window --warp west"]]
+                [:!TOl  [:yabai "window --warp east"]]
+
+                ;;Swap windows
+                [:!SOsemicolon  [:yabai "window --swap south"]]
+                [:!SOj  [:yabai "window --swap north"]]
+                [:!SOk  [:yabai "window --swap west"]]
+                [:!SOl  [:yabai "window --swap east"]]
+
+                ;;Move window to display left and right
+                [:!FOi [:yabai "window --display west"] nil {:afterup [:yabai "display --focus next"]}]
+                [:!FOo [:yabai "window --display east"] nil {:afterup [:yabai "display --focus prev"]}]
+
+                ;;Send window to space
+                [:!FO1 [:yabai "window --space 1"]]
+                [:!FO2 [:yabai "window --space 2"]]
+                [:!FO3 [:yabai "window --space 3"]]
+                [:!FO4 [:yabai "window --space 4"]]
+                [:!FO5 [:yabai "window --space 5"]]
+
+                [:!FOm [:yabai "window --space 6"]]
+                [:!FOcomma [:yabai "window --space 7"]]
+                [:!FOperiod [:yabai "window --space 8"]]
+                [:!FOslash [:yabai "window --space 9"]]
+
+                ;;Set insertion point in focused cotainer
+                [:!Ow [:yabai "window --insert south"]]
+                [:!Oq [:yabai "window --insert east"]]
+                [:!Os [:yabai "window --insert stack"]]
+                [:!Oe [:yabai "window --toggle split"]]
+                [:!Od [:yabai "window --focus stack.recent"]]
+
+                ;;Equalize size of windows
+                [:!Fe [:yabai "space --balance"]]
+                [:!Fx [:yabai "space --equalize x-axis"]]
+                [:!Fy [:yabai "space --equalize y-axis"]]
+
+                ;;Rotate Windows
+                [:!FOr [:yabai "space --rotate 270"]] 
+                [:!FOx [:yabai "space --mirror x-axis"]]
+                [:!FOy [:yabai "space --mirror y-axis"]]
+
+                ;;Toggle window flow
+            
+
+                [:!FOspacebar [:yabai "window --toggle float --grid 8:16:5:1:5:6"]]
+
+                ;;Toggle window fullscreen, zoom
+                [:!Of [:yabai "window --toggle zoom-fullscreen"]]
+                [:!Oa [:yabai "window --toggle zoom-parent"]]
+
+
+                ;;tart/stop yabai
+                [:!Fp "/opt/homebrew/bin/yabai --stop-service"]
+                [:!Fs "/opt/homebrew/bin/yabai --start-service"]
+                [:!Fr "/opt/homebrew/bin/yabai --restart-service"]
+
+                ;;Resize window
+                [:!Tk [:yabai "window --resize right:-50:0 2> /dev/null || /opt/homebrew/bin/yabai window --resize left:-50:0 2> /dev/null"]]
+                [:!Tsemicolon [:yabai "window --resize bottom:0:50 2> /dev/null || /opt/homebrew/bin/yabai window --resize top:0:50 2> /dev/"]]
+                [:!Tj [:yabai "window --resize bottom:0:-50 2> /dev/null|| /opt/homebrew/bin/yabai window --resize top:0:-50 2> /dev/null"]]
+                [:!Tl [:yabai "window --resize right:50:0 2> /dev/null|| /opt/homebrew/bin/yabai window --resize left:50:0 2> /dev/null"]]
+
+                ;;Move window
+                [:!CTk [:yabai "window --move rel:-150:0"]]
+                [:!CTsemicolon [:yabai "window --move rel:0:100"]]
+                [:!CTj [:yabai "window --move rel:0:-100"]]
+                [:!CTl [:yabai "window --move rel:150:0"]]
+
+            ]}
+            ; Q  | right_command
+
+            ; W  | right_control
+            ; E  | right_option
+            ; R  | right_shift
+            ; P  | caps_lock
+            {:des "Command to option, option to Command" :rules[
+                ;;[:##left_command :##left_option]
+                ;;[:##left_option :##left_command]
+                [:!Cm []]
+                [:!Ch []]
+            ]}
+
+            {:des "Capslock to Hyper, ESQ if alone" :rules[
+                 [:##caps_lock :fn nil {:alone :return_or_enter}]
+            ]}
+            {:des "Shift deletes Forward and Backward" :rules[
+                [:#Pright_shift :right_shift  nil {:alone :!OFdelete_or_backspace}]
+                [:#Pleft_shift :left_shift  nil {:alone :!Odelete_or_backspace}]
+            ]}
+            {:des "Media control" :rules[
+                [:!Fm :play_or_pause]
+                [:!Fcomma :rewind]
+                [:!Fperiod :fastforward]
+            ]}
+            {:des "Volume control" :rules[
+                :z-mode
+                [:comma :volume_decrement]
+                [:period :volume_increment]
+            ]}
+            {:des "Brightness control" :rules[
+                :x-mode
+                [:comma :display_brightness_decrement]
+                [:period :display_brightness_increment]
+            ]}
+            {:des "Toggle caps_lock by pressing left_shift then right_shift" :rules[
+                [:!S#Pright_shift :caps_lock nil {:alone :right_shift}]
+                [:!R#Pleft_shift :caps_lock nil {:alone :left_shift}]
+            ]}
+            {:des "Directional Keys" :rules[
+                 [:!F##j :up_arrow]
+                 [:!F##k :left_arrow]
+                 [:!F##l :right_arrow]
+                 [:!F##semicolon :down_arrow]
+            ]}
+            {:des "Navigation Tabs" :rules[
+                 [:!F#Pi :!COleft_arrow]
+                 [:!F#Po :!COright_arrow]
+            ]}
+            {:des "Scroll control" :rules[
+                
+                 [:!F#P9 {:mkey {:vwheel 30 :speed 2}}]
+                 [:!F#P8 {:mkey {:vwheel -30 :speed 2}}]
+                 [:!O#P9 {:mkey {:hwheel -20 :speed 2}}]
+                 [:!O#P8 {:mkey {:hwheel 20 :speed 2}}]
+            ]}
+            {:des "ShortCat" :rules[
+                 [:!F#Pn :!COTspacebar]
+            ]}
+            {:des "Pika" :rules[
+                 [:!F#Pc :!Op]
+            ]}
+            {:des "DeepL" :rules[
+                 [:!F#Pt :!CTOt nil {:delayed {:invoked [:!Ctab :fn] :canceled []} :params {:delay 200}}]
+            ]}
+            {:des "Mouse Pinter control" :rules[
+                 [:!F#Pw  {:mkey {:y -1536 :speed 1.0}}]
+                 [:!F#Ps {:mkey {:y 1536 :speed 1.0}}]
+                 [:!F#Pa {:mkey {:x -1536 :speed 1.0}}]
+                 [:!F#Pd {:mkey {:x 1536 :speed 1.0}}]
+                ;;  [:!F#Pspacebar {:pkey :button1}]
+                
+            ]}
+            {:des "Opening Apps" :rules[
+                
+                [[:p :g] [:launch-app "pgAdmin 4"] nil {:params {:held 100 :sim 30}}]
+                [[:s :p] [:launch-app "System Preferences"] nil {:params {:held 100 :sim 30}}]
+                [[:w :p] [:launch-app "WhatsApp"] nil {:params {:held 100 :sim 30}}]
+                [[:n :t] [:launch-app "Notion"] nil {:params {:held 100 :sim 30}}]
+                [[:o :b] [:launch-app "Obsidian"] nil {:params {:held 100 :sim 30}}]
+                [[:m :s] [:launch-app "music"] nil {:params {:held 100 :sim 30}}]
+                [[:v :s] [:open "Visual Studio Code"] nil {:params {:held 100 :sim 30}}]
+                [[:c :r] [:open "Google Chrome"] nil {:params {:held 100 :sim 30}}]
+                [[:s :f] [:open "Safari"] nil {:params {:held 100 :sim 30}}]
+                [[:t :m] [] nil {:held "open -a iTerm --new" :params {:held 100 :sim 30}}]
+                [[:f :d] [] nil {:held "open ~" :params {:held 100 :sim 30}}]
+                [[:d :l] [] nil {:held "open ~/Downloads" :params {:held 100 :sim 30}}]
+                [[:d :s] [] nil {:held "open ~/Desktop" :params {:held 100 :sim 30}}]
+                [[:a :p] [] nil {:held "open /Applications" :params {:held 100 :sim 30}}]
+            ]}
+            
+            {:des "Comma Mode [,] as Trigger Key" :rules[
+                :comma-mode
+                 [:a :open_bracket]
+                 [:s :close_bracket]
+                 [:d :!S7]
+                 [:f :!S8]
+                 [:q :!Shyphen]
+                 [:w :!Sequal_sign]
+                 [:e :!S5]
+                 [:r :!S6]]}
+             {:des "Period Mode [.] as Trigger Key" :rules[
+                :period-mode
+                 [:comma ["period-comma-mode" 1] nil {:alone :comma :afterup ["period-comma-mode" 0]}]
+                 [:a [:!Sgrave_accent_and_tilde :slash]]
+                 [:s [:period :!S8]]
+                 [:d :!S9]
+                 [:f :!S0]
+                 [:q :hyphen]
+                 [:w :equal_sign]
+                 [:e :!Sopen_bracket]
+                 [:r :!Sclose_bracket]]}
+            {:des "HYPER: Hyper+B = Universal sidebar toggle" :rules[
+                
+            ; Show sidebar
+                    [:!F#Pb  [:!OCs]  :notes]
+                    [:!F#Pb  [:!SCl]  :safari]
+                    [:!F#Pb  [:!COb]  :chrome]          ; shows bookmark manager
+                    [:!F#Pb  [:!CTb]  :nova] 
+                    [:!F#Pb  [:!Cb]   :code]
+                    [:!F#Pb  [:!CTs]  :finder]
+                    [:!F#Pb  [:!Cbackslash]  :notion]
+                    [:!F#Pb  [:!SCl]  :obsidian]
+                    [:!F#Pv  [:!CTs]  :obsidian]
+                    [:!F#Pb [:!CSp]  :finder]
+                    [:!F#Pb  [:!CTs]  :mail]
+                    [:!F#Pb  [:!CO2   ["previewsidebar" 0]] :preview1]
+                    [:!F#Pb  [:!CO1   ["previewsidebar" 1]] :preview0]
+                    [:!F#Pb  [:!CSbackslash] :terminal] ; no sidebar so tab overview
+                    [:!F#Pb  [:!CTs]]]}                   ; default cmd-ctrl-s to show/hide
+                                                        ; sidebar in other apps.
+                                                        ; might be better to remove this?
+         
+    ]
+}
+;;          ===GokuRakuJoudo Official===
+;; https://github.com/yqrashawn/GokuRakuJoudo/blob/master/examples.org
+;; https://github.com/yqrashawn/GokuRakuJoudo/blob/master/tutorial.md
+;; https://github.com/yqrashawn/GokuRakuJoudo/blob/master/resources/configurations/edn/example.edn
+;; https://github.com/yqrashawn/GokuRakuJoudo/blob/master/src/karabiner_configurator/keys_info.clj
+
+;;          ===Other Good Examples===
+; https://github.com/yqrashawn/GokuRakuJoudo/blob/master/in-the-wild.md
+; https://github.com/morberg/dotfiles/blob/main/karabiner.edn
+; https://github.com/tIsGoud/goku
+; https://github.com/kchen0x/k-goku (alternate, cleaner? approach to hyper)
+; https://github.com/
+;   emilbryggare/dotfiles/blob/main/.config/karabiner.edn (int use of aliases)
+;   nikitavoloboev/dotfiles/blob/master/karabiner/karabiner.edn
+;   johnlindquist/dotfiles/blob/master/karabiner/karabiner-starter.edn
+;   vheon/home/blob/master/roles/karabiner/files/karabiner.edn
+; https://github.com/tIsGoud/goku/blob/master/karabiner.edn (good comments)
+; https://github.com/nanoxd/dotfiles/blob/main/config/karabiner.edn (hyper)
+; https://github.com/loudoguno/goku/blob/master/karabiner.edn (v. complex)
+; https://gist.github.com/gsinclair/f4ab34da53034374eb6164698a0a8ace (simlayer)
+
+
+
+
+;; <other options> section
+;; to_if_alone                                    | :alone
+;; to_if_held_down                                | :held
+;; to_after_key_up                                | :afterup
+;; to_delayed_action                              | :delayed
+;;   to_if_canceled                               |   :canceled
+;;   to_if_invoked                                |   :invoked
+;; parameters                                     | :params
+;;   basic.to_if_alone_timeout_milliseconds       |   :alone
+;;   basic.to_if_held_down_threshold_milliseconds |   :held
+;;   basic.to_delayed_action_delay_milliseconds   |   :delay
+;;   basic.simultaneous_threshold_milliseconds    |   :sim
+
+;; !  | means mandatory
+    ;; #  | means optional
+    ;; C  | left_command
+    ;; T  | left_control
+    ;; O  | left_option
+    ;; S  | left_shift
+    ;; F  | fn
+    ;; Q  | right_command
+    ;; W  | right_control
+    ;; E  | right_option
+    ;; R  | right_shift
+    ;; P  | caps_lock
+    ;; !! | mandatory command + control + optional + shift (hyper)
+    ;; ## | optional any
+
+;; <from> section
+;; :a      | normal key or predefined froms
+;; :from-a | predefined froms
+;; :!Ca    | special modifier key
+;; [:a :b] | simultaneous key
+;; {...}   | fallback to `froms` definition
+
+;; <to> section
+;; :a                        | normal key or predefined tos
+;; :to-a                     | predefined tos
+;; :!Ca                      | special modifier key
+;; "ls"                      | shell command
+;; [:a :b]                   | multiple normal key
+;; ["vi-mode" 1]             | set variable, second element in vector isn't keyword
+;; ["vi-mode" :a]            | shell command then insert a
+;; [:launch-template "Mail"] | shell command then insert a
+;; ["cd" "ls"]               | multiple shell command
+;; [["vi-mode" 1] :a]        | set variable then insert a
+;; [{...}]                   | fallback to `tos` definition
+
+;; conflict
+;; ["cd" "ls"]
+;; set_variable to string or two shell_command
+;; two shell_command cd & ls, cd && ls
+;; ["cd" "ls"] | multiple shell command
+;; [{:set ["variable name" "variable value"]}] | set variable's value to string (fallback to `tos` definition)
