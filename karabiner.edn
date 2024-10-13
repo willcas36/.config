@@ -107,7 +107,12 @@
                 [:!Oq [:yabai "window --insert east"]]
                 [:!Os [:yabai "window --insert stack"]]
                 [:!Oe [:yabai "window --toggle split"]]
-                [:!Od [:yabai "window --focus stack.recent"]]
+
+                [:!Ew [:yabai "window --insert south"]]
+                [:!Eq [:yabai "window --insert east"]]
+                [:!Es [:yabai "window --insert stack"]]
+                [:!Ee [:yabai "window --toggle split"]]
+                [:!Ef [:yabai "window --focus stack.recent"]]
 
                 ;;Equalize size of windows
                 [:!Fe [:yabai "space --balance"]]
