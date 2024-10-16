@@ -188,8 +188,8 @@
                 [:period :display_brightness_increment]
             ]}
             {:des "Toggle caps_lock by pressing left_shift then right_shift" :rules[
-                [:!S#Pright_shift :caps_lock nil {:alone :right_shift}]
-                [:!R#Pleft_shift :caps_lock nil {:alone :left_shift}]
+                [:!S#Pright_shift :caps_lock]
+                [:!R#Pleft_shift :caps_lock]
             ]}
             {:des "Directional Keys" :rules[
                  [:!F##j :up_arrow]
