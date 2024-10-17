@@ -26,6 +26,8 @@
                 :preview1   ["^com\\.apple\\.Preview$" :previewsidebar]
                 :preview0   ["^com\\.apple\\.Preview$" :!previewsidebar]
                 :terminal   ["^com\\.apple\\.Terminal$"]
+                :chatgpt   ["^com\\.openai\\.ChatGPT$"]
+                :postman   ["^com\\.postmanlabs\\.mac$"]
                 :intelliJ ["^com\\.jetbrains\\.intellij.ce$"]}
 
     :templates {:yabai "/opt/homebrew/bin/yabai -m %s"
@@ -132,6 +134,7 @@
                 ;;Toggle window fullscreen, zoom
                 [:!Of [:yabai "window --toggle zoom-fullscreen"]]
                 [:!Oa [:yabai "window --toggle zoom-parent"]]
+                [:!Ea [:yabai "window --toggle zoom-parent"]]
 
 
                 ;;tart/stop yabai
@@ -215,7 +218,8 @@
                  [:!F#Pc :!Op]
             ]}
             {:des "DeepL" :rules[
-                 [:!F#Pt :!CTOt nil {:delayed {:invoked [:!Ctab :fn] :canceled []} :params {:delay 200}}]
+                 ;[:!F#Pt :!CTOt nil {:delayed {:invoked [:!Ctab :fn] :canceled []} :params {:delay 200}}]
+                 [:!F#Pt :!CTOt]
             ]}
             {:des "Mouse Pinter control" :rules[
                  [:!F#Pw  {:mkey {:y -1536 :speed 1.0}}]
@@ -233,6 +237,8 @@
                 [[:n :t] [:launch-app "Notion"] nil {:params {:held 100 :sim 30}}]
                 [[:o :b] [:launch-app "Obsidian"] nil {:params {:held 100 :sim 30}}]
                 [[:m :s] [:launch-app "music"] nil {:params {:held 100 :sim 30}}]
+                [[:p :m] [:launch-app "postman"] nil {:params {:held 100 :sim 30}}]
+                [[:c :g] [:launch-app "chatgpt"] nil {:params {:held 100 :sim 30}}]
                 [[:v :s] [:open "Visual Studio Code"] nil {:params {:held 100 :sim 30}}]
                 [[:c :r] [:open "Google Chrome"] nil {:params {:held 100 :sim 30}}]
                 [[:s :f] [:open "Safari"] nil {:params {:held 100 :sim 30}}]
