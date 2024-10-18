@@ -33,6 +33,11 @@ yabai -m config mouse_action2 move
 yabai -m config mouse_drop_action stack
 
 # Disable specific apps
+# Para saber el nombre de las ventanas abiertas de una aplicación
+    # osascript -e 'tell application "System Events" to get the name of every window of process "IntelliJ IDEA"'
+# Para desactivar esa ventana editar el siguiente comando
+    # yabai -m rule --add app="Safari" title="Preferences" manage=off
+# Fuente: https://github.com/koekeishiya/yabai/blob/master/doc/yabai.asciidoc
 
 
 yabai -m rule --add app="^Calculadora$" manage=off
@@ -58,4 +63,12 @@ yabai -m rule --add label="Mail" app="^Mail$" manage=off
 yabai -m rule --add label="Pika" app="^Pika$" manage=off
 yabai -m rule --add label="Mensajes" app="^Mensajes$" manage=off
 yabai -m rule --add label="Iterm" app="^Iterm$" manage=off
+yabai -m rule --add label="Raycast" app="^Raycast$" manage=off
+yabai -m rule --add label="Finder" app="^Finder$" manage=off
+yabai -m rule --add app="IntelliJ IDEA" title="Settings" manage=off
+yabai -m rule --add app="Safari" title="Preferences" manage=off
+
+
+
+
 
