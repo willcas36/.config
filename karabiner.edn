@@ -109,12 +109,15 @@
                 [:!Oq [:yabai "window --insert east"]]
                 [:!Os [:yabai "window --insert stack"]]
                 [:!Oe [:yabai "window --toggle split"]]
+                [:!Of [:yabai "window --focus stack.recent"]]
+                [:!Ef [:yabai "window --focus stack.recent"]]
+
 
                 [:!Ew [:yabai "window --insert south"]]
                 [:!Eq [:yabai "window --insert east"]]
                 [:!Es [:yabai "window --insert stack"]]
                 [:!Ee [:yabai "window --toggle split"]]
-                [:!Ef [:yabai "window --focus stack.recent"]]
+
 
                 ;;Equalize size of windows
                 [:!Fe [:yabai "space --balance"]]
@@ -132,7 +135,7 @@
                 [:!FOspacebar [:yabai "window --toggle float --grid 8:16:5:1:5:6"]]
 
                 ;;Toggle window fullscreen, zoom
-                [:!Of [:yabai "window --toggle zoom-fullscreen"]]
+                [:!Tf [:yabai "window --toggle zoom-fullscreen"]]
                 [:!Oa [:yabai "window --toggle zoom-parent"]]
                 [:!Ea [:yabai "window --toggle zoom-parent"]]
 
@@ -168,8 +171,11 @@
                 [:!Ch []]
             ]}
 
-            {:des "Capslock to Hyper, ESQ if alone" :rules[
+            {:des "Capslock to Hyper, Return if alone" :rules[
                  [:##caps_lock :fn nil {:alone :return_or_enter}]
+            ]}
+            {:des "Function to ESQ" :rules[
+                 [:fn :escape nil {:held :fn :params{:held 100}}]
             ]}
             {:des "Shift deletes Forward and Backward" :rules[
                 [:#Pright_shift :right_shift  nil {:alone :!OFdelete_or_backspace}]
