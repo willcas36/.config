@@ -65,8 +65,11 @@ yabai -m rule --add label="Mensajes" app="^Mensajes$" manage=off
 yabai -m rule --add label="Iterm" app="^Iterm$" manage=off
 yabai -m rule --add label="Raycast" app="^Raycast$" manage=off
 yabai -m rule --add label="Finder" app="^Finder$" manage=off
-yabai -m rule --add app="IntelliJ IDEA" title="Settings" manage=off
 yabai -m rule --add app="Safari" title="Preferences" manage=off
+yabai -m rule --add app="iTerm" manage=off
+yabai -m rule --add app="IntelliJ IDEA" title!="^[\w,\s-]+\.(java)$" manage=off
+
+
 
 
 
