@@ -27,8 +27,8 @@
                 :preview0   ["^com\\.apple\\.Preview$" :!previewsidebar]
                 :terminal   ["^com\\.apple\\.Terminal$"]
                 :chatgpt   ["^com\\.openai\\.ChatGPT$"]
-                :postman   ["^com\\.postmanlabs\\.mac$"]
-                :intelliJ ["^com\\.jetbrains\\.intellij.ce$"]}
+                :postman   ["^com\\.postmanlabs\\.mac$"]}
+
 
     :templates {:yabai "/opt/homebrew/bin/yabai -m %s"
                 :launch-app "open -a '%s'"
@@ -246,6 +246,7 @@
                 [[:p :m] [:launch-app "postman"] nil {:params {:held 100 :sim 30}}]
                 [[:c :g] [:launch-app "chatgpt"] nil {:params {:held 100 :sim 30}}]
                 [[:v :s] [:open "Visual Studio Code"] nil {:params {:held 100 :sim 30}}]
+                [[:i :n] [:open "IntelliJ IDEA CE"] nil {:params {:held 100 :sim 30}}]
                 [[:c :r] [:open "Google Chrome"] nil {:params {:held 100 :sim 30}}]
                 [[:s :f] [:open "Safari"] nil {:params {:held 100 :sim 30}}]
                 [[:t :m] [] nil {:held "open -a iTerm --new" :params {:held 100 :sim 30}}]

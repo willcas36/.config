@@ -68,7 +68,9 @@ yabai -m rule --add label="Finder" app="^Finder$" manage=off
 yabai -m rule --add app="Safari" title="Preferences" manage=off
 yabai -m rule --add app="iTerm" manage=off
 yabai -m rule --add app="IntelliJ IDEA" title!="^[\w,\s-]+\.(java)$" manage=off
-
+yabai -m rule --add app="Música" title!="Música" manage=off
+yabai -m rule --add app="Safari" title="Cuentas de Google" manage=off
+2
 
 
 
