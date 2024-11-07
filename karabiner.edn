@@ -49,15 +49,16 @@
             {:des, "Yabai keybinds", :rules[
                 ;;====NAVIGATION====
                 ;;Focus Spaces
-                [:!O1 [:!O1 [:yabai "display --focus prev"]]]
-                [:!O3 [:!O3 [:yabai "display --focus prev"]]]
-                [:!O4 [:!O4 [:yabai "display --focus prev"]]]
-                [:!O5 [:!O5 [:yabai "display --focus prev"]]]
+                [:!Ez [:!Ez [:yabai "display --focus prev"]]]
+                [:!Ex [:!Ex [:yabai "display --focus prev"]]]
+                [:!Ec [:!Ec [:yabai "display --focus prev"]]]
+                [:!Ev [:!Ev [:yabai "display --focus prev"]]]
+                [:!Eb [:!Eb [:yabai "display --focus prev"]]]
                 [:!Om [:!Om [:yabai "display --focus next"]]]
                 [:!Ocomma [:!Ocomma [:yabai "display --focus next"]]]
                 [:!Operiod [:!Operiod [:yabai "display --focus next"]]]
                 [:!Oslash [:!Oslash [:yabai "display --focus next"]]]
-;; El :fn es para simular una tecla presionada y muestrear el sonido en Klack
+                
                 ;;Windows focus
                 [:!Osemicolon [:yabai "window --focus south"]]
                 [:!Oj [:yabai "window --focus north"]]
@@ -67,13 +68,6 @@
                 ;;Focus Displays
                 [:!Oi [:yabai "display --focus next"]]
                 [:!Oo [:yabai "display --focus prev"]]
-
-                ;;Focus Spaces
-                [:!O1 :!O1 nil {:afterup [:yabai "display --focus prev"]}]
-                [:!O2 :!O2 nil {:afterup [:yabai "display --focus prev"]}]
-                [:!O3 :!O3 nil {:afterup [:yabai "display --focus prev"]}]
-                [:!O4 :!O4 nil {:afterup [:yabai "display --focus prev"]}]
-                [:!O5 :!O5 nil {:afterup [:yabai "display --focus prev"]}]
 
                 ;;==== Modification ====
                 ;;Move window relatively
