@@ -49,15 +49,16 @@
             {:des, "Yabai keybinds", :rules[
                 ;;====NAVIGATION====
                 ;;Focus Spaces
-                [:!Ez [:!Ez [:yabai "display --focus prev"]]]
-                [:!Ex [:!Ex [:yabai "display --focus prev"]]]
-                [:!Ec [:!Ec [:yabai "display --focus prev"]]]
-                [:!Ev [:!Ev [:yabai "display --focus prev"]]]
-                [:!Eb [:!Eb [:yabai "display --focus prev"]]]
-                [:!Om [:!Om [:yabai "display --focus next"]]]
-                [:!Ocomma [:!Ocomma [:yabai "display --focus next"]]]
-                [:!Operiod [:!Operiod [:yabai "display --focus next"]]]
-                [:!Oslash [:!Oslash [:yabai "display --focus next"]]]
+                [:!Ez [:!Ez [:yabai "display --focus next"]]]
+                [:!Ex [:!Ex [:yabai "display --focus next"]]]
+                [:!Ec [:!Ec [:yabai "display --focus next"]]]
+                [:!Ev [:!Ev [:yabai "display --focus next"]]]
+                [:!Eb [:!Eb [:yabai "display --focus next"]]]
+                [:!Om [:!Om [:yabai "display --focus prev"]]]
+                [:!Ocomma [:!Ocomma [:yabai "display --focus prev"]]]
+                [:!Operiod [:!Operiod [:yabai "display --focus prev"]]]
+                [:!Oslash [:!Oslash [:yabai "display --focus prev"]]]
+                [:!On [:!On [:yabai "display --focus prev"]]]
                 
                 ;;Windows focus
                 [:!Osemicolon [:yabai "window --focus south"]]
