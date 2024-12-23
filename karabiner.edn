@@ -49,26 +49,29 @@
             {:des, "Yabai keybinds", :rules[
                 ;;====NAVIGATION====
                 ;;Focus Spaces
-                [:!Ez [:!Ez [:yabai "display --focus next"]]]
-                [:!Ex [:!Ex [:yabai "display --focus next"]]]
-                [:!Ec [:!Ec [:yabai "display --focus next"]]]
-                [:!Ev [:!Ev [:yabai "display --focus next"]]]
-                [:!Eb [:!Eb [:yabai "display --focus next"]]]
-                [:!Om [:!Om [:yabai "display --focus prev"]]]
-                [:!Ocomma [:!Ocomma [:yabai "display --focus prev"]]]
-                [:!Operiod [:!Operiod [:yabai "display --focus prev"]]]
-                [:!Oslash [:!Oslash [:yabai "display --focus prev"]]]
-                [:!On [:!On [:yabai "display --focus prev"]]]
+                [:!E#Pz [:!Ez [:yabai "display --focus 1"]]]
+                [:!E#Px [:!Ex [:yabai "display --focus 1"]]]
+                [:!E#Pc [:!Ec [:yabai "display --focus 1"]]]
+                [:!E#Pv [:!Ev [:yabai "display --focus 1"]]]
+
+                [:!O#Pm [:!Om [:yabai "display --focus 2"]]]
+                [:!O#Pcomma [:!Ocomma [:yabai "display --focus 2"]]]
+                [:!O#Pperiod [:!Operiod [:yabai "display --focus 2"]]]
+                [:!O#Pslash [:!Oslash [:yabai "display --focus 2"]]]
+
+                [:!E#Pb [:!Eb [:yabai "display --focus 3"]]]
+                [:!O#Pn [:!On [:yabai "display --focus 3"]]]
                 
                 ;;Windows focus
-                [:!Osemicolon [:yabai "window --focus south"]]
-                [:!Oj [:yabai "window --focus north"]]
-                [:!Ok [:yabai "window --focus west"]]
-                [:!Ol [:yabai "window --focus east"]]
+                [:!O#Psemicolon [:yabai "window --focus south"]]
+                [:!O#Pj [:yabai "window --focus north"]]
+                [:!O#Pk [:yabai "window --focus west"]]
+                [:!O#Pl [:yabai "window --focus east"]]
 
                 ;;Focus Displays
-                [:!Oi [:yabai "display --focus next"]]
-                [:!Oo [:yabai "display --focus prev"]]
+                [:!O#Pu [:yabai "display --focus 1"]]
+                [:!O#Pi [:yabai "display --focus 2"]]
+                [:!O#Po [:yabai "display --focus 3"]]
 
                 ;;==== Modification ====
                 ;;Move window relatively
@@ -83,21 +86,25 @@
                 [:!SOk  [:yabai "window --swap west"]]
                 [:!SOl  [:yabai "window --swap east"]]
 
+
                 ;;Move window to display left and right
-                [:!FOi [:yabai "window --display west"] nil {:afterup [:yabai "display --focus next"]}]
-                [:!FOo [:yabai "window --display east"] nil {:afterup [:yabai "display --focus prev"]}]
+                [:!FOu [:yabai "window --display 1"] nil {:afterup [:yabai "display --focus 1"]}]
+                [:!FOi [:yabai "window --display 2"] nil {:afterup [:yabai "display --focus 2"]}]
+                [:!FOo [:yabai "window --display 3"] nil {:afterup [:yabai "display --focus 3"]}]
 
                 ;;Send window to space
-                [:!FO1 [:yabai "window --space 1"]]
-                [:!FO2 [:yabai "window --space 2"]]
-                [:!FO3 [:yabai "window --space 3"]]
-                [:!FO4 [:yabai "window --space 4"]]
-                [:!FO5 [:yabai "window --space 5"]]
+                [:!FOm [:yabai "window --space 1"]]
+                [:!FOcomma [:yabai "window --space 2"]]
+                [:!FOperiod [:yabai "window --space 3"]]
+                [:!FOslash [:yabai "window --space 4"]] 
 
-                [:!FOm [:yabai "window --space 6"]]
-                [:!FOcomma [:yabai "window --space 7"]]
-                [:!FOperiod [:yabai "window --space 8"]]
-                [:!FOslash [:yabai "window --space 9"]]
+                [:!FOz [:yabai "window --space 5"]]
+                [:!FOx [:yabai "window --space 6"]]
+                [:!FOc [:yabai "window --space 7"]]
+                [:!FOv [:yabai "window --space 8"]]
+
+                [:!FOb [:yabai "window --space 9"]]
+                [:!FOn [:yabai "window --space 10"]]
 
                 ;;Set insertion point in focused cotainer
                 [:!Ow [:yabai "window --insert south"]]
@@ -136,7 +143,7 @@
 
 
                 ;;tart/stop yabai
-                [:!Fp "/opt/homebrew/bin/yabai --stop-service"]
+                [:!FSs "/opt/homebrew/bin/yabai --stop-service"]
                 [:!Fs "/opt/homebrew/bin/yabai --start-service"]
                 [:!Fr "/opt/homebrew/bin/yabai --restart-service"]
 
@@ -145,6 +152,11 @@
                 [:!Tsemicolon [:yabai "window --resize bottom:0:50 2> /dev/null || /opt/homebrew/bin/yabai window --resize top:0:50 2> /dev/"]]
                 [:!Tj [:yabai "window --resize bottom:0:-50 2> /dev/null|| /opt/homebrew/bin/yabai window --resize top:0:-50 2> /dev/null"]]
                 [:!Tl [:yabai "window --resize right:50:0 2> /dev/null|| /opt/homebrew/bin/yabai window --resize left:50:0 2> /dev/null"]]
+
+                [:!TCk [:yabai "window --resize right:-200:0 2> /dev/null || /opt/homebrew/bin/yabai window --resize left:-200:0 2> /dev/null"]]
+                [:!TCsemicolon [:yabai "window --resize bottom:0:200 2> /dev/null || /opt/homebrew/bin/yabai window --resize top:0:200 2> /dev/"]]
+                [:!TCj [:yabai "window --resize bottom:0:-200 2> /dev/null|| /opt/homebrew/bin/yabai window --resize top:0:-200 2> /dev/null"]]
+                [:!TCl [:yabai "window --resize right:200:0 2> /dev/null|| /opt/homebrew/bin/yabai window --resize left:200:0 2> /dev/null"]]
 
                 ;;Move window
                 [:!CTk [:yabai "window --move rel:-150:0"]]
@@ -175,6 +187,10 @@
             {:des "Shift deletes Forward and Backward" :rules[
                 [:#Pright_shift :right_shift  nil {:alone :!OFdelete_or_backspace}]
                 [:#Pleft_shift :left_shift  nil {:alone :!Odelete_or_backspace}]
+            ]}
+            {:des "Next, Prev Cursor VsCode" :rules[
+                [:!F#Pu :!Tu :code]
+                [:!F#Pp :!CTOp :code]
             ]}
             {:des "Media control" :rules[
                 [:!Fm :play_or_pause]
@@ -222,24 +238,25 @@
                  ;[:!F#Pt :!CTOt nil {:delayed {:invoked [:!Ctab :fn] :canceled []} :params {:delay 200}}]
                  [:!F#Pt :!CTOt]
             ]}
-            {:des "Mouse Pinter control" :rules[
-                 [:!F#Pw  {:mkey {:y -1536 :speed 1.0}}]
-                 [:!F#Ps {:mkey {:y 1536 :speed 1.0}}]
-                 [:!F#Pa {:mkey {:x -1536 :speed 1.0}}]
-                 [:!F#Pd {:mkey {:x 1536 :speed 1.0}}]
-                ;;  [:!F#Pspacebar {:pkey :button1}]
+            ;; {:des "Mouse Pinter control" :rules[
+            ;;      [:!F#Pw  {:mkey {:y -1536 :speed 1.0}}]
+            ;;      [:!F#Ps {:mkey {:y 1536 :speed 1.0}}]
+            ;;      [:!F#Pa {:mkey {:x -1536 :speed 1.0}}]
+            ;;      [:!F#Pd {:mkey {:x 1536 :speed 1.0}}]
+            ;;     ;;  [:!F#Pspacebar {:pkey :button1}]
                 
-            ]}
+            ;; ]}
             {:des "Opening Apps" :rules[
                 
                 [[:p :g] [:launch-app "pgAdmin 4"] nil {:params {:held 100 :sim 30}}]
                 [[:s :p] [:launch-app "System Preferences"] nil {:params {:held 100 :sim 30}}]
                 [[:w :p] [:launch-app "WhatsApp"] nil {:params {:held 100 :sim 30}}]
-                [[:n :t] [:launch-app "Notion"] nil {:params {:held 100 :sim 30}}]
+                [[:n :i] [:launch-app "Notion"] nil {:params {:held 100 :sim 30}}]
                 [[:o :b] [:launch-app "Obsidian"] nil {:params {:held 100 :sim 30}}]
                 [[:m :s] [:launch-app "music"] nil {:params {:held 100 :sim 30}}]
                 [[:p :m] [:launch-app "postman"] nil {:params {:held 100 :sim 30}}]
                 [[:c :g] [:launch-app "chatgpt"] nil {:params {:held 100 :sim 30}}]
+                [[:c :l] [:launch-app "KeyboardCleanTool"] nil {:params {:held 100 :sim 30}}]
                 [[:v :s] [:open "Visual Studio Code"] nil {:params {:held 100 :sim 30}}]
                 [[:i :n] [:open "IntelliJ IDEA CE"] nil {:params {:held 100 :sim 30}}]
                 [[:c :r] [:open "Google Chrome"] nil {:params {:held 100 :sim 30}}]
