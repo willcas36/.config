@@ -44,7 +44,7 @@
              :z-mode {:key :z} 
              :x-mode {:key :x} 
              }
-    :main,[
+    :main [
 
             {:des, "Yabai keybinds", :rules[
                 ;;====NAVIGATION====
@@ -159,10 +159,10 @@
                 [:!TCl [:yabai "window --resize right:200:0 2> /dev/null|| /opt/homebrew/bin/yabai window --resize left:200:0 2> /dev/null"]]
 
                 ;;Move window
-                [:!CTk [:yabai "window --move rel:-150:0"]]
-                [:!CTsemicolon [:yabai "window --move rel:0:100"]]
-                [:!CTj [:yabai "window --move rel:0:-100"]]
-                [:!CTl [:yabai "window --move rel:150:0"]]
+                [:!COk [:yabai "window --move rel:-150:0"]]
+                [:!COsemicolon [:yabai "window --move rel:0:100"]]
+                [:!COj [:yabai "window --move rel:0:-100"]]
+                [:!COl [:yabai "window --move rel:150:0"]]
 
             ]}
             ; Q  | right_command
