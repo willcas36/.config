@@ -48,25 +48,47 @@
 
             {:des, "Yabai keybinds", :rules[
                 ;;====NAVIGATION====
+
                 ;;Focus Spaces
-                [:!E#Pz [:!Ez [:yabai "display --focus 1"]]]
-                [:!E#Px [:!Ex [:yabai "display --focus 1"]]]
-                [:!E#Pc [:!Ec [:yabai "display --focus 1"]]]
-                [:!E#Pv [:!Ev [:yabai "display --focus 1"]]]
 
-                [:!O#Pm [:!Om [:yabai "display --focus 2"]]]
-                [:!O#Pcomma [:!Ocomma [:yabai "display --focus 2"]]]
-                [:!O#Pperiod [:!Operiod [:yabai "display --focus 2"]]]
-                [:!O#Pslash [:!Oslash [:yabai "display --focus 2"]]]
+                ;; SIP Activated
+                ;; [:!E#Pz [:!Ez [:yabai "display --focus 1"]]]
+                ;; [:!E#Px [:!Ex [:yabai "display --focus 1"]]]
+                ;; [:!E#Pc [:!Ec [:yabai "display --focus 1"]]]
+                ;; [:!E#Pv [:!Ev [:yabai "display --focus 1"]]]
 
-                [:!E#Pb [:!Eb [:yabai "display --focus 3"]]]
-                [:!O#Pn [:!On [:yabai "display --focus 3"]]]
+                ;; [:!O#Pm [:!Om [:yabai "display --focus 2"]]]
+                ;; [:!O#Pcomma [:!Ocomma [:yabai "display --focus 2"]]]
+                ;; [:!O#Pperiod [:!Operiod [:yabai "display --focus 2"]]]
+                ;; [:!O#Pslash [:!Oslash [:yabai "display --focus 2"]]]
+
+                ;; [:!E#Pb [:!Eb [:yabai "display --focus 3"]]]
+                ;; [:!O#Pn [:!On [:yabai "display --focus 3"]]]
                 
+
+                ;; SIP Deactivated
+                [:!E#Pz [:yabai "space --focus 5"] nil {:afterup [:yabai "window --focus mouse"]}]
+                [:!E#Px [:yabai "space --focus 6"] nil {:afterup [:yabai "window --focus mouse"]}]
+                [:!E#Pc [:yabai "space --focus 7"] nil {:afterup [:yabai "window --focus mouse"]}]
+                [:!E#Pv [:yabai "space --focus 8"] nil {:afterup [:yabai "window --focus mouse"]}]
+
+                [:!O#Pm [:yabai "space --focus 1 "] nil {:afterup [:yabai "window --focus mouse"]}]
+                [:!O#Pcomma [:yabai "space --focus 2"] nil {:afterup [:yabai "window --focus mouse"]}]
+                [:!O#Pperiod [:yabai "space --focus 3"] nil {:afterup [:yabai "window --focus mouse"]}]
+                [:!O#Pslash [:yabai "space --focus 4"] nil {:afterup [:yabai "window --focus mouse"]}]
+
+                [:!E#Pb [:yabai "space --focus 9"] nil {:afterup [:yabai "window --focus mouse"]}]
+                [:!O#Pn [:yabai "space --focus 10"] nil {:afterup [:yabai "window --focus mouse"]}]
+
                 ;;Windows focus
                 [:!O#Psemicolon [:yabai "window --focus south"]]
                 [:!O#Pj [:yabai "window --focus north"]]
                 [:!O#Pk [:yabai "window --focus west"]]
                 [:!O#Pl [:yabai "window --focus east"]]
+
+                [:!O#Pf [:yabai "window --focus stack.recent"]]
+                [:!E#Pf [:yabai "window --focus stack.recent"]]
+
 
                 ;;Focus Displays
                 [:!O#Pu [:yabai "display --focus 1"]]
@@ -75,94 +97,106 @@
 
                 ;;==== Modification ====
                 ;;Move window relatively
-                [:!TOsemicolon [:yabai "window --warp south"]]
-                [:!TOj  [:yabai "window --warp north"]]
-                [:!TOk  [:yabai "window --warp west"]]
-                [:!TOl  [:yabai "window --warp east"]]
+                [:!TO#Psemicolon [:yabai "window --warp south"]]
+                [:!TO#Pj  [:yabai "window --warp north"]]
+                [:!TO#Pk  [:yabai "window --warp west"]]
+                [:!TO#Pl  [:yabai "window --warp east"]]
 
                 ;;Swap windows
-                [:!SOsemicolon  [:yabai "window --swap south"]]
-                [:!SOj  [:yabai "window --swap north"]]
-                [:!SOk  [:yabai "window --swap west"]]
-                [:!SOl  [:yabai "window --swap east"]]
+                [:!SO#Psemicolon  [:yabai "window --swap south"]]
+                [:!SO#Pj  [:yabai "window --swap north"]]
+                [:!SO#Pk  [:yabai "window --swap west"]]
+                [:!SO#Pl  [:yabai "window --swap east"]]
 
 
                 ;;Move window to display left and right
-                [:!FOu [:yabai "window --display 1"] nil {:afterup [:yabai "display --focus 1"]}]
-                [:!FOi [:yabai "window --display 2"] nil {:afterup [:yabai "display --focus 2"]}]
-                [:!FOo [:yabai "window --display 3"] nil {:afterup [:yabai "display --focus 3"]}]
 
+                ;; SIP Activated
+                ;; [:!FO#Pu [:yabai "window --display 1"] nil {:afterup [:yabai "display --focus 1"]}]
+                ;; [:!FO#Pi [:yabai "window --display 2"] nil {:afterup [:yabai "display --focus 2"]}]
+                ;; [:!FO#Po [:yabai "window --display 3"] nil {:afterup [:yabai "display --focus 3"]}]
+
+                ;; SIP Deactivated
+                [:!FO#Pu [:yabai "window --display 1"]]
+                [:!FO#Pi [:yabai "window --display 2"]]
+                [:!FO#Po [:yabai "window --display 3"]]
+                
                 ;;Send window to space
-                [:!FOm [:yabai "window --space 1"]]
-                [:!FOcomma [:yabai "window --space 2"]]
-                [:!FOperiod [:yabai "window --space 3"]]
-                [:!FOslash [:yabai "window --space 4"]] 
+                [:!FO#Pm [:yabai "window --space 1"]]
+                [:!FO#Pcomma [:yabai "window --space 2"]]
+                [:!FO#Pperiod [:yabai "window --space 3"]]
+                [:!FO#Pslash [:yabai "window --space 4"]] 
 
-                [:!FOz [:yabai "window --space 5"]]
-                [:!FOx [:yabai "window --space 6"]]
-                [:!FOc [:yabai "window --space 7"]]
-                [:!FOv [:yabai "window --space 8"]]
+                [:!FO#Pz [:yabai "window --space 5"]]
+                [:!FO#Px [:yabai "window --space 6"]]
+                [:!FO#Pc [:yabai "window --space 7"]]
+                [:!FO#Pv [:yabai "window --space 8"]]
 
-                [:!FOb [:yabai "window --space 9"]]
-                [:!FOn [:yabai "window --space 10"]]
+
+                [:!FO#Pb [:yabai "window --space 9"]]
+                [:!FO#Pn [:yabai "window --space 10"]]
+
+
+                ;; Scratchpad
+                [:!F#Ph [:yabai "window --scratchpad"]]
+                [:!F#Pr [:yabai "window --scratchpad recover"]]
+                [:!F#Pf [:yabai "window --toggle finder"]]
+                [:!F#Pw [:yabai "window --toggle musica"]]
+                [:!F#Pq [:yabai "window --toggle whatsapp"]]
+                [:!F#Pd [:yabai "window --toggle iterm"]]
+                [:!F#Pc [:yabai "window --toggle gpt"]]
+                
+                [:!F#Ps [:yabai "window --toggle sticky"]]
+                [:!F#Pv [:yabai "window --toggle pip"]]
 
                 ;;Set insertion point in focused cotainer
-                [:!Ow [:yabai "window --insert south"]]
-                [:!Oq [:yabai "window --insert east"]]
-                [:!Os [:yabai "window --insert stack"]]
-                [:!Oe [:yabai "window --toggle split"]]
-                [:!Of [:yabai "window --focus stack.recent"]]
-                [:!Ef [:yabai "window --focus stack.recent"]]
+                [:!E#Pw [:yabai "window --insert south"]]
+                [:!E#Pq [:yabai "window --insert east"]]
+                [:!E#Ps [:yabai "window --insert stack"]]
+                [:!E#Pe [:yabai "window --toggle split"]]
 
-
-                [:!Ew [:yabai "window --insert south"]]
-                [:!Eq [:yabai "window --insert east"]]
-                [:!Es [:yabai "window --insert stack"]]
-                [:!Ee [:yabai "window --toggle split"]]
 
 
                 ;;Equalize size of windows
-                [:!Fe [:yabai "space --balance"]]
-                [:!Fx [:yabai "space --equalize x-axis"]]
-                [:!Fy [:yabai "space --equalize y-axis"]]
+                [:!F#Pe [:yabai "space --balance"]]
+                [:!F#Px [:yabai "space --equalize x-axis"]]
+                [:!F#Py [:yabai "space --equalize y-axis"]]
 
                 ;;Rotate Windows
-                [:!FOr [:yabai "space --rotate 270"]] 
-                [:!FOx [:yabai "space --mirror x-axis"]]
-                [:!FOy [:yabai "space --mirror y-axis"]]
+                [:!FO#Pr [:yabai "space --rotate 270"]] 
+                [:!FO#Px [:yabai "space --mirror x-axis"]]
+                [:!FO#Py [:yabai "space --mirror y-axis"]]
 
                 ;;Toggle window flow
-            
-
-                [:!FOspacebar [:yabai "window --toggle float --grid 8:16:5:1:5:6"]]
+                [:!FO#Pspacebar [:yabai "window --toggle float --grid 11:11:1:1:7:7"]]
 
                 ;;Toggle window fullscreen, zoom
-                [:!Tf [:yabai "window --toggle zoom-fullscreen"]]
-                [:!Oa [:yabai "window --toggle zoom-parent"]]
-                [:!Ea [:yabai "window --toggle zoom-parent"]]
+                [:!T#Pf [:yabai "window --toggle zoom-fullscreen"]]
+                [:!O#Pa [:yabai "window --toggle zoom-parent"]]
+                [:!E#Pa [:yabai "window --toggle zoom-parent"]]
 
 
                 ;;tart/stop yabai
-                [:!FSs "/opt/homebrew/bin/yabai --stop-service"]
-                [:!Fs "/opt/homebrew/bin/yabai --start-service"]
-                [:!Fr "/opt/homebrew/bin/yabai --restart-service"]
+                [:!TOC#Pp "/opt/homebrew/bin/yabai --stop-service"]
+                [:!TOC#Ps "/opt/homebrew/bin/yabai --start-service"]
+                [:!TOC#Pr "/opt/homebrew/bin/yabai --restart-service"]
 
                 ;;Resize window
-                [:!Tk [:yabai "window --resize right:-50:0 2> /dev/null || /opt/homebrew/bin/yabai window --resize left:-50:0 2> /dev/null"]]
-                [:!Tsemicolon [:yabai "window --resize bottom:0:50 2> /dev/null || /opt/homebrew/bin/yabai window --resize top:0:50 2> /dev/"]]
-                [:!Tj [:yabai "window --resize bottom:0:-50 2> /dev/null|| /opt/homebrew/bin/yabai window --resize top:0:-50 2> /dev/null"]]
-                [:!Tl [:yabai "window --resize right:50:0 2> /dev/null|| /opt/homebrew/bin/yabai window --resize left:50:0 2> /dev/null"]]
+                [:!T#Pk [:yabai "window --resize right:-50:0 2> /dev/null || /opt/homebrew/bin/yabai window --resize left:-50:0 2> /dev/null"]]
+                [:!T#Psemicolon [:yabai "window --resize bottom:0:50 2> /dev/null || /opt/homebrew/bin/yabai window --resize top:0:50 2> /dev/"]]
+                [:!T#Pj [:yabai "window --resize bottom:0:-50 2> /dev/null|| /opt/homebrew/bin/yabai window --resize top:0:-50 2> /dev/null"]]
+                [:!T#Pl [:yabai "window --resize right:50:0 2> /dev/null|| /opt/homebrew/bin/yabai window --resize left:50:0 2> /dev/null"]]
 
-                [:!TCk [:yabai "window --resize right:-200:0 2> /dev/null || /opt/homebrew/bin/yabai window --resize left:-200:0 2> /dev/null"]]
-                [:!TCsemicolon [:yabai "window --resize bottom:0:200 2> /dev/null || /opt/homebrew/bin/yabai window --resize top:0:200 2> /dev/"]]
-                [:!TCj [:yabai "window --resize bottom:0:-200 2> /dev/null|| /opt/homebrew/bin/yabai window --resize top:0:-200 2> /dev/null"]]
-                [:!TCl [:yabai "window --resize right:200:0 2> /dev/null|| /opt/homebrew/bin/yabai window --resize left:200:0 2> /dev/null"]]
+                [:!FC#Pi [:yabai "window --resize right:-200:0 2> /dev/null || /opt/homebrew/bin/yabai window --resize left:-200:0 2> /dev/null"]]
+                [:!FC#Pp [:yabai "window --resize bottom:0:200 2> /dev/null || /opt/homebrew/bin/yabai window --resize top:0:200 2> /dev/"]]
+                [:!FC#Pu [:yabai "window --resize bottom:0:-200 2> /dev/null|| /opt/homebrew/bin/yabai window --resize top:0:-200 2> /dev/null"]]
+                [:!FC#Po [:yabai "window --resize right:200:0 2> /dev/null|| /opt/homebrew/bin/yabai window --resize left:200:0 2> /dev/null"]]
 
                 ;;Move window
-                [:!COk [:yabai "window --move rel:-150:0"]]
-                [:!COsemicolon [:yabai "window --move rel:0:100"]]
-                [:!COj [:yabai "window --move rel:0:-100"]]
-                [:!COl [:yabai "window --move rel:150:0"]]
+                [:!FC#Pm [:yabai "window --move rel:0:-150"]]
+                [:!FC#Pcomma [:yabai "window --move rel:-200:0"]]
+                [:!FC#Pperiod [:yabai "window --move rel:200:0"]]
+                [:!FC#Pslash [:yabai "window --move rel:0:150"]]
 
             ]}
             ; Q  | right_command
@@ -193,9 +227,9 @@
                 [:!F#Pp :!CTOp :code]
             ]}
             {:des "Media control" :rules[
-                [:!Fm :play_or_pause]
-                [:!Fcomma :rewind]
-                [:!Fperiod :fastforward]
+                [:!F#Pm :play_or_pause]
+                [:!F#Pcomma :rewind]
+                [:!F#Pperiod :fastforward]
             ]}
             {:des "Volume control" :rules[
                 :z-mode
@@ -231,9 +265,9 @@
             {:des "ShortCat" :rules[
                  [:!F#Pn :!COTspacebar]
             ]}
-            {:des "Pika" :rules[
-                 [:!F#Pc :!Op]
-            ]}
+            ;; {:des "Pika" :rules[
+            ;;      [:!F#Pc :!Op]
+            ;; ]}
             {:des "DeepL" :rules[
                  ;[:!F#Pt :!CTOt nil {:delayed {:invoked [:!Ctab :fn] :canceled []} :params {:delay 200}}]
                  [:!F#Pt :!CTOt]
