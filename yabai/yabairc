@@ -63,7 +63,6 @@ yabai -m rule --add label="Configuración del Sistema" app="^Configuración del 
 yabai -m rule --add label="App Store" app="^App Store$" manage=off
 yabai -m rule --add label="Monitor de Actividad" app="^Monitor de Actividad$" manage=off
 yabai -m rule --add label="MediaMate" app="^MediaMate$" manage=off
-yabai -m rule --add label="Anki" app="^Anki$" manage=off
 yabai -m rule --add label="DeepL" app="^DeepL$" manage=off
 yabai -m rule --add label="AppCleaner" app="^AppCleaner$" manage=off
 yabai -m rule --add label="Karabiner-EventViewer" app="^Karabiner-EventViewer$" manage=off
@@ -85,8 +84,10 @@ yabai -m rule --add app="IntelliJ IDEA" title!="^[\w,\s-]+\.(java)$" manage=off
 yabai -m rule --add app="Safari" title="Cuentas de Google" manage=off
 yabai -m rule --add app="Duplicación del iPhone" manage=off
 yabai -m rule --add app="Discord" manage=off
-yabai -m rule --add app="iTerm" scratchpad="iterm" grid=11:11:2:2:5:5
-yabai -m rule --add app="Música" scratchpad="musica" grid=11:11:1:1:8:8
-yabai -m rule --add app="Finder$" scratchpad="finder" grid=11:11:1:1:8:8
-yabai -m rule --add app="WhatsApp$" scratchpad="whatsapp" grid=11:11:1:1:8:8
-yabai -m rule --add app="ChatGPT$" scratchpad="gpt" grid=11:11:1:1:8:8
+yabai -m rule --add app="iTerm" scratchpad="iterm" grid=12:12:7:2:4:6
+yabai -m rule --add app="Música" scratchpad="musica" grid=12:12:2:2:8:9
+yabai -m rule --add app="Finder$" scratchpad="finder" grid=12:12:2:2:8:8
+yabai -m rule --add app="ChatGPT$" scratchpad="gpt" grid=12:12:4:2:4:8
+yabai -m rule --add app="WhatsApp$" scratchpad="whatsapp" grid=12:12:3:2:6:9
+yabai -m rule --add app="Mail$" scratchpad="mail" grid=12:12:2:2:8:9
+yabai -m rule --add app="^Anki$" scratchpad="anki" grid=12:12:3:1:7:10

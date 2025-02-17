@@ -8,6 +8,9 @@
                       :alone   1000
                       ;; to_if_held_down_threshold_milliseconds
                       :held    500}} 
+
+    ;; Para saber el bundle ID de cada app
+    ;;   mdls -name kMDItemCFBundleIdentifier /Applications/Postman.app
     :applications {
                 :safari     ["^com\\.apple\\.Safari$"]
                 :chrome     ["^com\\.google\\.Chrome$"]
@@ -27,7 +30,10 @@
                 :preview0   ["^com\\.apple\\.Preview$" :!previewsidebar]
                 :terminal   ["^com\\.apple\\.Terminal$"]
                 :chatgpt   ["^com\\.openai\\.ChatGPT$"]
-                :postman   ["^com\\.postmanlabs\\.mac$"]}
+                :postman   ["^com\\.postmanlabs\\.mac$"]
+                :intellij   ["^com\\.jetbrains.intellij\\.ce$"]
+                :anki   ["^net\\.ankiweb\\.dtop"]
+                }
 
 
     :templates {:yabai "/opt/homebrew/bin/yabai -m %s"
@@ -103,6 +109,7 @@
                 [:!TO#Pl  [:yabai "window --warp east"]]
 
                 ;;Swap windows
+                
                 [:!SO#Psemicolon  [:yabai "window --swap south"]]
                 [:!SO#Pj  [:yabai "window --swap north"]]
                 [:!SO#Pk  [:yabai "window --swap west"]]
@@ -145,6 +152,8 @@
                 [:!F#Pq [:yabai "window --toggle whatsapp"]]
                 [:!F#Pd [:yabai "window --toggle iterm"]]
                 [:!F#Pc [:yabai "window --toggle gpt"]]
+                [:!F#Pe [:yabai "window --toggle mail"]]
+                [:!F#Pa [:yabai "window --toggle anki"]]
                 
                 [:!F#Ps [:yabai "window --toggle sticky"]]
                 [:!F#Pv [:yabai "window --toggle pip"]]
@@ -158,9 +167,9 @@
 
 
                 ;;Equalize size of windows
-                [:!F#Pe [:yabai "space --balance"]]
-                [:!F#Px [:yabai "space --equalize x-axis"]]
-                [:!F#Py [:yabai "space --equalize y-axis"]]
+                [:!FC#Pe [:yabai "space --balance"]]
+                [:!FC#Px [:yabai "space --equalize x-axis"]]
+                [:!FC#Py [:yabai "space --equalize y-axis"]]
 
                 ;;Rotate Windows
                 [:!FO#Pr [:yabai "space --rotate 270"]] 
@@ -187,16 +196,16 @@
                 [:!T#Pj [:yabai "window --resize bottom:0:-50 2> /dev/null|| /opt/homebrew/bin/yabai window --resize top:0:-50 2> /dev/null"]]
                 [:!T#Pl [:yabai "window --resize right:50:0 2> /dev/null|| /opt/homebrew/bin/yabai window --resize left:50:0 2> /dev/null"]]
 
-                [:!FC#Pi [:yabai "window --resize right:-200:0 2> /dev/null || /opt/homebrew/bin/yabai window --resize left:-200:0 2> /dev/null"]]
-                [:!FC#Pp [:yabai "window --resize bottom:0:200 2> /dev/null || /opt/homebrew/bin/yabai window --resize top:0:200 2> /dev/"]]
-                [:!FC#Pu [:yabai "window --resize bottom:0:-200 2> /dev/null|| /opt/homebrew/bin/yabai window --resize top:0:-200 2> /dev/null"]]
-                [:!FC#Po [:yabai "window --resize right:200:0 2> /dev/null|| /opt/homebrew/bin/yabai window --resize left:200:0 2> /dev/null"]]
+                [:!FC#Pm [:yabai "window --resize bottom:0:-200 2> /dev/null|| /opt/homebrew/bin/yabai window --resize top:0:-200 2> /dev/null"]]
+                [:!FC#Pcomma [:yabai "window --resize right:-200:0 2> /dev/null || /opt/homebrew/bin/yabai window --resize left:-200:0 2> /dev/null"]]
+                [:!FC#Pperiod [:yabai "window --resize right:200:0 2> /dev/null|| /opt/homebrew/bin/yabai window --resize left:200:0 2> /dev/null"]]
+                [:!FC#Pslash [:yabai "window --resize bottom:0:200 2> /dev/null || /opt/homebrew/bin/yabai window --resize top:0:200 2> /dev/"]]
 
                 ;;Move window
-                [:!FC#Pm [:yabai "window --move rel:0:-150"]]
-                [:!FC#Pcomma [:yabai "window --move rel:-200:0"]]
-                [:!FC#Pperiod [:yabai "window --move rel:200:0"]]
-                [:!FC#Pslash [:yabai "window --move rel:0:150"]]
+                [:!FC#Pu [:yabai "window --move rel:0:-150"]]
+                [:!FC#Pi [:yabai "window --move rel:-200:0"]]
+                [:!FC#Po [:yabai "window --move rel:200:0"]]
+                [:!FC#Pp [:yabai "window --move rel:0:150"]]
 
             ]}
             ; Q  | right_command
@@ -221,10 +230,6 @@
             {:des "Shift deletes Forward and Backward" :rules[
                 [:#Pright_shift :right_shift  nil {:alone :!OFdelete_or_backspace}]
                 [:#Pleft_shift :left_shift  nil {:alone :!Odelete_or_backspace}]
-            ]}
-            {:des "Next, Prev Cursor VsCode" :rules[
-                [:!F#Pu :!Tu :code]
-                [:!F#Pp :!CTOp :code]
             ]}
             {:des "Media control" :rules[
                 [:!F#Pm :play_or_pause]
@@ -261,6 +266,22 @@
                  [:!F#P8 {:mkey {:vwheel -30 :speed 2}}]
                  [:!O#P9 {:mkey {:hwheel -20 :speed 2}}]
                  [:!O#P8 {:mkey {:hwheel 20 :speed 2}}]
+            ]}
+
+
+            ;; ===== APPS =====
+            {:des "Next, Prev Cursor VsCode" :rules[
+                [:!F#Pu :!Tu :code]
+                [:!F#Pp :!CTOp :code]
+            ]}
+            {:des "Anki controls" :rules[
+                [:semicolon :return_or_enter :anki]
+                [:comma :!Cz :anki]
+                [:period :!SCz :anki]
+            ]}
+            {:des "Next, Prev Cursor intellij" :rules[
+                [:!F#Pu :!Thyphen :intellij]
+                [:!F#Pp :!SThyphen :intellij]
             ]}
             {:des "ShortCat" :rules[
                  [:!F#Pn :!COTspacebar]
@@ -424,3 +445,41 @@
 ;; two shell_command cd & ls, cd && ls
 ;; ["cd" "ls"] | multiple shell command
 ;; [{:set ["variable name" "variable value"]}] | set variable's value to string (fallback to `tos` definition)
+
+
+
+   ;; :x {:mouse_key true}
+   ;; :y {:mouse_key true}
+;;    :any {:modifier true :both true}
+;;    :command {:modifier true :both true}
+;;    :shift {:modifier true :both true}
+;;    :option {:modifier true :both true}
+;;    :control {:modifier true :both true}
+;;    :caps_lock {:modifier true}
+;;    :left_control {:modifier true}
+;;    :left_shift {:modifier true}
+;;    :left_option {:modifier true}
+;;    :left_command {:modifier true}
+;;    :right_control {:modifier true}
+;;    :right_shift {:modifier true}
+;;    :right_option {:modifier true}
+;;    :right_command {:modifier true}
+;;    :fn {:modifier true}
+;;    :return_or_enter {:label "enter" :display true}
+;;    :escape {:display true}
+;;    :delete_or_backspace {:label "backspace" :display true}
+;;    :delete_forward {:label "del" :display true}
+;;    :tab {:display true}
+;;    :spacebar {:display true}
+;;    :hyphen {:label "hyphen (-)" :display true}
+;;    :equal_sign {:label "equal_sign (=)" :display true}
+;;    :open_bracket {:label "open_bracket [" :display true}
+;;    :close_bracket {:label "close_bracket ]" :display true}
+;;    :backslash {:label "backslash (\\)" :display true}
+;;    :non_us_pound {}
+;;    :semicolon {:label "semicolon (;)" :display true}
+;;    :quote {:label "quote (')" :display true}
+;;    :grave_accent_and_tilde {:label "grave_accent_and_tilde ()" :display true}
+;;    :comma {:label "comma (,)" :display true}
+;;    :period {:label "period (.)" :display true}
+;;    :slash {:label "slash (/)" :display true}
