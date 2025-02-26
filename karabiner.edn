@@ -158,6 +158,12 @@
                 [:!F#Ps [:yabai "window --toggle sticky"]]
                 [:!F#Pv [:yabai "window --toggle pip"]]
 
+
+                [:!F#Pz [:yabai "window --raise"]]
+                [:!F#Px [:yabai "window --minimize"]]
+
+                
+
                 ;;Set insertion point in focused cotainer
                 [:!E#Pw [:yabai "window --insert south"]]
                 [:!E#Pq [:yabai "window --insert east"]]
