@@ -88,7 +88,7 @@ yabai -m rule --add app="Discord" manage=off
 yabai -m rule --add app="iTerm" scratchpad="iterm" grid=12:12:7:2:4:6
 yabai -m rule --add app="Música" scratchpad="musica" grid=12:12:2:2:8:9
 yabai -m rule --add app="Finder$" scratchpad="finder" grid=12:12:2:2:8:8
-yabai -m rule --add app="ChatGPT$" scratchpad="gpt" grid=12:12:4:2:4:8
-yabai -m rule --add app="WhatsApp$" scratchpad="whatsapp" grid=12:12:3:2:6:9
+yabai -m rule --add app="ChatGPT$" scratchpad="gpt" grid=12:12:3:2:6:8
+yabai -m rule --add app="WhatsApp$" scratchpad="whatsapp" grid=12:12:2:2:8:9
 yabai -m rule --add app="Mail$" scratchpad="mail" grid=12:12:2:2:8:9
 yabai -m rule --add app="^Anki$" scratchpad="anki" grid=12:12:3:1:7:10
