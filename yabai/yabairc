@@ -59,6 +59,12 @@ yabai -m config mouse_drop_action stack
 yabai -m rule --add app="Calculadora$" scratchpad="calculadora"
 yabai -m rule --add app="^Focus To-Do$" manage=off
 yabai -m rule --add app="^Google Drive$" manage=off
+yabai -m rule --add app="^Ice$" manage=off
+yabai -m rule --add app="^QuickTime Player$" manage=off
+yabai -m rule --add app="^Microsoft Word$" manage=off
+yabai -m rule --add app="^DBeaver$" manage=off
+yabai -m rule --add app="^Configuración de Audio MIDI$" manage=off
+yabai -m rule --add app="^Vista Previa$" manage=off
 @REM yabai -m rule --add label="Finder" app="^Finder$" title="(Co(py|nnect)|Move|Info|Pref)" manage=off
 yabai -m rule --add label="Configuración del Sistema" app="^Configuración del Sistema$" title=".*" manage=off
 yabai -m rule --add label="App Store" app="^App Store$" manage=off
@@ -88,7 +94,10 @@ yabai -m rule --add app="Discord" manage=off
 yabai -m rule --add app="iTerm" scratchpad="iterm" grid=12:12:7:2:4:6
 yabai -m rule --add app="Música" scratchpad="musica" grid=12:12:2:2:8:9
 yabai -m rule --add app="Finder$" scratchpad="finder" grid=12:12:2:2:8:8
-yabai -m rule --add app="ChatGPT$" scratchpad="gpt" grid=12:12:3:2:6:8
+yabai -m rule --add app="ChatGPT$" scratchpad="gpt" grid=12:12:2:2:8:9
 yabai -m rule --add app="WhatsApp$" scratchpad="whatsapp" grid=12:12:2:2:8:9
+yabai -m rule --add app="Slack$" scratchpad="slack" grid=12:12:2:2:8:9
+yabai -m rule --add app="Gather$" scratchpad="gather" grid=12:12:1:0:10:11
 yabai -m rule --add app="Mail$" scratchpad="mail" grid=12:12:2:2:8:9
 yabai -m rule --add app="^Anki$" scratchpad="anki" grid=12:12:3:1:7:10
+yabai -m rule --add app="^Obsidian$" scratchpad="obsidian" grid=12:12:1:1:10:10

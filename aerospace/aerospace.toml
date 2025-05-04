@@ -11,12 +11,12 @@ enable-normalization-flatten-containers = false
 enable-normalization-opposite-orientation-for-nested-containers = false
 
 [gaps]
-inner.horizontal = 5
-inner.vertical =   5
-outer.left =       0
-outer.bottom =     0
-outer.top =        0
-outer.right =      0
+inner.horizontal = 15
+inner.vertical = 15
+outer.left = 0
+outer.bottom = 0
+outer.top = 0
+outer.right = 0
 
 [mode.main.binding]
 ctrl-alt-r = 'flatten-workspace-tree'
@@ -37,24 +37,26 @@ alt-shift-h = 'move up'
 alt-shift-k = 'move right'
 
 
-
 alt-shift-u = ['move-node-to-monitor --wrap-around left', 'focus-monitor left']
-alt-shift-i = ['move-node-to-monitor --wrap-around right', 'focus-monitor right']
+alt-shift-i = [
+    'move-node-to-monitor --wrap-around right',
+    'focus-monitor right',
+]
 alt-shift-comma = ['move-node-to-workspace --wrap-around next']
 alt-shift-m = ['move-node-to-workspace --wrap-around prev']
 
 
-alt-shift-minus = 'resize smart -50' 
+alt-shift-minus = 'resize smart -50'
 alt-shift-equal = 'resize smart +50'
 
 
-alt-q = 'split horizontal' 
+alt-q = 'split horizontal'
 alt-w = 'split vertical'
 
 alt-f = 'fullscreen'
 
-alt-s = 'layout v_accordion' # 'layout stacking' in i3
-alt-a = 'layout h_accordion' # 'layout tabbed' in i3
+alt-s = 'layout v_accordion'               # 'layout stacking' in i3
+alt-a = 'layout h_accordion'               # 'layout tabbed' in i3
 alt-e = 'layout tiles horizontal vertical' # 'layout toggle split' in i3
 
 alt-shift-space = 'layout floating tiling' # 'floating toggle' in i3
@@ -144,13 +146,13 @@ run = 'layout floating'
 
 
 [workspace-to-monitor-force-assignment]
-01 = ['main','secondary']
-02 = ['main','secondary']
-03 = ['main','secondary']
-04 = ['main','secondary']
-05 = ['main','secondary']
-06 = ['secondary','main'] 
-07 = ['secondary','main']
-08 = ['secondary','main']
-09 = ['secondary','main']
-1 = ['secondary','main']
+01 = ['main', 'secondary']
+02 = ['main', 'secondary']
+03 = ['main', 'secondary']
+04 = ['main', 'secondary']
+05 = ['main', 'secondary']
+06 = ['secondary', 'main']
+07 = ['secondary', 'main']
+08 = ['secondary', 'main']
+09 = ['secondary', 'main']
+1 = ['secondary', 'main']
