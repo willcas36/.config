@@ -606,7 +606,7 @@
             }
           },
           "to" : [ {
-            "shell_command" : "/opt/homebrew/bin/yabai -m window --toggle redis"
+            "shell_command" : "/opt/homebrew/bin/yabai -m window --scratchpad recover"
           } ],
           "type" : "basic"
         }, {

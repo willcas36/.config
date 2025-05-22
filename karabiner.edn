@@ -156,7 +156,7 @@
 
                 ;; Scratchpad
                 [:!F#Ph [:yabai "window --scratchpad"]]
-                [:!F#Pr [:yabai "window --scratchpad recover"]]
+                [:!F#Pr [:yabai "window --toggle redis"]]
                 [:!F#Pf [:yabai "window --toggle finder"]]
                 [:!F#Pw [:yabai "window --toggle musica"]]
                 [:!F#Pq [:yabai "window --toggle whatsapp"]]
