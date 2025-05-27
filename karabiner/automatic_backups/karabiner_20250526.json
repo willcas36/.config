@@ -3044,23 +3044,6 @@
             }
           },
           "to" : [ {
-            "key_code" : "b",
-            "modifiers" : [ "left_command" ]
-          } ],
-          "conditions" : [ {
-            "type" : "frontmost_application_if",
-            "bundle_identifiers" : [ "com\\.exafunction\\.windsurf" ]
-          } ],
-          "type" : "basic"
-        }, {
-          "from" : {
-            "key_code" : "b",
-            "modifiers" : {
-              "mandatory" : [ "fn" ],
-              "optional" : [ "caps_lock" ]
-            }
-          },
-          "to" : [ {
             "key_code" : "s",
             "modifiers" : [ "left_command", "left_control" ]
           } ],
