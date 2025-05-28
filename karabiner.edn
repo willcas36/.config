@@ -255,7 +255,7 @@
             {:des "Media control" :rules[
                 [:!F#Pm :play_or_pause]
                 [:!F#Pcomma :rewind]
-                [:!F#Pperiod :fastforward]
+                [:!F#Pperiod :fast_forward]
             ]}
             {:des "Volume control" :rules[
                 :z-mode
