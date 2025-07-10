@@ -24,6 +24,8 @@
                 :windsurf   ["com\\.exafunction\\.windsurf"]
                 :terminals  ["^com\\.apple\\.Terminal$"
                              "^com\\.googlecode\\.iterm2$"]
+                :warp       ["^dev\\.warp\\.Warp-Stable$"]
+
                 :mail       ["^com\\.apple\\.mail$"]
                 :notes      ["^com\\.apple\\.Notes$"]
                 :calendar   ["^com\\.apple\\.iCal$"]
@@ -163,7 +165,7 @@
                 [:!F#Pq [:yabai "window --toggle whatsapp"]]
                 [:!FC#Pq [:yabai "window --toggle slack"]]
                 [:!F#Pg [:yabai "window --toggle gather"]]
-                [:!F#Pd [:yabai "window --toggle iterm"]]
+                [:!F#Pd [:yabai "window --toggle warp"]]
                 [:!F#Pc [:yabai "window --toggle gpt"]]
                 [:!F#Pe [:yabai "window --toggle mail"]]
                 [:!F#Pa [:yabai "window --toggle anki"]]
@@ -296,6 +298,10 @@
                 [:!F#Pu :!Tu :code]
                 [:!F#Pp :!CTOp :code]
             ]}
+            {:des "Next, Prev Cursor Windsurf" :rules[
+                [:!F#Pu :!Tu :windsurf]
+                [:!F#Pp :!CTOp :windsurf]
+            ]}
             {:des "Anki controls" :rules[
                 [:semicolon :return_or_enter :anki]
                 [:comma :!Cz :anki]
@@ -333,12 +339,13 @@
                 [[:m :s] [:launch-app "music"] nil {:params {:held 100 :sim 30}}]
                 [[:p :m] [:launch-app "postman"] nil {:params {:held 100 :sim 30}}]
                 [[:c :g] [:launch-app "chatgpt"] nil {:params {:held 100 :sim 30}}]
+                [[:t :m] [:launch-app "warp"] nil {:params {:held 100 :sim 30}}]
                 [[:c :l] [:launch-app "KeyboardCleanTool"] nil {:params {:held 100 :sim 30}}]
                 [[:v :s] [:open "Visual Studio Code"] nil {:params {:held 100 :sim 30}}]
                 [[:i :n] [:open "IntelliJ IDEA CE"] nil {:params {:held 100 :sim 30}}]
                 [[:c :r] [:open "Google Chrome"] nil {:params {:held 100 :sim 30}}]
                 [[:s :f] [:open "Safari"] nil {:params {:held 100 :sim 30}}]
-                [[:t :m] [] nil {:held "open -a iTerm --new" :params {:held 100 :sim 30}}]
+                ;;[[:t :m] [] nil {:held "open -a iTerm --new" :params {:held 100 :sim 30}}]
                 [[:f :d] [] nil {:held "open ~" :params {:held 100 :sim 30}}]
                 [[:d :l] [] nil {:held "open ~/Downloads" :params {:held 100 :sim 30}}]
                 [[:d :s] [] nil {:held "open ~/Desktop" :params {:held 100 :sim 30}}]
