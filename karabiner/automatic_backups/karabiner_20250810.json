@@ -1639,95 +1639,20 @@
         "description" : "Anki controls",
         "manipulators" : [ {
           "from" : {
-            "pointing_button" : "button5"
+            "key_code" : "button5"
           },
           "to" : [ {
             "key_code" : "z",
             "modifiers" : [ "left_command" ]
           } ],
-          "conditions" : [ {
-            "type" : "frontmost_application_if",
-            "bundle_identifiers" : [ "^net\\.ankiweb\\.dtop" ]
-          } ],
           "type" : "basic"
         }, {
           "from" : {
-            "pointing_button" : "button9"
+            "key_code" : "button9"
           },
           "to" : [ {
             "key_code" : "z",
             "modifiers" : [ "left_command", "left_shift" ]
-          } ],
-          "conditions" : [ {
-            "type" : "frontmost_application_if",
-            "bundle_identifiers" : [ "^net\\.ankiweb\\.dtop" ]
-          } ],
-          "type" : "basic"
-        }, {
-          "from" : {
-            "pointing_button" : "button6"
-          },
-          "to" : [ {
-            "key_code" : "j"
-          } ],
-          "conditions" : [ {
-            "type" : "frontmost_application_if",
-            "bundle_identifiers" : [ "^net\\.ankiweb\\.dtop" ]
-          } ],
-          "type" : "basic"
-        }, {
-          "from" : {
-            "pointing_button" : "button8"
-          },
-          "to" : [ {
-            "key_code" : "return_or_enter"
-          } ],
-          "conditions" : [ {
-            "type" : "frontmost_application_if",
-            "bundle_identifiers" : [ "^net\\.ankiweb\\.dtop" ]
-          } ],
-          "type" : "basic"
-        }, {
-          "from" : {
-            "pointing_button" : "button4"
-          },
-          "to" : [ {
-            "key_code" : "k"
-          } ],
-          "conditions" : [ {
-            "type" : "frontmost_application_if",
-            "bundle_identifiers" : [ "^net\\.ankiweb\\.dtop" ]
-          } ],
-          "type" : "basic"
-        }, {
-          "from" : {
-            "pointing_button" : "button7"
-          },
-          "to" : [ {
-            "key_code" : "z"
-          } ],
-          "conditions" : [ {
-            "type" : "frontmost_application_if",
-            "bundle_identifiers" : [ "^net\\.ankiweb\\.dtop" ]
-          } ],
-          "type" : "basic"
-        }, {
-          "from" : {
-            "pointing_button" : "button3"
-          },
-          "to" : [ {
-            "pointing_button" : "button1"
-          }, {
-            "pointing_button" : "button1"
-          }, {
-            "pointing_button" : "button1"
-          }, {
-            "key_code" : "t",
-            "modifiers" : [ "left_command", "left_control", "left_option" ]
-          } ],
-          "conditions" : [ {
-            "type" : "frontmost_application_if",
-            "bundle_identifiers" : [ "^net\\.ankiweb\\.dtop" ]
           } ],
           "type" : "basic"
         }, {
@@ -3363,15 +3288,9 @@
     "devices" : [ {
       "identifiers" : {
         "is_keyboard" : true,
-        "product_id" : 50489,
-        "vendor_id" : 1133
-      },
-      "ignore" : true
-    }, {
-      "identifiers" : {
         "is_pointing_device" : true,
-        "product_id" : 50489,
-        "vendor_id" : 1133
+        "product_id" : 7087,
+        "vendor_id" : 6940
       },
       "ignore" : false
     } ],

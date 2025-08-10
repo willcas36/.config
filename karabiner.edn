@@ -303,9 +303,16 @@
                 [:!F#Pp :!CTOp :windsurf]
             ]}
             {:des "Anki controls" :rules[
-                [:semicolon :return_or_enter :anki]
-                [:comma :!Cz :anki]
-                [:period :!SCz :anki]
+                 [{:pkey :button5} :!Cz :anki]
+                 [{:pkey :button9} :!SCz :anki]
+                 [{:pkey :button6} :j :anki]
+                 [{:pkey :button8} [:return_or_enter] :anki]
+                 [{:pkey :button4} :k :anki]
+                 [{:pkey :button7} :z :anki]
+                 [{:pkey :button3} [{:pkey :button1} {:pkey :button1} {:pkey :button1} :!CTOt] :anki]
+                 [:semicolon :return_or_enter :anki]
+                 [:comma :!Cz :anki]
+                 [:period :!SCz :anki]
             ]}
             {:des "Next, Prev Cursor intellij" :rules[
                 [:!F#Pu :!Thyphen :intellij]
