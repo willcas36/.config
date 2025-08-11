@@ -1713,6 +1713,30 @@
           "type" : "basic"
         }, {
           "from" : {
+            "pointing_button" : "button11"
+          },
+          "to" : [ {
+            "key_code" : "i"
+          } ],
+          "conditions" : [ {
+            "type" : "frontmost_application_if",
+            "bundle_identifiers" : [ "^net\\.ankiweb\\.dtop" ]
+          } ],
+          "type" : "basic"
+        }, {
+          "from" : {
+            "pointing_button" : "button10"
+          },
+          "to" : [ {
+            "key_code" : "t"
+          } ],
+          "conditions" : [ {
+            "type" : "frontmost_application_if",
+            "bundle_identifiers" : [ "^net\\.ankiweb\\.dtop" ]
+          } ],
+          "type" : "basic"
+        }, {
+          "from" : {
             "pointing_button" : "button3"
           },
           "to" : [ {
