@@ -169,6 +169,7 @@
                 [:!F#Pc [:yabai "window --toggle gpt"]]
                 [:!F#Pe [:yabai "window --toggle mail"]]
                 [:!F#Pa [:yabai "window --toggle anki"]]
+                [{:pkey :button12} [:yabai "window --toggle anki"]]
                 [:!F#Pv [:yabai "window --toggle obsidian"]]
                 
                 [:!F#Ps [:yabai "window --toggle sticky"]]
@@ -312,6 +313,7 @@
                  [{:pkey :button11} :i :anki]
                  [{:pkey :button10} :t :anki]
                  [{:pkey :button3} [{:pkey :button1} {:pkey :button1} {:pkey :button1} :!CTOt] :anki]
+                 [{:pkey :button13} [{:pkey :button1} {:pkey :button1} :!CTOt] :anki]
                  [:semicolon :return_or_enter :anki]
                  [:comma :!Cz :anki]
                  [:period :!SCz :anki]
@@ -329,6 +331,7 @@
             {:des "DeepL" :rules[
                  ;[:!F#Pt :!CTOt nil {:delayed {:invoked [:!Ctab :fn] :canceled []} :params {:delay 200}}]
                  [:!F#Pt :!CTOt]
+                 [{:pkey :button13} [{:pkey :button1} {:pkey :button1} :!CTOt]]
             ]}
             ;; {:des "Mouse Pinter control" :rules[
             ;;      [:!F#Pw  {:mkey {:y -1536 :speed 1.0}}]

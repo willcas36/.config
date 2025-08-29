@@ -719,6 +719,14 @@
           "type" : "basic"
         }, {
           "from" : {
+            "pointing_button" : "button12"
+          },
+          "to" : [ {
+            "shell_command" : "/opt/homebrew/bin/yabai -m window --toggle anki"
+          } ],
+          "type" : "basic"
+        }, {
+          "from" : {
             "key_code" : "v",
             "modifiers" : {
               "mandatory" : [ "fn" ],
@@ -1756,6 +1764,23 @@
           "type" : "basic"
         }, {
           "from" : {
+            "pointing_button" : "button13"
+          },
+          "to" : [ {
+            "pointing_button" : "button1"
+          }, {
+            "pointing_button" : "button1"
+          }, {
+            "key_code" : "t",
+            "modifiers" : [ "left_command", "left_control", "left_option" ]
+          } ],
+          "conditions" : [ {
+            "type" : "frontmost_application_if",
+            "bundle_identifiers" : [ "^net\\.ankiweb\\.dtop" ]
+          } ],
+          "type" : "basic"
+        }, {
+          "from" : {
             "key_code" : "semicolon"
           },
           "to" : [ {
@@ -1857,6 +1882,19 @@
             }
           },
           "to" : [ {
+            "key_code" : "t",
+            "modifiers" : [ "left_command", "left_control", "left_option" ]
+          } ],
+          "type" : "basic"
+        }, {
+          "from" : {
+            "pointing_button" : "button13"
+          },
+          "to" : [ {
+            "pointing_button" : "button1"
+          }, {
+            "pointing_button" : "button1"
+          }, {
             "key_code" : "t",
             "modifiers" : [ "left_command", "left_control", "left_option" ]
           } ],
