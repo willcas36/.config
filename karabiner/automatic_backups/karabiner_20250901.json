@@ -1657,17 +1657,7 @@
         "description" : "Anki controls",
         "manipulators" : [ {
           "from" : {
-            "simultaneous" : [ {
-              "pointing_button" : "button6"
-            }, {
-              "pointing_button" : "button1"
-            } ],
-            "simultaneous_options" : {
-              "detect_key_down_uninterruptedly" : false,
-              "key_down_order" : "insensitive",
-              "key_up_order" : "insensitive",
-              "key_up_when" : "any"
-            }
+            "pointing_button" : "button5"
           },
           "to" : [ {
             "key_code" : "z",
@@ -1680,17 +1670,7 @@
           "type" : "basic"
         }, {
           "from" : {
-            "simultaneous" : [ {
-              "pointing_button" : "button4"
-            }, {
-              "pointing_button" : "button1"
-            } ],
-            "simultaneous_options" : {
-              "detect_key_down_uninterruptedly" : false,
-              "key_down_order" : "insensitive",
-              "key_up_order" : "insensitive",
-              "key_up_when" : "any"
-            }
+            "pointing_button" : "button9"
           },
           "to" : [ {
             "key_code" : "z",
@@ -1703,63 +1683,19 @@
           "type" : "basic"
         }, {
           "from" : {
-            "simultaneous" : [ {
-              "pointing_button" : "button6"
-            }, {
-              "pointing_button" : "button2"
-            } ],
-            "simultaneous_options" : {
-              "detect_key_down_uninterruptedly" : false,
-              "key_down_order" : "insensitive",
-              "key_up_order" : "insensitive",
-              "key_up_when" : "any"
-            }
-          },
-          "to" : [ {
-            "key_code" : "i"
-          } ],
-          "conditions" : [ {
-            "type" : "frontmost_application_if",
-            "bundle_identifiers" : [ "^net\\.ankiweb\\.dtop" ]
-          } ],
-          "type" : "basic"
-        }, {
-          "from" : {
-            "simultaneous" : [ {
-              "pointing_button" : "button4"
-            }, {
-              "pointing_button" : "button2"
-            } ],
-            "simultaneous_options" : {
-              "detect_key_down_uninterruptedly" : false,
-              "key_down_order" : "insensitive",
-              "key_up_order" : "insensitive",
-              "key_up_when" : "any"
-            }
-          },
-          "to" : [ {
-            "key_code" : "t"
-          } ],
-          "conditions" : [ {
-            "type" : "frontmost_application_if",
-            "bundle_identifiers" : [ "^net\\.ankiweb\\.dtop" ]
-          } ],
-          "type" : "basic"
-        }, {
-          "from" : {
-            "pointing_button" : "button3"
-          },
-          "to" : [ {
-            "key_code" : "escape"
-          } ],
-          "conditions" : [ {
-            "type" : "frontmost_application_if",
-            "bundle_identifiers" : [ "^net\\.ankiweb\\.dtop" ]
-          } ],
-          "type" : "basic"
-        }, {
-          "from" : {
             "pointing_button" : "button6"
+          },
+          "to" : [ {
+            "key_code" : "j"
+          } ],
+          "conditions" : [ {
+            "type" : "frontmost_application_if",
+            "bundle_identifiers" : [ "^net\\.ankiweb\\.dtop" ]
+          } ],
+          "type" : "basic"
+        }, {
+          "from" : {
+            "pointing_button" : "button8"
           },
           "to" : [ {
             "key_code" : "return_or_enter"
@@ -1774,7 +1710,7 @@
             "pointing_button" : "button4"
           },
           "to" : [ {
-            "key_code" : "j"
+            "key_code" : "k"
           } ],
           "conditions" : [ {
             "type" : "frontmost_application_if",
@@ -1783,17 +1719,43 @@
           "type" : "basic"
         }, {
           "from" : {
-            "simultaneous" : [ {
-              "pointing_button" : "button1"
-            }, {
-              "pointing_button" : "button2"
-            } ],
-            "simultaneous_options" : {
-              "detect_key_down_uninterruptedly" : false,
-              "key_down_order" : "insensitive",
-              "key_up_order" : "insensitive",
-              "key_up_when" : "any"
-            }
+            "pointing_button" : "button7"
+          },
+          "to" : [ {
+            "key_code" : "z"
+          } ],
+          "conditions" : [ {
+            "type" : "frontmost_application_if",
+            "bundle_identifiers" : [ "^net\\.ankiweb\\.dtop" ]
+          } ],
+          "type" : "basic"
+        }, {
+          "from" : {
+            "pointing_button" : "button11"
+          },
+          "to" : [ {
+            "key_code" : "i"
+          } ],
+          "conditions" : [ {
+            "type" : "frontmost_application_if",
+            "bundle_identifiers" : [ "^net\\.ankiweb\\.dtop" ]
+          } ],
+          "type" : "basic"
+        }, {
+          "from" : {
+            "pointing_button" : "button10"
+          },
+          "to" : [ {
+            "key_code" : "t"
+          } ],
+          "conditions" : [ {
+            "type" : "frontmost_application_if",
+            "bundle_identifiers" : [ "^net\\.ankiweb\\.dtop" ]
+          } ],
+          "type" : "basic"
+        }, {
+          "from" : {
+            "pointing_button" : "button3"
           },
           "to" : [ {
             "pointing_button" : "button1"
@@ -3481,13 +3443,6 @@
       "identifiers" : {
         "is_pointing_device" : true,
         "product_id" : 50489,
-        "vendor_id" : 1133
-      },
-      "ignore" : false
-    }, {
-      "identifiers" : {
-        "is_pointing_device" : true,
-        "product_id" : 50495,
         "vendor_id" : 1133
       },
       "ignore" : false

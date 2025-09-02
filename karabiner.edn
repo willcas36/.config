@@ -169,7 +169,7 @@
                 [:!F#Pc [:yabai "window --toggle gpt"]]
                 [:!F#Pe [:yabai "window --toggle mail"]]
                 [:!F#Pa [:yabai "window --toggle anki"]]
-                [{:pkey :button12} [:yabai "window --toggle anki"]]
+                [[{:pkey :button6} {:pkey :button4}] [:yabai "window --toggle anki"]]
                 [:!F#Pv [:yabai "window --toggle obsidian"]]
                 
                 [:!F#Ps [:yabai "window --toggle sticky"]]
@@ -304,19 +304,19 @@
                 [:!F#Pp :!CTOp :windsurf]
             ]}
             {:des "Anki controls" :rules[
-                 [{:pkey :button5} :!Cz :anki]
-                 [{:pkey :button9} :!SCz :anki]
-                 [{:pkey :button6} :j :anki]
-                 [{:pkey :button8} [:return_or_enter] :anki]
-                 [{:pkey :button4} :k :anki]
-                 [{:pkey :button7} :z :anki]
-                 [{:pkey :button11} :i :anki]
-                 [{:pkey :button10} :t :anki]
-                 [{:pkey :button3} [{:pkey :button1} {:pkey :button1} {:pkey :button1} :!CTOt] :anki]
-                 [{:pkey :button13} [{:pkey :button1} {:pkey :button1} :!CTOt] :anki]
-                 [:semicolon :return_or_enter :anki]
-                 [:comma :!Cz :anki]
-                 [:period :!SCz :anki]
+                :anki
+                 [[{:pkey :button6} {:pkey :button1}] :!Cz]
+                 [[{:pkey :button4} {:pkey :button1}] :!SCz]
+                 [[{:pkey :button6} {:pkey :button2}] :i]
+                 [[{:pkey :button4} {:pkey :button2}] :t]
+                 [{:pkey :button3} :escape]
+                 [{:pkey :button6} [:return_or_enter]]
+                 [{:pkey :button4} :j]
+                 [[{:pkey :button1} {:pkey :button2}] [{:pkey :button1} {:pkey :button1} {:pkey :button1} :!CTOt]]
+                 [{:pkey :button13} [{:pkey :button1} {:pkey :button1} :!CTOt]]
+                 [:semicolon :return_or_enter]
+                 [:comma :!Cz]
+                 [:period :!SCz]
             ]}
             {:des "Next, Prev Cursor intellij" :rules[
                 [:!F#Pu :!Thyphen :intellij]
