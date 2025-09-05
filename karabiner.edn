@@ -20,8 +20,9 @@
                 :music      ["^com\\.apple\\.Music"]
                 :code       ["^com\\.visualstudio\\.code\\.oss$"
                              "^com\\.microsoft\\.VSCode(Insiders)?$"
-                             "^com\\.microsoft\\.VSCode?$"]
-                :windsurf   ["com\\.exafunction\\.windsurf"]
+                             "^com\\.microsoft\\.VSCode?$"
+                             "com\\.exafunction\\.windsurf"
+                             ]
                 :terminals  ["^com\\.apple\\.Terminal$"
                              "^com\\.googlecode\\.iterm2$"]
                 :warp       ["^dev\\.warp\\.Warp-Stable$"]
@@ -43,8 +44,15 @@
     :templates {:yabai "/opt/homebrew/bin/yabai -m %s"
                 :launch-app "open -a '%s'"
                 :open "open -n '/Applications/%s.app'"}
+
+    :devices {:g305-device [{:vendor_id 1133 :product_id 50495}]}
+
     :layers {
-                :hyper-mode {:key :caps_lock :alone {:key :return_or_enter}} 
+                :hyper-mode {:key :caps_lock :alone {:key :return_or_enter}}
+                :mouse-mode1 {:key :keypad_1 :condi :g305-device :alone {:key :!Cc}}
+                :mouse-mode2 {:key :keypad_2 :condi :g305-device :alone {:key :!Cv}}
+                :mouse-mode3 {:key :keypad_3 :condi :g305-device}
+                :mouse-mode4 {:key :keypad_4 :condi :g305-device :alone {:key :!Tup_arrow}}
             }
     :simlayers {
              :launch-mode {:key :slash}
@@ -169,7 +177,7 @@
                 [:!F#Pc [:yabai "window --toggle gpt"]]
                 [:!F#Pe [:yabai "window --toggle mail"]]
                 [:!F#Pa [:yabai "window --toggle anki"]]
-                [[{:pkey :button6} {:pkey :button4}] [:yabai "window --toggle anki"]]
+                ;;[[{:pkey :button6} {:pkey :button4}] [:yabai "window --toggle anki"]]
                 [:!F#Pv [:yabai "window --toggle obsidian"]]
                 
                 [:!F#Ps [:yabai "window --toggle sticky"]]
@@ -204,9 +212,9 @@
                 [:!FO#Pspacebar [:yabai "window --toggle float --grid 11:11:1:1:7:7"]]
 
                 ;;Toggle window fullscreen, zoom
-                [:!T#Pf [:yabai "window --toggle zoom-fullscreen"]]
-                [:!O#Pa [:yabai "window --toggle zoom-parent"]]
-                [:!E#Pa [:yabai "window --toggle zoom-parent"]]
+                [:!T#Pf [:yabai "window --toggle zoom-parent"]]
+                [:!O#Pa [:yabai "window --toggle zoom-fullscreen"]]
+                [:!E#Pa [:yabai "window --toggle zoom-fullscreen"]]
 
 
                 ;;tart/stop yabai
@@ -244,7 +252,40 @@
                 [:!Cm []]
                 [:!Ch []]
             ]}
+            ;; :condi for multiple conditions
+            {:des "Mouse navigation" :rules[
+                ;;[:condi :g305-device :f1-mode :z-mode] for multiple conditions use :condi as the first element
+                [:v [:yabai "space --focus 4 "] :mouse-mode1 {:afterup [:yabai "window --focus mouse"]}]
+                [:c [:yabai "space --focus 3 "] :mouse-mode1 {:afterup [:yabai "window --focus mouse"]}]
+                [:x [:yabai "space --focus 2 "] :mouse-mode1 {:afterup [:yabai "window --focus mouse"]}]
+                [:z [:yabai "space --focus 1 "] :mouse-mode1 {:afterup [:yabai "window --focus mouse"]}]
 
+                [:v [:yabai "space --focus 8 "] :mouse-mode2 {:afterup [:yabai "window --focus mouse"]}]
+                [:c [:yabai "space --focus 7 "] :mouse-mode2 {:afterup [:yabai "window --focus mouse"]}]
+                [:x [:yabai "space --focus 6 "] :mouse-mode2 {:afterup [:yabai "window --focus mouse"]}]
+                [:z [:yabai "space --focus 5 "] :mouse-mode2 {:afterup [:yabai "window --focus mouse"]}]
+
+                [:b [:yabai "space --focus 10 "] :mouse-mode1 {:afterup [:yabai "window --focus mouse"]}]
+                [:w [:yabai "space --focus 11 "] :mouse-mode1 {:afterup [:yabai "window --focus mouse"]}]
+                [:e [:yabai "space --focus 12 "] :mouse-mode1 {:afterup [:yabai "window --focus mouse"]}]
+
+                [:r [:launch-app "Windows App"] :mouse-mode1]
+
+                [:s [:yabai "window --focus west"] :mouse-mode1]
+                [:d [:yabai "window --focus east"] :mouse-mode1]
+                [:f [:yabai "window --focus stack.recent"] :mouse-mode1]
+                [:a [:yabai "window --toggle zoom-fullscreen"] :mouse-mode1]
+                ;; NAVIGATION TABS
+                [:w :!SCopen_bracket :mouse-mode2]
+                [:e :!SCclose_bracket :mouse-mode2]
+                [:q :!Tu [:code :mouse-mode2]]
+                [:r :!CTOp [:code :mouse-mode2]]
+            ]}
+
+            {:des "Toggle caps_lock by pressing left_shift then right_shift" :rules[
+               [:!S#Pright_shift :caps_lock]
+               [:!R#Pleft_shift :caps_lock]
+            ]}
             {:des "Capslock to Hyper, Return if alone" :rules[
                  [:##caps_lock :fn nil {:alone :return_or_enter}]
             ]}
@@ -270,10 +311,6 @@
                 [:comma :display_brightness_decrement]
                 [:period :display_brightness_increment]
             ]}
-            {:des "Toggle caps_lock by pressing left_shift then right_shift" :rules[
-                [:!S#Pright_shift :caps_lock]
-                [:!R#Pleft_shift :caps_lock]
-            ]}
             {:des "Directional Keys" :rules[
                  [:!F##j :up_arrow]
                  [:!F##k :left_arrow]
@@ -298,10 +335,6 @@
             {:des "Next, Prev Cursor VsCode" :rules[
                 [:!F#Pu :!Tu :code]
                 [:!F#Pp :!CTOp :code]
-            ]}
-            {:des "Next, Prev Cursor Windsurf" :rules[
-                [:!F#Pu :!Tu :windsurf]
-                [:!F#Pp :!CTOp :windsurf]
             ]}
             {:des "Anki controls" :rules[
                 :anki
