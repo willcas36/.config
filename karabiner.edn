@@ -260,13 +260,27 @@
                 [:x [:yabai "space --focus 2 "] :mouse-mode1 {:afterup [:yabai "window --focus mouse"]}]
                 [:z [:yabai "space --focus 1 "] :mouse-mode1 {:afterup [:yabai "window --focus mouse"]}]
 
+                [:!Sv [:yabai "window --space 4"] :mouse-mode1]
+                [:!Sc [:yabai "window --space 3"] :mouse-mode1]
+                [:!Sx [:yabai "window --space 2"] :mouse-mode1]
+                [:!Sz [:yabai "window --space 1"] :mouse-mode1]
+
+
                 [:v [:yabai "space --focus 8 "] :mouse-mode2 {:afterup [:yabai "window --focus mouse"]}]
                 [:c [:yabai "space --focus 7 "] :mouse-mode2 {:afterup [:yabai "window --focus mouse"]}]
                 [:x [:yabai "space --focus 6 "] :mouse-mode2 {:afterup [:yabai "window --focus mouse"]}]
                 [:z [:yabai "space --focus 5 "] :mouse-mode2 {:afterup [:yabai "window --focus mouse"]}]
 
+                [:!Sv [:yabai "window --space 8"] :mouse-mode2]
+                [:!Sc [:yabai "window --space 7"] :mouse-mode2]
+                [:!Sx [:yabai "window --space 6"] :mouse-mode2]
+                [:!Sz [:yabai "window --space 5"] :mouse-mode2]
+
+
                 [:b [:yabai "space --focus 10 "] :mouse-mode1 {:afterup [:yabai "window --focus mouse"]}]
+                [:!Sb [:yabai "window --space 10"] :mouse-mode1]
                 [:w [:yabai "space --focus 11 "] :mouse-mode1 {:afterup [:yabai "window --focus mouse"]}]
+                [:!Sw [:yabai "window --space 11"] :mouse-mode1]
                 [:e [:yabai "space --focus 12 "] :mouse-mode1 {:afterup [:yabai "window --focus mouse"]}]
 
                 [:r [:launch-app "Windows App"] :mouse-mode1]

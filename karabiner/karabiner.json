@@ -1225,6 +1225,70 @@
           } ],
           "type" : "basic"
         }, {
+          "from" : {
+            "key_code" : "v",
+            "modifiers" : {
+              "mandatory" : [ "left_shift" ]
+            }
+          },
+          "to" : [ {
+            "shell_command" : "/opt/homebrew/bin/yabai -m window --space 4"
+          } ],
+          "conditions" : [ {
+            "name" : "mouse-mode1",
+            "value" : 1,
+            "type" : "variable_if"
+          } ],
+          "type" : "basic"
+        }, {
+          "from" : {
+            "key_code" : "c",
+            "modifiers" : {
+              "mandatory" : [ "left_shift" ]
+            }
+          },
+          "to" : [ {
+            "shell_command" : "/opt/homebrew/bin/yabai -m window --space 3"
+          } ],
+          "conditions" : [ {
+            "name" : "mouse-mode1",
+            "value" : 1,
+            "type" : "variable_if"
+          } ],
+          "type" : "basic"
+        }, {
+          "from" : {
+            "key_code" : "x",
+            "modifiers" : {
+              "mandatory" : [ "left_shift" ]
+            }
+          },
+          "to" : [ {
+            "shell_command" : "/opt/homebrew/bin/yabai -m window --space 2"
+          } ],
+          "conditions" : [ {
+            "name" : "mouse-mode1",
+            "value" : 1,
+            "type" : "variable_if"
+          } ],
+          "type" : "basic"
+        }, {
+          "from" : {
+            "key_code" : "z",
+            "modifiers" : {
+              "mandatory" : [ "left_shift" ]
+            }
+          },
+          "to" : [ {
+            "shell_command" : "/opt/homebrew/bin/yabai -m window --space 1"
+          } ],
+          "conditions" : [ {
+            "name" : "mouse-mode1",
+            "value" : 1,
+            "type" : "variable_if"
+          } ],
+          "type" : "basic"
+        }, {
           "to_after_key_up" : [ {
             "shell_command" : "/opt/homebrew/bin/yabai -m window --focus mouse"
           } ],
@@ -1289,6 +1353,70 @@
           } ],
           "type" : "basic"
         }, {
+          "from" : {
+            "key_code" : "v",
+            "modifiers" : {
+              "mandatory" : [ "left_shift" ]
+            }
+          },
+          "to" : [ {
+            "shell_command" : "/opt/homebrew/bin/yabai -m window --space 8"
+          } ],
+          "conditions" : [ {
+            "name" : "mouse-mode2",
+            "value" : 1,
+            "type" : "variable_if"
+          } ],
+          "type" : "basic"
+        }, {
+          "from" : {
+            "key_code" : "c",
+            "modifiers" : {
+              "mandatory" : [ "left_shift" ]
+            }
+          },
+          "to" : [ {
+            "shell_command" : "/opt/homebrew/bin/yabai -m window --space 7"
+          } ],
+          "conditions" : [ {
+            "name" : "mouse-mode2",
+            "value" : 1,
+            "type" : "variable_if"
+          } ],
+          "type" : "basic"
+        }, {
+          "from" : {
+            "key_code" : "x",
+            "modifiers" : {
+              "mandatory" : [ "left_shift" ]
+            }
+          },
+          "to" : [ {
+            "shell_command" : "/opt/homebrew/bin/yabai -m window --space 6"
+          } ],
+          "conditions" : [ {
+            "name" : "mouse-mode2",
+            "value" : 1,
+            "type" : "variable_if"
+          } ],
+          "type" : "basic"
+        }, {
+          "from" : {
+            "key_code" : "z",
+            "modifiers" : {
+              "mandatory" : [ "left_shift" ]
+            }
+          },
+          "to" : [ {
+            "shell_command" : "/opt/homebrew/bin/yabai -m window --space 5"
+          } ],
+          "conditions" : [ {
+            "name" : "mouse-mode2",
+            "value" : 1,
+            "type" : "variable_if"
+          } ],
+          "type" : "basic"
+        }, {
           "to_after_key_up" : [ {
             "shell_command" : "/opt/homebrew/bin/yabai -m window --focus mouse"
           } ],
@@ -1305,6 +1433,22 @@
           } ],
           "type" : "basic"
         }, {
+          "from" : {
+            "key_code" : "b",
+            "modifiers" : {
+              "mandatory" : [ "left_shift" ]
+            }
+          },
+          "to" : [ {
+            "shell_command" : "/opt/homebrew/bin/yabai -m window --space 10"
+          } ],
+          "conditions" : [ {
+            "name" : "mouse-mode1",
+            "value" : 1,
+            "type" : "variable_if"
+          } ],
+          "type" : "basic"
+        }, {
           "to_after_key_up" : [ {
             "shell_command" : "/opt/homebrew/bin/yabai -m window --focus mouse"
           } ],
@@ -1313,6 +1457,22 @@
           },
           "to" : [ {
             "shell_command" : "/opt/homebrew/bin/yabai -m space --focus 11 "
+          } ],
+          "conditions" : [ {
+            "name" : "mouse-mode1",
+            "value" : 1,
+            "type" : "variable_if"
+          } ],
+          "type" : "basic"
+        }, {
+          "from" : {
+            "key_code" : "w",
+            "modifiers" : {
+              "mandatory" : [ "left_shift" ]
+            }
+          },
+          "to" : [ {
+            "shell_command" : "/opt/homebrew/bin/yabai -m window --space 11"
           } ],
           "conditions" : [ {
             "name" : "mouse-mode1",
