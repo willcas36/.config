@@ -145,9 +145,9 @@
                 ;; [:!FO#Po [:yabai "window --display 3"] nil {:afterup [:yabai "display --focus 3"]}]
 
                 ;; SIP Deactivated
-                [:!FO#Pu [:yabai "window --display 1"]]
-                [:!FO#Pi [:yabai "window --display 2"]]
-                [:!FO#Po [:yabai "window --display 3"]]
+                ;;[:!FO#Pu [:yabai "window --display 1"]]
+                ;;[:!FO#Pi [:yabai "window --display 2"]]
+                ;;[:!FO#Po [:yabai "window --display 3"]]
                 
                 ;;Send window to space
                 [:!FO#Pm [:yabai "window --space 1"]]
@@ -163,6 +163,8 @@
 
                 [:!FO#Pb [:yabai "window --space 9"]]
                 [:!FO#Pn [:yabai "window --space 10"]]
+                [:!FO#Pi [:yabai "window --space 11"]]
+                [:!FO#Po [:yabai "window --space 12"]]
 
 
                 ;; Scratchpad

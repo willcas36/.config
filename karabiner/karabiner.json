@@ -490,42 +490,6 @@
           "type" : "basic"
         }, {
           "from" : {
-            "key_code" : "u",
-            "modifiers" : {
-              "mandatory" : [ "left_option", "fn" ],
-              "optional" : [ "caps_lock" ]
-            }
-          },
-          "to" : [ {
-            "shell_command" : "/opt/homebrew/bin/yabai -m window --display 1"
-          } ],
-          "type" : "basic"
-        }, {
-          "from" : {
-            "key_code" : "i",
-            "modifiers" : {
-              "mandatory" : [ "left_option", "fn" ],
-              "optional" : [ "caps_lock" ]
-            }
-          },
-          "to" : [ {
-            "shell_command" : "/opt/homebrew/bin/yabai -m window --display 2"
-          } ],
-          "type" : "basic"
-        }, {
-          "from" : {
-            "key_code" : "o",
-            "modifiers" : {
-              "mandatory" : [ "left_option", "fn" ],
-              "optional" : [ "caps_lock" ]
-            }
-          },
-          "to" : [ {
-            "shell_command" : "/opt/homebrew/bin/yabai -m window --display 3"
-          } ],
-          "type" : "basic"
-        }, {
-          "from" : {
             "key_code" : "m",
             "modifiers" : {
               "mandatory" : [ "left_option", "fn" ],
@@ -642,6 +606,30 @@
           },
           "to" : [ {
             "shell_command" : "/opt/homebrew/bin/yabai -m window --space 10"
+          } ],
+          "type" : "basic"
+        }, {
+          "from" : {
+            "key_code" : "i",
+            "modifiers" : {
+              "mandatory" : [ "left_option", "fn" ],
+              "optional" : [ "caps_lock" ]
+            }
+          },
+          "to" : [ {
+            "shell_command" : "/opt/homebrew/bin/yabai -m window --space 11"
+          } ],
+          "type" : "basic"
+        }, {
+          "from" : {
+            "key_code" : "o",
+            "modifiers" : {
+              "mandatory" : [ "left_option", "fn" ],
+              "optional" : [ "caps_lock" ]
+            }
+          },
+          "to" : [ {
+            "shell_command" : "/opt/homebrew/bin/yabai -m window --space 12"
           } ],
           "type" : "basic"
         }, {
