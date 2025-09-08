@@ -340,10 +340,10 @@
             ]}
             {:des "Scroll control" :rules[
                 
-                 [:!F#P9 {:mkey {:vwheel 30 :speed 2}}]
-                 [:!F#P8 {:mkey {:vwheel -30 :speed 2}}]
-                 [:!O#P9 {:mkey {:hwheel -20 :speed 2}}]
-                 [:!O#P8 {:mkey {:hwheel 20 :speed 2}}]
+                 [:!F#CP9 {:mkey {:vwheel 30 :speed 2}}]
+                 [:!F#CP8 {:mkey {:vwheel -30 :speed 2}}]
+                ;;  [:!O#CP9 {:mkey {:hwheel -20 :speed 2}}]
+                ;;  [:!O#CP8 {:mkey {:hwheel 20 :speed 2}}]
             ]}
 
 
