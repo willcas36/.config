@@ -634,18 +634,6 @@
           "type" : "basic"
         }, {
           "from" : {
-            "key_code" : "h",
-            "modifiers" : {
-              "mandatory" : [ "fn" ],
-              "optional" : [ "caps_lock" ]
-            }
-          },
-          "to" : [ {
-            "shell_command" : "/opt/homebrew/bin/yabai -m window --scratchpad"
-          } ],
-          "type" : "basic"
-        }, {
-          "from" : {
             "key_code" : "r",
             "modifiers" : {
               "mandatory" : [ "fn" ],
@@ -2074,6 +2062,23 @@
           "to" : [ {
             "key_code" : "p",
             "modifiers" : [ "left_command", "left_control", "left_option" ]
+          } ],
+          "conditions" : [ {
+            "type" : "frontmost_application_if",
+            "bundle_identifiers" : [ "^com\\.visualstudio\\.code\\.oss$", "^com\\.microsoft\\.VSCode(Insiders)?$", "^com\\.microsoft\\.VSCode?$", "com\\.exafunction\\.windsurf" ]
+          } ],
+          "type" : "basic"
+        }, {
+          "from" : {
+            "key_code" : "h",
+            "modifiers" : {
+              "mandatory" : [ "fn" ],
+              "optional" : [ "caps_lock" ]
+            }
+          },
+          "to" : [ {
+            "key_code" : "tab",
+            "modifiers" : [ "left_control" ]
           } ],
           "conditions" : [ {
             "type" : "frontmost_application_if",

@@ -168,7 +168,7 @@
 
 
                 ;; Scratchpad
-                [:!F#Ph [:yabai "window --scratchpad"]]
+                ;;[:!F#Ph [:yabai "window --scratchpad"]]
                 [:!F#Pr [:yabai "window --toggle redis"]]
                 [:!F#Pf [:yabai "window --toggle finder"]]
                 [:!F#Pw [:yabai "window --toggle musica"]]
@@ -349,8 +349,10 @@
 
             ;; ===== APPS =====
             {:des "Next, Prev Cursor VsCode" :rules[
-                [:!F#Pu :!Tu :code]
-                [:!F#Pp :!CTOp :code]
+                :code
+                [:!F#Pu :!Tu]
+                [:!F#Pp :!CTOp]
+                [:!F#Ph :!Ttab]
             ]}
             {:des "Anki controls" :rules[
                 :anki
