@@ -65,6 +65,34 @@
             } ],
             "type" : "device_if"
           } ]
+        }, {
+          "type" : "basic",
+          "to" : [ {
+            "set_variable" : {
+              "name" : "mouse-mode4",
+              "value" : 1
+            }
+          } ],
+          "from" : {
+            "key_code" : "keypad_4"
+          },
+          "to_after_key_up" : [ {
+            "set_variable" : {
+              "name" : "mouse-mode4",
+              "value" : 0
+            }
+          } ],
+          "to_if_alone" : [ {
+            "key_code" : "up_arrow",
+            "modifiers" : [ "left_control" ]
+          } ],
+          "conditions" : [ {
+            "identifiers" : [ {
+              "vendor_id" : 1133,
+              "product_id" : 50495
+            } ],
+            "type" : "device_if"
+          } ]
         } ]
       }, {
         "description" : "Yabai keybinds",
@@ -1435,7 +1463,7 @@
             "shell_command" : "/opt/homebrew/bin/yabai -m space --focus 11 "
           } ],
           "conditions" : [ {
-            "name" : "mouse-mode1",
+            "name" : "mouse-mode2",
             "value" : 1,
             "type" : "variable_if"
           } ],
@@ -1451,7 +1479,7 @@
             "shell_command" : "/opt/homebrew/bin/yabai -m window --space 11"
           } ],
           "conditions" : [ {
-            "name" : "mouse-mode1",
+            "name" : "mouse-mode2",
             "value" : 1,
             "type" : "variable_if"
           } ],
@@ -1467,20 +1495,7 @@
             "shell_command" : "/opt/homebrew/bin/yabai -m space --focus 12 "
           } ],
           "conditions" : [ {
-            "name" : "mouse-mode1",
-            "value" : 1,
-            "type" : "variable_if"
-          } ],
-          "type" : "basic"
-        }, {
-          "from" : {
-            "key_code" : "r"
-          },
-          "to" : [ {
-            "shell_command" : "open -a 'Windows App'"
-          } ],
-          "conditions" : [ {
-            "name" : "mouse-mode1",
+            "name" : "mouse-mode2",
             "value" : 1,
             "type" : "variable_if"
           } ],
@@ -1546,7 +1561,7 @@
             "modifiers" : [ "left_command", "left_shift" ]
           } ],
           "conditions" : [ {
-            "name" : "mouse-mode2",
+            "name" : "mouse-mode1",
             "value" : 1,
             "type" : "variable_if"
           } ],
@@ -1560,7 +1575,7 @@
             "modifiers" : [ "left_command", "left_shift" ]
           } ],
           "conditions" : [ {
-            "name" : "mouse-mode2",
+            "name" : "mouse-mode1",
             "value" : 1,
             "type" : "variable_if"
           } ],
@@ -1577,7 +1592,7 @@
             "type" : "frontmost_application_if",
             "bundle_identifiers" : [ "^com\\.visualstudio\\.code\\.oss$", "^com\\.microsoft\\.VSCode(Insiders)?$", "^com\\.microsoft\\.VSCode?$", "com\\.exafunction\\.windsurf" ]
           }, {
-            "name" : "mouse-mode2",
+            "name" : "mouse-mode1",
             "value" : 1,
             "type" : "variable_if"
           } ],
@@ -1594,7 +1609,33 @@
             "type" : "frontmost_application_if",
             "bundle_identifiers" : [ "^com\\.visualstudio\\.code\\.oss$", "^com\\.microsoft\\.VSCode(Insiders)?$", "^com\\.microsoft\\.VSCode?$", "com\\.exafunction\\.windsurf" ]
           }, {
-            "name" : "mouse-mode2",
+            "name" : "mouse-mode1",
+            "value" : 1,
+            "type" : "variable_if"
+          } ],
+          "type" : "basic"
+        }, {
+          "from" : {
+            "key_code" : "s"
+          },
+          "to" : [ {
+            "shell_command" : "/opt/homebrew/bin/yabai -m space --focus prev"
+          } ],
+          "conditions" : [ {
+            "name" : "mouse-mode4",
+            "value" : 1,
+            "type" : "variable_if"
+          } ],
+          "type" : "basic"
+        }, {
+          "from" : {
+            "key_code" : "d"
+          },
+          "to" : [ {
+            "shell_command" : "/opt/homebrew/bin/yabai -m space --focus next"
+          } ],
+          "conditions" : [ {
+            "name" : "mouse-mode4",
             "value" : 1,
             "type" : "variable_if"
           } ],

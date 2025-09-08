@@ -51,7 +51,7 @@
                 :hyper-mode {:key :caps_lock :alone {:key :return_or_enter}}
                 :mouse-mode1 {:key :keypad_1 :condi :g305-device :alone {:key :!Cc}}
                 :mouse-mode2 {:key :keypad_2 :condi :g305-device :alone {:key :!Cv}}
-                :mouse-mode3 {:key :keypad_3 :condi :g305-device}
+                :mouse-mode3 {:key :keypad_3 :condi :g305-device :alone {:pkey :button3}}
                 :mouse-mode4 {:key :keypad_4 :condi :g305-device :alone {:key :!Tup_arrow}}
             }
     :simlayers {
@@ -281,21 +281,25 @@
 
                 [:b [:yabai "space --focus 10 "] :mouse-mode1 {:afterup [:yabai "window --focus mouse"]}]
                 [:!Sb [:yabai "window --space 10"] :mouse-mode1]
-                [:w [:yabai "space --focus 11 "] :mouse-mode1 {:afterup [:yabai "window --focus mouse"]}]
-                [:!Sw [:yabai "window --space 11"] :mouse-mode1]
-                [:e [:yabai "space --focus 12 "] :mouse-mode1 {:afterup [:yabai "window --focus mouse"]}]
+                [:w [:yabai "space --focus 11 "] :mouse-mode2 {:afterup [:yabai "window --focus mouse"]}]
+                [:!Sw [:yabai "window --space 11"] :mouse-mode2]
+                [:e [:yabai "space --focus 12 "] :mouse-mode2 {:afterup [:yabai "window --focus mouse"]}]
 
-                [:r [:launch-app "Windows App"] :mouse-mode1]
-
+                ;;[:r [:launch-app "Windows App"] :mouse-mode1]3
+33
                 [:s [:yabai "window --focus west"] :mouse-mode1]
                 [:d [:yabai "window --focus east"] :mouse-mode1]
                 [:f [:yabai "window --focus stack.recent"] :mouse-mode1]
                 [:a [:yabai "window --toggle zoom-fullscreen"] :mouse-mode1]
                 ;; NAVIGATION TABS
-                [:w :!SCopen_bracket :mouse-mode2]
-                [:e :!SCclose_bracket :mouse-mode2]
-                [:q :!Tu [:code :mouse-mode2]]
-                [:r :!CTOp [:code :mouse-mode2]]
+                [:w :!SCopen_bracket :mouse-mode1]
+                [:e :!SCclose_bracket :mouse-mode1]
+                [:q :!Tu [:code :mouse-mode1]]
+                [:r :!CTOp [:code :mouse-mode1]]
+
+                ;; NAVIGATION SPACES
+                [:s [:yabai "space --focus prev"] :mouse-mode4]
+                [:d [:yabai "space --focus next"] :mouse-mode4]
             ]}
 
             {:des "Toggle caps_lock by pressing left_shift then right_shift" :rules[

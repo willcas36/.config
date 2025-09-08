@@ -94,7 +94,7 @@ yabai -m rule --add app="Safari" title="Cuentas de Google" manage=off
 yabai -m rule --add app="Duplicación del iPhone" manage=off
 yabai -m rule --add app="Discord" manage=off
 yabai -m rule --add app="iTerm" scratchpad="iterm" grid=12:12:6:2:6:8
-yabai -m rule --add app="Warp" scratchpad="warp" grid=12:12:6:2:6:8
+yabai -m rule --add app="Warp" scratchpad="warp" grid=12:12:2:2:8:8
 yabai -m rule --add app="Música" scratchpad="musica" grid=12:12:2:2:8:9
 yabai -m rule --add app="Finder$" scratchpad="finder" grid=12:12:2:2:8:8
 yabai -m rule --add app="ChatGPT$" scratchpad="gpt" grid=12:12:2:2:8:9
