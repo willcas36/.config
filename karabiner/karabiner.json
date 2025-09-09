@@ -13,34 +13,6 @@
           "type" : "basic",
           "to" : [ {
             "set_variable" : {
-              "name" : "mouse-mode1",
-              "value" : 1
-            }
-          } ],
-          "from" : {
-            "key_code" : "keypad_1"
-          },
-          "to_after_key_up" : [ {
-            "set_variable" : {
-              "name" : "mouse-mode1",
-              "value" : 0
-            }
-          } ],
-          "to_if_alone" : [ {
-            "key_code" : "c",
-            "modifiers" : [ "left_command" ]
-          } ],
-          "conditions" : [ {
-            "identifiers" : [ {
-              "vendor_id" : 1133,
-              "product_id" : 50495
-            } ],
-            "type" : "device_if"
-          } ]
-        }, {
-          "type" : "basic",
-          "to" : [ {
-            "set_variable" : {
               "name" : "mouse-mode2",
               "value" : 1
             }
@@ -56,6 +28,34 @@
           } ],
           "to_if_alone" : [ {
             "key_code" : "v",
+            "modifiers" : [ "left_command" ]
+          } ],
+          "conditions" : [ {
+            "identifiers" : [ {
+              "vendor_id" : 1133,
+              "product_id" : 50495
+            } ],
+            "type" : "device_if"
+          } ]
+        }, {
+          "type" : "basic",
+          "to" : [ {
+            "set_variable" : {
+              "name" : "mouse-mode1",
+              "value" : 1
+            }
+          } ],
+          "from" : {
+            "key_code" : "keypad_1"
+          },
+          "to_after_key_up" : [ {
+            "set_variable" : {
+              "name" : "mouse-mode1",
+              "value" : 0
+            }
+          } ],
+          "to_if_alone" : [ {
+            "key_code" : "c",
             "modifiers" : [ "left_command" ]
           } ],
           "conditions" : [ {
@@ -278,18 +278,6 @@
           "type" : "basic"
         }, {
           "from" : {
-            "key_code" : "u",
-            "modifiers" : {
-              "mandatory" : [ "left_option" ],
-              "optional" : [ "caps_lock" ]
-            }
-          },
-          "to" : [ {
-            "shell_command" : "open -a 'Windows App'"
-          } ],
-          "type" : "basic"
-        }, {
-          "from" : {
             "key_code" : "semicolon",
             "modifiers" : {
               "mandatory" : [ "left_option" ],
@@ -369,31 +357,7 @@
             }
           },
           "to" : [ {
-            "shell_command" : "/opt/homebrew/bin/yabai -m display --focus 1"
-          } ],
-          "type" : "basic"
-        }, {
-          "from" : {
-            "key_code" : "i",
-            "modifiers" : {
-              "mandatory" : [ "left_option" ],
-              "optional" : [ "caps_lock" ]
-            }
-          },
-          "to" : [ {
-            "shell_command" : "/opt/homebrew/bin/yabai -m display --focus 2"
-          } ],
-          "type" : "basic"
-        }, {
-          "from" : {
-            "key_code" : "o",
-            "modifiers" : {
-              "mandatory" : [ "left_option" ],
-              "optional" : [ "caps_lock" ]
-            }
-          },
-          "to" : [ {
-            "shell_command" : "/opt/homebrew/bin/yabai -m display --focus 3"
+            "shell_command" : "/opt/homebrew/bin/yabai -m display --focus recent"
           } ],
           "type" : "basic"
         }, {
@@ -1175,7 +1139,7 @@
             "shell_command" : "/opt/homebrew/bin/yabai -m space --focus 4 "
           } ],
           "conditions" : [ {
-            "name" : "mouse-mode1",
+            "name" : "mouse-mode2",
             "value" : 1,
             "type" : "variable_if"
           } ],
@@ -1191,7 +1155,7 @@
             "shell_command" : "/opt/homebrew/bin/yabai -m space --focus 3 "
           } ],
           "conditions" : [ {
-            "name" : "mouse-mode1",
+            "name" : "mouse-mode2",
             "value" : 1,
             "type" : "variable_if"
           } ],
@@ -1207,7 +1171,7 @@
             "shell_command" : "/opt/homebrew/bin/yabai -m space --focus 2 "
           } ],
           "conditions" : [ {
-            "name" : "mouse-mode1",
+            "name" : "mouse-mode2",
             "value" : 1,
             "type" : "variable_if"
           } ],
@@ -1223,7 +1187,7 @@
             "shell_command" : "/opt/homebrew/bin/yabai -m space --focus 1 "
           } ],
           "conditions" : [ {
-            "name" : "mouse-mode1",
+            "name" : "mouse-mode2",
             "value" : 1,
             "type" : "variable_if"
           } ],
@@ -1239,7 +1203,7 @@
             "shell_command" : "/opt/homebrew/bin/yabai -m window --space 4"
           } ],
           "conditions" : [ {
-            "name" : "mouse-mode1",
+            "name" : "mouse-mode2",
             "value" : 1,
             "type" : "variable_if"
           } ],
@@ -1255,7 +1219,7 @@
             "shell_command" : "/opt/homebrew/bin/yabai -m window --space 3"
           } ],
           "conditions" : [ {
-            "name" : "mouse-mode1",
+            "name" : "mouse-mode2",
             "value" : 1,
             "type" : "variable_if"
           } ],
@@ -1271,7 +1235,7 @@
             "shell_command" : "/opt/homebrew/bin/yabai -m window --space 2"
           } ],
           "conditions" : [ {
-            "name" : "mouse-mode1",
+            "name" : "mouse-mode2",
             "value" : 1,
             "type" : "variable_if"
           } ],
@@ -1287,7 +1251,7 @@
             "shell_command" : "/opt/homebrew/bin/yabai -m window --space 1"
           } ],
           "conditions" : [ {
-            "name" : "mouse-mode1",
+            "name" : "mouse-mode2",
             "value" : 1,
             "type" : "variable_if"
           } ],
@@ -1303,7 +1267,7 @@
             "shell_command" : "/opt/homebrew/bin/yabai -m space --focus 8 "
           } ],
           "conditions" : [ {
-            "name" : "mouse-mode2",
+            "name" : "mouse-mode1",
             "value" : 1,
             "type" : "variable_if"
           } ],
@@ -1319,7 +1283,7 @@
             "shell_command" : "/opt/homebrew/bin/yabai -m space --focus 7 "
           } ],
           "conditions" : [ {
-            "name" : "mouse-mode2",
+            "name" : "mouse-mode1",
             "value" : 1,
             "type" : "variable_if"
           } ],
@@ -1335,7 +1299,7 @@
             "shell_command" : "/opt/homebrew/bin/yabai -m space --focus 6 "
           } ],
           "conditions" : [ {
-            "name" : "mouse-mode2",
+            "name" : "mouse-mode1",
             "value" : 1,
             "type" : "variable_if"
           } ],
@@ -1351,7 +1315,7 @@
             "shell_command" : "/opt/homebrew/bin/yabai -m space --focus 5 "
           } ],
           "conditions" : [ {
-            "name" : "mouse-mode2",
+            "name" : "mouse-mode1",
             "value" : 1,
             "type" : "variable_if"
           } ],
@@ -1367,7 +1331,7 @@
             "shell_command" : "/opt/homebrew/bin/yabai -m window --space 8"
           } ],
           "conditions" : [ {
-            "name" : "mouse-mode2",
+            "name" : "mouse-mode1",
             "value" : 1,
             "type" : "variable_if"
           } ],
@@ -1383,7 +1347,7 @@
             "shell_command" : "/opt/homebrew/bin/yabai -m window --space 7"
           } ],
           "conditions" : [ {
-            "name" : "mouse-mode2",
+            "name" : "mouse-mode1",
             "value" : 1,
             "type" : "variable_if"
           } ],
@@ -1399,7 +1363,7 @@
             "shell_command" : "/opt/homebrew/bin/yabai -m window --space 6"
           } ],
           "conditions" : [ {
-            "name" : "mouse-mode2",
+            "name" : "mouse-mode1",
             "value" : 1,
             "type" : "variable_if"
           } ],
@@ -1415,7 +1379,7 @@
             "shell_command" : "/opt/homebrew/bin/yabai -m window --space 5"
           } ],
           "conditions" : [ {
-            "name" : "mouse-mode2",
+            "name" : "mouse-mode1",
             "value" : 1,
             "type" : "variable_if"
           } ],
@@ -1431,7 +1395,7 @@
             "shell_command" : "/opt/homebrew/bin/yabai -m space --focus 10 "
           } ],
           "conditions" : [ {
-            "name" : "mouse-mode1",
+            "name" : "mouse-mode2",
             "value" : 1,
             "type" : "variable_if"
           } ],
@@ -1447,7 +1411,7 @@
             "shell_command" : "/opt/homebrew/bin/yabai -m window --space 10"
           } ],
           "conditions" : [ {
-            "name" : "mouse-mode1",
+            "name" : "mouse-mode2",
             "value" : 1,
             "type" : "variable_if"
           } ],
@@ -1463,7 +1427,7 @@
             "shell_command" : "/opt/homebrew/bin/yabai -m space --focus 11 "
           } ],
           "conditions" : [ {
-            "name" : "mouse-mode2",
+            "name" : "mouse-mode1",
             "value" : 1,
             "type" : "variable_if"
           } ],
@@ -1479,7 +1443,7 @@
             "shell_command" : "/opt/homebrew/bin/yabai -m window --space 11"
           } ],
           "conditions" : [ {
-            "name" : "mouse-mode2",
+            "name" : "mouse-mode1",
             "value" : 1,
             "type" : "variable_if"
           } ],
@@ -1493,6 +1457,58 @@
           },
           "to" : [ {
             "shell_command" : "/opt/homebrew/bin/yabai -m space --focus 12 "
+          } ],
+          "conditions" : [ {
+            "name" : "mouse-mode1",
+            "value" : 1,
+            "type" : "variable_if"
+          } ],
+          "type" : "basic"
+        }, {
+          "from" : {
+            "key_code" : "s"
+          },
+          "to" : [ {
+            "shell_command" : "/opt/homebrew/bin/yabai -m window --focus west"
+          } ],
+          "conditions" : [ {
+            "name" : "mouse-mode2",
+            "value" : 1,
+            "type" : "variable_if"
+          } ],
+          "type" : "basic"
+        }, {
+          "from" : {
+            "key_code" : "d"
+          },
+          "to" : [ {
+            "shell_command" : "/opt/homebrew/bin/yabai -m window --focus east"
+          } ],
+          "conditions" : [ {
+            "name" : "mouse-mode2",
+            "value" : 1,
+            "type" : "variable_if"
+          } ],
+          "type" : "basic"
+        }, {
+          "from" : {
+            "key_code" : "f"
+          },
+          "to" : [ {
+            "shell_command" : "/opt/homebrew/bin/yabai -m window --focus stack.recent"
+          } ],
+          "conditions" : [ {
+            "name" : "mouse-mode2",
+            "value" : 1,
+            "type" : "variable_if"
+          } ],
+          "type" : "basic"
+        }, {
+          "from" : {
+            "key_code" : "a"
+          },
+          "to" : [ {
+            "shell_command" : "/opt/homebrew/bin/yabai -m window --toggle zoom-fullscreen"
           } ],
           "conditions" : [ {
             "name" : "mouse-mode2",
@@ -1561,7 +1577,7 @@
             "modifiers" : [ "left_command", "left_shift" ]
           } ],
           "conditions" : [ {
-            "name" : "mouse-mode1",
+            "name" : "mouse-mode2",
             "value" : 1,
             "type" : "variable_if"
           } ],
@@ -1575,7 +1591,7 @@
             "modifiers" : [ "left_command", "left_shift" ]
           } ],
           "conditions" : [ {
-            "name" : "mouse-mode1",
+            "name" : "mouse-mode2",
             "value" : 1,
             "type" : "variable_if"
           } ],
@@ -1592,7 +1608,7 @@
             "type" : "frontmost_application_if",
             "bundle_identifiers" : [ "^com\\.visualstudio\\.code\\.oss$", "^com\\.microsoft\\.VSCode(Insiders)?$", "^com\\.microsoft\\.VSCode?$", "com\\.exafunction\\.windsurf" ]
           }, {
-            "name" : "mouse-mode1",
+            "name" : "mouse-mode2",
             "value" : 1,
             "type" : "variable_if"
           } ],
@@ -1609,7 +1625,7 @@
             "type" : "frontmost_application_if",
             "bundle_identifiers" : [ "^com\\.visualstudio\\.code\\.oss$", "^com\\.microsoft\\.VSCode(Insiders)?$", "^com\\.microsoft\\.VSCode?$", "com\\.exafunction\\.windsurf" ]
           }, {
-            "name" : "mouse-mode1",
+            "name" : "mouse-mode2",
             "value" : 1,
             "type" : "variable_if"
           } ],
