@@ -304,6 +304,7 @@
                 ;; NAVIGATION SPACES
                 [:s [:yabai "space --focus prev"] :mouse-mode4]
                 [:d [:yabai "space --focus next"] :mouse-mode4]
+
             ]}
 
             {:des "Toggle caps_lock by pressing left_shift then right_shift" :rules[
@@ -324,6 +325,10 @@
                 [:!F#Pm :play_or_pause]
                 [:!F#Pcomma :rewind]
                 [:!F#Pperiod :fast_forward]
+                [:#Pv :play_or_pause :mouse-mode4]
+                [:#Px :rewind :mouse-mode4]
+                [:#Pc :fast_forward :mouse-mode4]
+
             ]}
             {:des "Volume control" :rules[
                 :z-mode
@@ -360,7 +365,8 @@
                 :code
                 [:!F#Pu :!Tu]
                 [:!F#Pp :!CTOp]
-                [:!F#Ph :!Ttab]
+                [:!F#Pn :!Ttab]
+                [:!F#Pslash :!Ff12]
             ]}
             {:des "Anki controls" :rules[
                 :anki
@@ -382,7 +388,7 @@
                 [:!F#Pp :!SThyphen :intellij]
             ]}
             {:des "ShortCat" :rules[
-                 [:!F#Pn :!COTspacebar]
+                 [:!F#Ph :!COTspacebar]
             ]}
             ;; {:des "Pika" :rules[
             ;;      [:!F#Pc :!Op]

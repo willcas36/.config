@@ -1789,6 +1789,54 @@
             "consumer_key_code" : "fast_forward"
           } ],
           "type" : "basic"
+        }, {
+          "from" : {
+            "key_code" : "v",
+            "modifiers" : {
+              "optional" : [ "caps_lock" ]
+            }
+          },
+          "to" : [ {
+            "consumer_key_code" : "play_or_pause"
+          } ],
+          "conditions" : [ {
+            "name" : "mouse-mode4",
+            "value" : 1,
+            "type" : "variable_if"
+          } ],
+          "type" : "basic"
+        }, {
+          "from" : {
+            "key_code" : "x",
+            "modifiers" : {
+              "optional" : [ "caps_lock" ]
+            }
+          },
+          "to" : [ {
+            "consumer_key_code" : "rewind"
+          } ],
+          "conditions" : [ {
+            "name" : "mouse-mode4",
+            "value" : 1,
+            "type" : "variable_if"
+          } ],
+          "type" : "basic"
+        }, {
+          "from" : {
+            "key_code" : "c",
+            "modifiers" : {
+              "optional" : [ "caps_lock" ]
+            }
+          },
+          "to" : [ {
+            "consumer_key_code" : "fast_forward"
+          } ],
+          "conditions" : [ {
+            "name" : "mouse-mode4",
+            "value" : 1,
+            "type" : "variable_if"
+          } ],
+          "type" : "basic"
         } ]
       }, {
         "description" : "Volume control",
@@ -2127,7 +2175,7 @@
           "type" : "basic"
         }, {
           "from" : {
-            "key_code" : "h",
+            "key_code" : "n",
             "modifiers" : {
               "mandatory" : [ "fn" ],
               "optional" : [ "caps_lock" ]
@@ -2136,6 +2184,23 @@
           "to" : [ {
             "key_code" : "tab",
             "modifiers" : [ "left_control" ]
+          } ],
+          "conditions" : [ {
+            "type" : "frontmost_application_if",
+            "bundle_identifiers" : [ "^com\\.visualstudio\\.code\\.oss$", "^com\\.microsoft\\.VSCode(Insiders)?$", "^com\\.microsoft\\.VSCode?$", "com\\.exafunction\\.windsurf" ]
+          } ],
+          "type" : "basic"
+        }, {
+          "from" : {
+            "key_code" : "slash",
+            "modifiers" : {
+              "mandatory" : [ "fn" ],
+              "optional" : [ "caps_lock" ]
+            }
+          },
+          "to" : [ {
+            "key_code" : "f12",
+            "modifiers" : [ "fn" ]
           } ],
           "conditions" : [ {
             "type" : "frontmost_application_if",
@@ -2397,7 +2462,7 @@
         "description" : "ShortCat",
         "manipulators" : [ {
           "from" : {
-            "key_code" : "n",
+            "key_code" : "h",
             "modifiers" : {
               "mandatory" : [ "fn" ],
               "optional" : [ "caps_lock" ]
