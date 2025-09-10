@@ -2023,6 +2023,38 @@
               } ]
             }
           }
+        }, {
+          "from" : {
+            "key_code" : "w",
+            "modifiers" : {
+              "optional" : [ "caps_lock" ]
+            }
+          },
+          "to" : [ {
+            "consumer_key_code" : "display_brightness_decrement"
+          } ],
+          "conditions" : [ {
+            "name" : "mouse-mode4",
+            "value" : 1,
+            "type" : "variable_if"
+          } ],
+          "type" : "basic"
+        }, {
+          "from" : {
+            "key_code" : "e",
+            "modifiers" : {
+              "optional" : [ "caps_lock" ]
+            }
+          },
+          "to" : [ {
+            "consumer_key_code" : "display_brightness_increment"
+          } ],
+          "conditions" : [ {
+            "name" : "mouse-mode4",
+            "value" : 1,
+            "type" : "variable_if"
+          } ],
+          "type" : "basic"
         } ]
       }, {
         "description" : "Directional Keys",

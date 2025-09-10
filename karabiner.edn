@@ -336,9 +336,10 @@
                 [:period :volume_increment]
             ]}
             {:des "Brightness control" :rules[
-                :x-mode
-                [:comma :display_brightness_decrement]
-                [:period :display_brightness_increment]
+                [:comma :display_brightness_decrement :x-mode]
+                [:period :display_brightness_increment :x-mode]
+                [:#Pw :display_brightness_decrement :mouse-mode4]
+                [:#Pe :display_brightness_increment :mouse-mode4]
             ]}
             {:des "Directional Keys" :rules[
                  [:!F##j :up_arrow]
