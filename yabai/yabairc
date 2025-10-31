@@ -52,6 +52,9 @@ yabai -m config mouse_drop_action stack
 # Disable specific apps
 # Para saber el nombre de las ventanas abiertas de una aplicación
     # osascript -e 'tell application "System Events" to get the name of every window of process "IntelliJ IDEA"'
+    # osascript -e 'tell application "System Events" to get name of (processes where background only is false)'
+        #Para app especifica
+            # yabai -m query --windows | jq '.[] | select(.app=="BlueStacks")'
 # Para desactivar esa ventana editar el siguiente comando
     # yabai -m rule --add app="Safari" title="Preferences" manage=off
 # Fuente: https://github.com/koekeishiya/yabai/blob/master/doc/yabai.asciidoc
