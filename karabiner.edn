@@ -169,7 +169,8 @@
 
                 ;; Scratchpad
                 ;;[:!F#Ph [:yabai "window --scratchpad"]]
-                [:!FC#Pr [:yabai "window --scratchpad recover"]]
+                ;; [:!FC#Pr [:yabai "window --scratchpad recover"]]
+                [:!F#Pr [:yabai "window --toggle redis || open -a 'Another Redis Desktop Manager'"]]
                 [:!F#Pf [:yabai "window --toggle finder || open -a Finder"]]
                 [:!F#Pw [:yabai "window --toggle musica || open -a Music"]]
                 [:!F#Pq [:yabai "window --toggle whatsapp || open -a WhatsApp"]]

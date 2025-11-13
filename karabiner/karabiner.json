@@ -628,12 +628,12 @@
           "from" : {
             "key_code" : "r",
             "modifiers" : {
-              "mandatory" : [ "left_command", "fn" ],
+              "mandatory" : [ "fn" ],
               "optional" : [ "caps_lock" ]
             }
           },
           "to" : [ {
-            "shell_command" : "/opt/homebrew/bin/yabai -m window --scratchpad recover"
+            "shell_command" : "/opt/homebrew/bin/yabai -m window --toggle redis || open -a 'Another Redis Desktop Manager'"
           } ],
           "type" : "basic"
         }, {
