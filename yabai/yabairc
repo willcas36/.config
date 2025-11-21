@@ -104,7 +104,7 @@ yabai -m rule --add app="Finder$" scratchpad="finder" grid=12:12:2:2:8:8
 yabai -m rule --add app="ChatGPT$" scratchpad="gpt" grid=12:12:2:2:8:9
 yabai -m rule --add app="WhatsApp$" scratchpad="whatsapp" grid=12:12:2:2:8:9
 yabai -m rule --add app="Slack$" scratchpad="slack" grid=12:12:2:2:8:9
-yabai -m rule --add app="Gather$" scratchpad="gather" grid=12:12:0:0:12:12
+yabai -m rule --add app="GatherV2$" scratchpad="gatherv2" grid=12:12:0:0:12:12
 yabai -m rule --add app="Mail$" scratchpad="mail" grid=12:12:1:2:10:9
 yabai -m rule --add app="^Anki$" scratchpad="anki" grid=12:12:3:1:7:10
 yabai -m rule --add app="^Obsidian$" scratchpad="obsidian" grid=12:12:1:1:10:10
