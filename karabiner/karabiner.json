@@ -717,7 +717,7 @@
             }
           },
           "to" : [ {
-            "shell_command" : "/opt/homebrew/bin/yabai -m window --toggle bluestacks || open -a BlueStacks"
+            "shell_command" : "/opt/homebrew/bin/yabai -m window --toggle gatherv2 || open -a GatherV2"
           } ],
           "type" : "basic"
         }, {
@@ -754,6 +754,18 @@
           },
           "to" : [ {
             "shell_command" : "/opt/homebrew/bin/yabai -m window --toggle obsidian || open -a Obsidian"
+          } ],
+          "type" : "basic"
+        }, {
+          "from" : {
+            "key_code" : "y",
+            "modifiers" : {
+              "mandatory" : [ "fn" ],
+              "optional" : [ "caps_lock" ]
+            }
+          },
+          "to" : [ {
+            "shell_command" : "/opt/homebrew/bin/yabai -m window --toggle simulator || open -a Simulator"
           } ],
           "type" : "basic"
         }, {
@@ -1606,7 +1618,7 @@
           } ],
           "conditions" : [ {
             "type" : "frontmost_application_if",
-            "bundle_identifiers" : [ "^com\\.visualstudio\\.code\\.oss$", "^com\\.microsoft\\.VSCode(Insiders)?$", "^com\\.microsoft\\.VSCode?$", "com\\.exafunction\\.windsurf" ]
+            "bundle_identifiers" : [ "^com\\.visualstudio\\.code\\.oss$", "^com\\.microsoft\\.VSCode(Insiders)?$", "^com\\.microsoft\\.VSCode?$", "com\\.exafunction\\.windsurf", "com.google.antigravity" ]
           }, {
             "name" : "mouse-mode2",
             "value" : 1,
@@ -1623,7 +1635,7 @@
           } ],
           "conditions" : [ {
             "type" : "frontmost_application_if",
-            "bundle_identifiers" : [ "^com\\.visualstudio\\.code\\.oss$", "^com\\.microsoft\\.VSCode(Insiders)?$", "^com\\.microsoft\\.VSCode?$", "com\\.exafunction\\.windsurf" ]
+            "bundle_identifiers" : [ "^com\\.visualstudio\\.code\\.oss$", "^com\\.microsoft\\.VSCode(Insiders)?$", "^com\\.microsoft\\.VSCode?$", "com\\.exafunction\\.windsurf", "com.google.antigravity" ]
           }, {
             "name" : "mouse-mode2",
             "value" : 1,
@@ -2185,7 +2197,7 @@
           } ],
           "conditions" : [ {
             "type" : "frontmost_application_if",
-            "bundle_identifiers" : [ "^com\\.visualstudio\\.code\\.oss$", "^com\\.microsoft\\.VSCode(Insiders)?$", "^com\\.microsoft\\.VSCode?$", "com\\.exafunction\\.windsurf" ]
+            "bundle_identifiers" : [ "^com\\.visualstudio\\.code\\.oss$", "^com\\.microsoft\\.VSCode(Insiders)?$", "^com\\.microsoft\\.VSCode?$", "com\\.exafunction\\.windsurf", "com.google.antigravity" ]
           } ],
           "type" : "basic"
         }, {
@@ -2202,7 +2214,7 @@
           } ],
           "conditions" : [ {
             "type" : "frontmost_application_if",
-            "bundle_identifiers" : [ "^com\\.visualstudio\\.code\\.oss$", "^com\\.microsoft\\.VSCode(Insiders)?$", "^com\\.microsoft\\.VSCode?$", "com\\.exafunction\\.windsurf" ]
+            "bundle_identifiers" : [ "^com\\.visualstudio\\.code\\.oss$", "^com\\.microsoft\\.VSCode(Insiders)?$", "^com\\.microsoft\\.VSCode?$", "com\\.exafunction\\.windsurf", "com.google.antigravity" ]
           } ],
           "type" : "basic"
         }, {
@@ -2219,7 +2231,7 @@
           } ],
           "conditions" : [ {
             "type" : "frontmost_application_if",
-            "bundle_identifiers" : [ "^com\\.visualstudio\\.code\\.oss$", "^com\\.microsoft\\.VSCode(Insiders)?$", "^com\\.microsoft\\.VSCode?$", "com\\.exafunction\\.windsurf" ]
+            "bundle_identifiers" : [ "^com\\.visualstudio\\.code\\.oss$", "^com\\.microsoft\\.VSCode(Insiders)?$", "^com\\.microsoft\\.VSCode?$", "com\\.exafunction\\.windsurf", "com.google.antigravity" ]
           } ],
           "type" : "basic"
         }, {
@@ -2236,7 +2248,7 @@
           } ],
           "conditions" : [ {
             "type" : "frontmost_application_if",
-            "bundle_identifiers" : [ "^com\\.visualstudio\\.code\\.oss$", "^com\\.microsoft\\.VSCode(Insiders)?$", "^com\\.microsoft\\.VSCode?$", "com\\.exafunction\\.windsurf" ]
+            "bundle_identifiers" : [ "^com\\.visualstudio\\.code\\.oss$", "^com\\.microsoft\\.VSCode(Insiders)?$", "^com\\.microsoft\\.VSCode?$", "com\\.exafunction\\.windsurf", "com.google.antigravity" ]
           } ],
           "type" : "basic"
         } ]
@@ -3858,7 +3870,7 @@
           } ],
           "conditions" : [ {
             "type" : "frontmost_application_if",
-            "bundle_identifiers" : [ "^com\\.visualstudio\\.code\\.oss$", "^com\\.microsoft\\.VSCode(Insiders)?$", "^com\\.microsoft\\.VSCode?$", "com\\.exafunction\\.windsurf" ]
+            "bundle_identifiers" : [ "^com\\.visualstudio\\.code\\.oss$", "^com\\.microsoft\\.VSCode(Insiders)?$", "^com\\.microsoft\\.VSCode?$", "com\\.exafunction\\.windsurf", "com.google.antigravity" ]
           } ],
           "type" : "basic"
         }, {

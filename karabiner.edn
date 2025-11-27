@@ -22,6 +22,7 @@
                              "^com\\.microsoft\\.VSCode(Insiders)?$"
                              "^com\\.microsoft\\.VSCode?$"
                              "com\\.exafunction\\.windsurf"
+                             "com.google.antigravity"
                              ]
                 :terminals  ["^com\\.apple\\.Terminal$"
                              "^com\\.googlecode\\.iterm2$"]
@@ -181,6 +182,7 @@
                 [:!F#Pe [:yabai "window --toggle mail || open -a Mail"]]
                 [:!F#Pa [:yabai "window --toggle anki || open -a Anki"]]
                 [:!F#Pv [:yabai "window --toggle obsidian || open -a Obsidian"]]
+                [:!F#Py [:yabai "window --toggle simulator || open -a Simulator"]]
                 ;;[[{:pkey :button6} {:pkey :button4}] [:yabai "window --toggle anki"]]
                 
                 [:!F#Ps [:yabai "window --toggle sticky"]]

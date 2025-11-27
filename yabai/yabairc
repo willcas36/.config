@@ -109,3 +109,5 @@ yabai -m rule --add app="Mail$" scratchpad="mail" grid=12:12:1:2:10:9
 yabai -m rule --add app="^Anki$" scratchpad="anki" grid=12:12:3:1:7:10
 yabai -m rule --add app="^Obsidian$" scratchpad="obsidian" grid=12:12:1:1:10:10
 yabai -m rule --add app="^Another Redis Desktop Manager$" scratchpad="redis" grid=12:12:1:1:10:10
+yabai -m rule --add app="^simulator$" scratchpad="Simulator" grid=12:12:1:1:10:10
+
