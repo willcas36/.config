@@ -334,13 +334,13 @@
 
             ]}
             {:des "Volume control" :rules[
-                :z-mode
+                :x-mode
                 [:comma :volume_decrement]
                 [:period :volume_increment]
             ]}
             {:des "Brightness control" :rules[
-                [:comma :display_brightness_decrement :x-mode]
-                [:period :display_brightness_increment :x-mode]
+                [:comma :display_brightness_decrement :z-mode]
+                [:period :display_brightness_increment :z-mode]
                 [:#Pw :display_brightness_decrement :mouse-mode4]
                 [:#Pe :display_brightness_increment :mouse-mode4]
             ]}
