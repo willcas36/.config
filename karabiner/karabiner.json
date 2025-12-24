@@ -1860,7 +1860,7 @@
             "consumer_key_code" : "volume_decrement"
           } ],
           "conditions" : [ {
-            "name" : "z-mode",
+            "name" : "x-mode",
             "value" : 1,
             "type" : "variable_if"
           } ],
@@ -1872,7 +1872,7 @@
           },
           "to" : [ {
             "set_variable" : {
-              "name" : "z-mode",
+              "name" : "x-mode",
               "value" : 1
             }
           }, {
@@ -1880,7 +1880,7 @@
           } ],
           "from" : {
             "simultaneous" : [ {
-              "key_code" : "z"
+              "key_code" : "x"
             }, {
               "key_code" : "comma"
             } ],
@@ -1891,7 +1891,7 @@
               "key_up_when" : "any",
               "to_after_key_up" : [ {
                 "set_variable" : {
-                  "name" : "z-mode",
+                  "name" : "x-mode",
                   "value" : 0
                 }
               } ]
@@ -1905,7 +1905,7 @@
             "consumer_key_code" : "volume_increment"
           } ],
           "conditions" : [ {
-            "name" : "z-mode",
+            "name" : "x-mode",
             "value" : 1,
             "type" : "variable_if"
           } ],
@@ -1917,7 +1917,7 @@
           },
           "to" : [ {
             "set_variable" : {
-              "name" : "z-mode",
+              "name" : "x-mode",
               "value" : 1
             }
           }, {
@@ -1925,7 +1925,7 @@
           } ],
           "from" : {
             "simultaneous" : [ {
-              "key_code" : "z"
+              "key_code" : "x"
             }, {
               "key_code" : "period"
             } ],
@@ -1936,7 +1936,7 @@
               "key_up_when" : "any",
               "to_after_key_up" : [ {
                 "set_variable" : {
-                  "name" : "z-mode",
+                  "name" : "x-mode",
                   "value" : 0
                 }
               } ]
@@ -1953,7 +1953,7 @@
             "consumer_key_code" : "display_brightness_decrement"
           } ],
           "conditions" : [ {
-            "name" : "x-mode",
+            "name" : "z-mode",
             "value" : 1,
             "type" : "variable_if"
           } ],
@@ -1965,7 +1965,7 @@
           },
           "to" : [ {
             "set_variable" : {
-              "name" : "x-mode",
+              "name" : "z-mode",
               "value" : 1
             }
           }, {
@@ -1973,7 +1973,7 @@
           } ],
           "from" : {
             "simultaneous" : [ {
-              "key_code" : "x"
+              "key_code" : "z"
             }, {
               "key_code" : "comma"
             } ],
@@ -1984,7 +1984,7 @@
               "key_up_when" : "any",
               "to_after_key_up" : [ {
                 "set_variable" : {
-                  "name" : "x-mode",
+                  "name" : "z-mode",
                   "value" : 0
                 }
               } ]
@@ -1998,7 +1998,7 @@
             "consumer_key_code" : "display_brightness_increment"
           } ],
           "conditions" : [ {
-            "name" : "x-mode",
+            "name" : "z-mode",
             "value" : 1,
             "type" : "variable_if"
           } ],
@@ -2010,7 +2010,7 @@
           },
           "to" : [ {
             "set_variable" : {
-              "name" : "x-mode",
+              "name" : "z-mode",
               "value" : 1
             }
           }, {
@@ -2018,7 +2018,7 @@
           } ],
           "from" : {
             "simultaneous" : [ {
-              "key_code" : "x"
+              "key_code" : "z"
             }, {
               "key_code" : "period"
             } ],
@@ -2029,7 +2029,7 @@
               "key_up_when" : "any",
               "to_after_key_up" : [ {
                 "set_variable" : {
-                  "name" : "x-mode",
+                  "name" : "z-mode",
                   "value" : 0
                 }
               } ]

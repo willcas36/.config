@@ -79,6 +79,7 @@ yabai -m rule --add label="MediaMate" app="^MediaMate$" manage=off
 yabai -m rule --add label="DeepL" app="^DeepL$" manage=off
 yabai -m rule --add label="AppCleaner" app="^AppCleaner$" manage=off
 yabai -m rule --add label="Karabiner-EventViewer" app="^Karabiner-EventViewer$" manage=off
+yabai -m rule --add label="PastePal" app="^PastePal$" manage=off
 yabai -m rule --add label="Karabiner-Elements" app="^Karabiner-Elements$" manage=off
 yabai -m rule --add label="ChronoSync" app="^ChronoSync$" manage=off
 yabai -m rule --add label="Editor de Texto" app="^Editor de Texto$" manage=off
