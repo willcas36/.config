@@ -770,6 +770,18 @@
           "type" : "basic"
         }, {
           "from" : {
+            "key_code" : "z",
+            "modifiers" : {
+              "mandatory" : [ "fn" ],
+              "optional" : [ "caps_lock" ]
+            }
+          },
+          "to" : [ {
+            "shell_command" : "/opt/homebrew/bin/yabai -m window --toggle vocabsieve || open -a vocabsieve"
+          } ],
+          "type" : "basic"
+        }, {
+          "from" : {
             "key_code" : "s",
             "modifiers" : {
               "mandatory" : [ "fn" ],

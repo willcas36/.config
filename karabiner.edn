@@ -183,6 +183,7 @@
                 [:!F#Pa [:yabai "window --toggle anki || open -a Anki"]]
                 [:!F#Pv [:yabai "window --toggle obsidian || open -a Obsidian"]]
                 [:!F#Py [:yabai "window --toggle simulator || open -a Simulator"]]
+                [:!F#Pz [:yabai "window --toggle vocabsieve || open -a vocabsieve"]]
                 ;;[[{:pkey :button6} {:pkey :button4}] [:yabai "window --toggle anki"]]
                 
                 [:!F#Ps [:yabai "window --toggle sticky"]]
