@@ -1,4 +1,4 @@
-{   :profiles {:Default {;; "default true means" rules default goes into this rule if no profiles specified
+{:profiles {:Default {;; "default true means" rules default goes into this rule if no profiles specified
                       :default true
                       ;; simlayer is implemented with to_if_alone and simultaneous key press feature
                       :sim     50
@@ -7,12 +7,11 @@
                       ;; affects to_if_alone behavior
                       :alone   1000
                       ;; to_if_held_down_threshold_milliseconds
-                      :held    500}} 
+                      :held    500}}
 
     ;; Para saber el bundle ID de cada app
     ;;   mdls -name kMDItemCFBundleIdentifier /Applications/Postman.app
-    :applications {
-                :safari     ["^com\\.apple\\.Safari$"]
+ :applications {:safari     ["^com\\.apple\\.Safari$"]
                 :chrome     ["^com\\.google\\.Chrome$"]
                 :finder     ["^com\\.apple\\.finder$"]
                 :obsidian   ["^md\\.obsidian$"]
@@ -22,8 +21,7 @@
                              "^com\\.microsoft\\.VSCode(Insiders)?$"
                              "^com\\.microsoft\\.VSCode?$"
                              "com\\.exafunction\\.windsurf"
-                             "com.google.antigravity"
-                             ]
+                             "com.google.antigravity"]
                 :terminals  ["^com\\.apple\\.Terminal$"
                              "^com\\.googlecode\\.iterm2$"]
                 :warp       ["^dev\\.warp\\.Warp-Stable$"]
@@ -38,45 +36,31 @@
                 :postman   ["^com\\.postmanlabs\\.mac$"]
                 :intellij   ["^com\\.jetbrains.intellij\\.ce$"]
                 :anki   ["^net\\.ankiweb\\.dtop"]
-                :windowsapp   ["^com\\.microsoft\\.rdc\\.macos$"]
-                }
+                :windowsapp   ["^com\\.microsoft\\.rdc\\.macos$"]}
 
+ :templates {:yabai "/opt/homebrew/bin/yabai -m %s"
+             :launch-app "open -a '%s'"
+             :open "open -n '/Applications/%s.app'"
+             :directory "open ~/%s"}
 
-    :templates {:yabai "/opt/homebrew/bin/yabai -m %s"
-                :launch-app "open -a '%s'"
-                :open "open -n '/Applications/%s.app'"
-                :directory "open ~/%s"
-                }
+ :devices {:g305-device [{:vendor_id 1133 :product_id 50495}]}
 
-    :devices {:g305-device [{:vendor_id 1133 :product_id 50495}]
-    }
-
-    :layers {
-                :hyper-mode {:key :caps_lock :alone {:key :return_or_enter}}
-                :mouse-mode1 {:key :keypad_1 :condi :g305-device :alone {:key :!Copen_bracket}}
-                :mouse-mode2 {:key :keypad_2 :condi :g305-device :alone {:key :!Cclose_bracket}}
-                :mouse-mode3 {:key :keypad_3 :condi :g305-device :alone {:pkey :button3}}
-                :mouse-mode4 {:key :keypad_4 :condi :g305-device :alone {:key :!Tup_arrow}}
-             :launch-mode {:key :slash}
-            }
-    :simlayers {
-             :tmux-winmove-mode {:key :q :condi :Terminals}
+ :layers {:hyper-mode {:key :caps_lock :alone {:key :return_or_enter}}
+          :mouse-mode1 {:key :keypad_1 :condi :g305-device :alone {:key :!Copen_bracket}}
+          :mouse-mode2 {:key :keypad_2 :condi :g305-device :alone {:key :!Cclose_bracket}}
+          :mouse-mode3 {:key :keypad_3 :condi :g305-device :alone {:pkey :button3}}
+          :mouse-mode4 {:key :keypad_4 :condi :g305-device :alone {:key :!Tup_arrow}}
+          :launch-mode {:key :slash}}
+ :simlayers {:tmux-winmove-mode {:key :q :condi :Terminals}
              :period-mode {:key :period}
-             :comma-mode {:key :comma} 
-             :z-mode {:key :z} 
-             :x-mode {:key :x} 
-             }
-    :main [
-            {:des "Capslock to Hyper, Return if alone" :rules[
-                 [:##caps_lock :fn nil {:alone :return_or_enter}]
-            ]}
-            {:des "Mouse mode" :rules[
-                :g305-device
-                [:left_control :left_control :!anki {:alone :!C#Pclose_bracket}]
-                [:right_control :right_control :!anki {:alone :!C#Popen_bracket}]
-            ]}
-            {:des, "Yabai keybinds", :rules[
-                ;;====NAVIGATION====
+             :comma-mode {:key :comma}
+             :z-mode {:key :z}
+             :x-mode {:key :x}}
+ :main [{:des "Capslock to Hyper, Return if alone" :rules [[:##caps_lock :fn nil {:alone :return_or_enter}]]}
+        {:des "Mouse mode" :rules [:g305-device
+                                   [:left_control :left_control :!anki {:alone :!C#Pclose_bracket}]
+                                   [:right_control :right_control :!anki {:alone :!C#Popen_bracket}]]}
+        {:des, "Yabai keybinds", :rules [;;====NAVIGATION====
 
                 ;;Focus Spaces
 
@@ -93,62 +77,57 @@
 
                 ;; [:!E#Pb [:!Eb [:yabai "display --focus 3"]]]
                 ;; [:!O#Pn [:!On [:yabai "display --focus 3"]]]
-                
 
-                ;; SIP Deactivated
-                [:!E#Pz [:yabai "space --focus 5"] nil {:afterup [:yabai "window --focus mouse"]}]
-                [:!E#Px [:yabai "space --focus 6"] nil {:afterup [:yabai "window --focus mouse"]}]
-                [:!E#Pc [:yabai "space --focus 7"] nil {:afterup [:yabai "window --focus mouse"]}]
-                [:!E#Pv [:yabai "space --focus 8"] nil {:afterup [:yabai "window --focus mouse"]}]
+;; SIP Deactivated
+                                         [:!E#Pz [:yabai "space --focus 5"] nil {:afterup [:yabai "window --focus mouse"]}]
+                                         [:!E#Px [:yabai "space --focus 6"] nil {:afterup [:yabai "window --focus mouse"]}]
+                                         [:!E#Pc [:yabai "space --focus 7"] nil {:afterup [:yabai "window --focus mouse"]}]
+                                         [:!E#Pv [:yabai "space --focus 8"] nil {:afterup [:yabai "window --focus mouse"]}]
 
-                [:!O#Pm [:yabai "space --focus 1 "] nil {:afterup [:yabai "window --focus mouse"]}]
-                [:!O#Pcomma [:yabai "space --focus 2"] nil {:afterup [:yabai "window --focus mouse"]}]
-                [:!O#Pperiod [:yabai "space --focus 3"] nil {:afterup [:yabai "window --focus mouse"]}]
-                [:!O#Pslash [:yabai "space --focus 4"] nil {:afterup [:yabai "window --focus mouse"]}]
+                                         [:!O#Pm [:yabai "space --focus 1 "] nil {:afterup [:yabai "window --focus mouse"]}]
+                                         [:!O#Pcomma [:yabai "space --focus 2"] nil {:afterup [:yabai "window --focus mouse"]}]
+                                         [:!O#Pperiod [:yabai "space --focus 3"] nil {:afterup [:yabai "window --focus mouse"]}]
+                                         [:!O#Pslash [:yabai "space --focus 4"] nil {:afterup [:yabai "window --focus mouse"]}]
 
-                [:!E#Pb [:yabai "space --focus 9"] nil {:afterup [:yabai "window --focus mouse"]}]
-                [:!O#Pn [:yabai "space --focus 10"] nil {:afterup [:yabai "window --focus mouse"]}]
-                [:!O#Pi [:yabai "space --focus 11"] nil {:afterup [:yabai "window --focus mouse"]}]
-                [:!O#Po [:yabai "space --focus 12"] nil {:afterup [:yabai "window --focus mouse"]}]
+                                         [:!E#Pb [:yabai "space --focus 9"] nil {:afterup [:yabai "window --focus mouse"]}]
+                                         [:!O#Pn [:yabai "space --focus 10"] nil {:afterup [:yabai "window --focus mouse"]}]
+                                         [:!O#Pi [:yabai "space --focus 11"] nil {:afterup [:yabai "window --focus mouse"]}]
+                                         [:!O#Po [:yabai "space --focus 12"] nil {:afterup [:yabai "window --focus mouse"]}]
                 ;;[:!O#Pu [:launch-app "Windows App"]]
 
+;;Windows focus
+                                         [:!O#Psemicolon [:yabai "window --focus stack.next"]]
+                                         [:!O#Pj [:yabai "window --focus stack.prev"]]
+                                         [:!O#Pk [:yabai "window --focus west"]]
+                                         [:!O#Pl [:yabai "window --focus east"]]
 
-                ;;Windows focus
-                [:!O#Psemicolon [:yabai "window --focus stack.next"]]
-                [:!O#Pj [:yabai "window --focus stack.prev"]]
-                [:!O#Pk [:yabai "window --focus west"]]
-                [:!O#Pl [:yabai "window --focus east"]]
+                                         [:!O#Pf [:yabai "window --focus stack.recent"]]
+                                         [:!E#Pf [:yabai "window --focus stack.recent"]]
 
-                [:!O#Pf [:yabai "window --focus stack.recent"]]
-                [:!E#Pf [:yabai "window --focus stack.recent"]]
-
-
-                ;;Focus Displays
-                [:!O#Pu [:yabai "display --focus recent"]]
+;;Focus Displays
+                                         [:!O#Pu [:yabai "display --focus recent"]]
                ;; [:!O#Pi [:yabai "display --focus 2"]]
                 ;;[:!O#Po [:yabai "display --focus 3"]]
 
                 ;;==== Modification ====
                 ;;Move window relatively
-                [:!TO#Psemicolon [:yabai "window --warp south"]]
-                [:!TO#Pj  [:yabai "window --warp north"]]
-                [:!TO#Pk  [:yabai "window --warp west"]]
-                [:!TO#Pl  [:yabai "window --warp east"]]
+                                         [:!TO#Psemicolon [:yabai "window --warp south"]]
+                                         [:!TO#Pj  [:yabai "window --warp north"]]
+                                         [:!TO#Pk  [:yabai "window --warp west"]]
+                                         [:!TO#Pl  [:yabai "window --warp east"]]
 
-                [:!FT#Psemicolon [:yabai "window --stack next"]]
-                [:!FT#Pj [:yabai "window --stack prev"]]
+                                         [:!FT#Psemicolon [:yabai "window --stack next"]]
+                                         [:!FT#Pj [:yabai "window --stack prev"]]
 
+;;Swap windows
 
-                ;;Swap windows
-                
-                [:!SO#Psemicolon  [:yabai "window --swap south"]]
-                [:!SO#Pj  [:yabai "window --swap north"]]
-                [:!SO#Pk  [:yabai "window --swap west"]]
-                
-                [:!SO#Pl  [:yabai "window --swap east"]]
+                                         [:!SO#Psemicolon  [:yabai "window --swap south"]]
+                                         [:!SO#Pj  [:yabai "window --swap north"]]
+                                         [:!SO#Pk  [:yabai "window --swap west"]]
 
+                                         [:!SO#Pl  [:yabai "window --swap east"]]
 
-                ;;Move window to display left and right
+;;Move window to display left and right
 
                 ;; SIP Activated
                 ;; [:!FO#Pu [:yabai "window --display 1"] nil {:afterup [:yabai "display --focus 1"]}]
@@ -159,84 +138,75 @@
                 ;;[:!FO#Pu [:yabai "window --display 1"]]
                 ;;[:!FO#Pi [:yabai "window --display 2"]]
                 ;;[:!FO#Po [:yabai "window --display 3"]]
-                
+
                 ;;Send window to space
-                [:!FO#Pm [:yabai "window --space 1"]]
-                [:!FO#Pcomma [:yabai "window --space 2"]]
-                [:!FO#Pperiod [:yabai "window --space 3"]]
-                [:!FO#Pslash [:yabai "window --space 4"]] 
+                                         [:!FO#Pm [:yabai "window --space 1"]]
+                                         [:!FO#Pcomma [:yabai "window --space 2"]]
+                                         [:!FO#Pperiod [:yabai "window --space 3"]]
+                                         [:!FO#Pslash [:yabai "window --space 4"]]
 
-                [:!FO#Pz [:yabai "window --space 5"]]
-                [:!FO#Px [:yabai "window --space 6"]]
-                [:!FO#Pc [:yabai "window --space 7"]]
-                [:!FO#Pv [:yabai "window --space 8"]]
+                                         [:!FO#Pz [:yabai "window --space 5"]]
+                                         [:!FO#Px [:yabai "window --space 6"]]
+                                         [:!FO#Pc [:yabai "window --space 7"]]
+                                         [:!FO#Pv [:yabai "window --space 8"]]
 
+                                         [:!FO#Pb [:yabai "window --space 9"]]
+                                         [:!FO#Pn [:yabai "window --space 10"]]
+                                         [:!FO#Pi [:yabai "window --space 11"]]
+                                         [:!FO#Po [:yabai "window --space 12"]]
 
-                [:!FO#Pb [:yabai "window --space 9"]]
-                [:!FO#Pn [:yabai "window --space 10"]]
-                [:!FO#Pi [:yabai "window --space 11"]]
-                [:!FO#Po [:yabai "window --space 12"]]
-
-
-                ;; Scratchpad
+;; Scratchpad
                 ;;[:!F#Ph [:yabai "window --scratchpad"]]
                 ;; [:!FC#Pr [:yabai "window --scratchpad recover"]]
-                [:!F#Pr [:yabai "window --toggle redis || open -a 'Another Redis Desktop Manager'"]]
-                [:!F#Pf [:yabai "window --toggle finder || open -a Finder"]]
-                [:!F#Pw [:yabai "window --toggle musica || open -a Music"]]
-                [:!F#Pq [:yabai "window --toggle whatsapp || open -a WhatsApp"]]
-                [:!FC#Pq [:yabai "window --toggle slack || open -a Slack"]]
-                [:!F#Pd [:yabai "window --toggle warp || open -a Warp"]]
-                [:!F#Pc [:yabai "window --toggle gpt || open -a ChatGPT"]]
-                [:!F#Pg [:yabai "window --toggle gatherv2 || open -a GatherV2"]]
-                [:!F#Pe [:yabai "window --toggle mail || open -a Mail"]]
-                [:!F#Pa [:yabai "window --toggle anki || open -a Anki"]]
-                [:!F#Pv [:yabai "window --toggle obsidian || open -a Obsidian"]]
-                [:!F#Py [:yabai "window --toggle simulator || open -a Simulator"]]
-                [:!F#Pz [:yabai "window --toggle vocabsieve || open -a vocabsieve"]]
+                                         [:!F#Pr [:yabai "window --toggle redis || open -a 'Another Redis Desktop Manager'"]]
+                                         [:!F#Pf [:yabai "window --toggle finder || open -a Finder"]]
+                                         [:!F#Pw [:yabai "window --toggle musica || open -a Music"]]
+                                         [:!F#Pq [:yabai "window --toggle whatsapp || open -a WhatsApp"]]
+                                         [:!FC#Pq [:yabai "window --toggle slack || open -a Slack"]]
+                                         [:!F#Pd [:yabai "window --toggle warp || open -a Warp"]]
+                                         [:!F#Pc [:yabai "window --toggle gpt || open -a ChatGPT"]]
+                                         [:!F#Pg [:yabai "window --toggle gatherv2 || open -a GatherV2"]]
+                                         [:!F#Pe [:yabai "window --toggle mail || open -a Mail"]]
+                                         [:!F#Pa [:yabai "window --toggle anki || open -a Anki"]]
+                                         [:!F#Pv [:yabai "window --toggle obsidian || open -a Obsidian"]]
+                                         [:!F#Py [:yabai "window --toggle simulator || open -a Simulator"]]
+                                         [:!F#Pz [:yabai "window --toggle vocabsieve || open -a vocabsieve"]]
                 ;;[[{:pkey :button6} {:pkey :button4}] [:yabai "window --toggle anki"]]
-                
-                [:!F#Ps [:yabai "window --toggle sticky"]]
-                [:!F#Pz [:yabai "window --toggle pip"]]
 
+                                         [:!F#Ps [:yabai "window --toggle sticky"]]
+                                         [:!F#Pz [:yabai "window --toggle pip"]]
 
-                [:!F#Pz [:yabai "window --raise"]]
-                [:!F#Px [:yabai "window --minimize"]]
+                                         [:!F#Pz [:yabai "window --raise"]]
+                                         [:!F#Px [:yabai "window --minimize"]]
 
-                
+;;Set insertion point in focused cotainer
+                                         [:!E#Pw [:yabai "window --insert south"]]
+                                         [:!E#Pq [:yabai "window --insert east"]]
+                                         [:!E#Ps [:yabai "window --insert stack"]]
+                                         [:!E#Pe [:yabai "window --toggle split"]]
 
-                ;;Set insertion point in focused cotainer
-                [:!E#Pw [:yabai "window --insert south"]]
-                [:!E#Pq [:yabai "window --insert east"]]
-                [:!E#Ps [:yabai "window --insert stack"]]
-                [:!E#Pe [:yabai "window --toggle split"]]
+;;Equalize size of windows
+                                         [:!FC#Pe [:yabai "space --balance"]]
+                                         [:!FC#Px [:yabai "space --equalize x-axis"]]
+                                         [:!FC#Py [:yabai "space --equalize y-axis"]]
 
-
-
-                ;;Equalize size of windows
-                [:!FC#Pe [:yabai "space --balance"]]
-                [:!FC#Px [:yabai "space --equalize x-axis"]]
-                [:!FC#Py [:yabai "space --equalize y-axis"]]
-
-
-                ;;Rotate Windows
-                [:!FO#Pr [:yabai "space --rotate 270"]] 
-                [:!FO#Px [:yabai "space --mirror x-axis"]]
-                [:!FO#Py [:yabai "space --mirror y-axis"]]
+;;Rotate Windows
+                                         [:!FO#Pr [:yabai "space --rotate 270"]]
+                                         [:!FO#Px [:yabai "space --mirror x-axis"]]
+                                         [:!FO#Py [:yabai "space --mirror y-axis"]]
 
                 ;;Toggle window flow
-                [:!FO#Pspacebar [:yabai "window --toggle float --grid 11:11:1:1:7:7"]]
+                                         [:!FO#Pspacebar [:yabai "window --toggle float --grid 11:11:1:1:7:7"]]
 
                 ;;Toggle window fullscreen, zoom
-                [:!T#Pf [:yabai "window --toggle zoom-parent"]]
-                [:!O#Pa [:yabai "window --toggle zoom-fullscreen"]]
-                [:!E#Pa [:yabai "window --toggle zoom-fullscreen"]]
-
+                                         [:!T#Pf [:yabai "window --toggle zoom-parent"]]
+                                         [:!O#Pa [:yabai "window --toggle zoom-fullscreen"]]
+                                         [:!E#Pa [:yabai "window --toggle zoom-fullscreen"]]
 
                 ;;tart/stop yabai
-                [:!TOC#Pp "/opt/homebrew/bin/yabai --stop-service"]
-                [:!TOC#Ps "/opt/homebrew/bin/yabai --start-service"]
-                [:!TOC#Pr "/opt/homebrew/bin/yabai --restart-service"]
+                                         [:!TOC#Pp "/opt/homebrew/bin/yabai --stop-service"]
+                                         [:!TOC#Ps "/opt/homebrew/bin/yabai --start-service"]
+                                         [:!TOC#Pr "/opt/homebrew/bin/yabai --restart-service"]
 
                 ;;Resize window
                 ;; [:!T#Pk [:yabai "window --resize right:-50:0 2> /dev/null || /opt/homebrew/bin/yabai window --resize left:-50:0 2> /dev/null"]]
@@ -244,185 +214,149 @@
                 ;; [:!T#Pj [:yabai "window --resize bottom:0:-50 2> /dev/null|| /opt/homebrew/bin/yabai window --resize top:0:-50 2> /dev/null"]]
                 ;; [:!T#Pl [:yabai "window --resize right:50:0 2> /dev/null|| /opt/homebrew/bin/yabai window --resize left:50:0 2> /dev/null"]]
 
-                [:!FC#Pm [:yabai "window --resize bottom:0:-100 2> /dev/null|| /opt/homebrew/bin/yabai window --resize top:0:-100 2> /dev/null"]]
-                [:!FC#Pcomma [:yabai "window --resize right:-100:0 2> /dev/null || /opt/homebrew/bin/yabai window --resize left:-100:0 2> /dev/null"]]
-                [:!FC#Pperiod [:yabai "window --resize right:100:0 2> /dev/null|| /opt/homebrew/bin/yabai window --resize left:100:0 2> /dev/null"]]
-                [:!FC#Pslash [:yabai "window --resize bottom:0:100 2> /dev/null || /opt/homebrew/bin/yabai window --resize top:0:100 2> /dev/"]]
+                                         [:!FC#Pm [:yabai "window --resize bottom:0:-100 2> /dev/null|| /opt/homebrew/bin/yabai window --resize top:0:-100 2> /dev/null"]]
+                                         [:!FC#Pcomma [:yabai "window --resize right:-100:0 2> /dev/null || /opt/homebrew/bin/yabai window --resize left:-100:0 2> /dev/null"]]
+                                         [:!FC#Pperiod [:yabai "window --resize right:100:0 2> /dev/null|| /opt/homebrew/bin/yabai window --resize left:100:0 2> /dev/null"]]
+                                         [:!FC#Pslash [:yabai "window --resize bottom:0:100 2> /dev/null || /opt/homebrew/bin/yabai window --resize top:0:100 2> /dev/"]]
 
                 ;;Move window
-                [:!FC#Pu [:yabai "window --move rel:0:-150"]]
-                [:!FC#Pi [:yabai "window --move rel:-200:0"]]
-                [:!FC#Po [:yabai "window --move rel:200:0"]]
-                [:!FC#Pp [:yabai "window --move rel:0:150"]]
+                                         [:!FC#Pu [:yabai "window --move rel:0:-150"]]
+                                         [:!FC#Pi [:yabai "window --move rel:-200:0"]]
+                                         [:!FC#Po [:yabai "window --move rel:200:0"]]
+                                         [:!FC#Pp [:yabai "window --move rel:0:150"]]]}
 
-            ]}
             ; Q  | right_command
-
             ; W  | right_control
             ; E  | right_option
             ; R  | right_shift
             ; P  | caps_lock
-            {:des "Command to option, option to Command" :rules[
-                ;;[:##left_command :##left_option]
+        {:des "Command to option, option to Command" :rules [;;[:##left_command :##left_option]
                 ;;[:##left_option :##left_command]
-                [:!Cm []]
-                [:!Ch []]
-            ]}
+                                                             [:!Cm []]
+                                                             [:!Ch []]]}
             ;; :condi for multiple conditions
-            {:des "Mouse navigation" :rules[
-                ;;[:condi :g305-device :f1-mode :z-mode] for multiple conditions use :condi as the first element
-                [:!Wv [:yabai "space --focus 4 "] nil {:afterup [:yabai "window --focus mouse"]}]
-                [:!Wc [:yabai "space --focus 3 "] nil {:afterup [:yabai "window --focus mouse"]}]
-                [:!Wx [:yabai "space --focus 2 "] nil {:afterup [:yabai "window --focus mouse"]}]
-                [:!Wz [:yabai "space --focus 1 "] nil {:afterup [:yabai "window --focus mouse"]}]
+        {:des "Mouse navigation" :rules [;;[:condi :g305-device :f1-mode :z-mode] for multiple conditions use :condi as the first element
+                                         [:!Wv [:yabai "space --focus 4 "] nil {:afterup [:yabai "window --focus mouse"]}]
+                                         [:!Wc [:yabai "space --focus 3 "] nil {:afterup [:yabai "window --focus mouse"]}]
+                                         [:!Wx [:yabai "space --focus 2 "] nil {:afterup [:yabai "window --focus mouse"]}]
+                                         [:!Wz [:yabai "space --focus 1 "] nil {:afterup [:yabai "window --focus mouse"]}]
 
-                [:!WSv [:yabai "window --space 4"]]
-                [:!WSc [:yabai "window --space 3"]]
-                [:!WSx [:yabai "window --space 2"]]
-                [:!WSz [:yabai "window --space 1"]] 
+                                         [:!WSv [:yabai "window --space 4"]]
+                                         [:!WSc [:yabai "window --space 3"]]
+                                         [:!WSx [:yabai "window --space 2"]]
+                                         [:!WSz [:yabai "window --space 1"]]
 
+                                         [:!Tv [:yabai "space --focus 8 "] nil {:afterup [:yabai "window --focus mouse"]}]
+                                         [:!Tc [:yabai "space --focus 7 "] nil {:afterup [:yabai "window --focus mouse"]}]
+                                         [:!Tx [:yabai "space --focus 6 "] nil {:afterup [:yabai "window --focus mouse"]}]
+                                         [:!Tz [:yabai "space --focus 5 "] nil {:afterup [:yabai "window --focus mouse"]}]
 
-                [:!Tv [:yabai "space --focus 8 "] nil {:afterup [:yabai "window --focus mouse"]}]
-                [:!Tc [:yabai "space --focus 7 "] nil {:afterup [:yabai "window --focus mouse"]}]
-                [:!Tx [:yabai "space --focus 6 "] nil {:afterup [:yabai "window --focus mouse"]}]
-                [:!Tz [:yabai "space --focus 5 "] nil {:afterup [:yabai "window --focus mouse"]}]
+                                         [:!TSv [:yabai "window --space 8"]]
+                                         [:!TSc [:yabai "window --space 7"]]
+                                         [:!TSx [:yabai "window --space 6"]]
+                                         [:!TSz [:yabai "window --space 5"]]
 
-                [:!TSv [:yabai "window --space 8"]]
-                [:!TSc [:yabai "window --space 7"]]
-                [:!TSx [:yabai "window --space 6"]]
-                [:!TSz [:yabai "window --space 5"]]
+                                         [:!Wb [:yabai "space --focus 10 "] nil {:afterup [:yabai "window --focus mouse"]}]
+                                         [:!WSb [:yabai "window --space 10"]]
+                                         [:!Tw [:yabai "space --focus 11 "] nil {:afterup [:yabai "window --focus mouse"]}]
+                                         [:!TSw [:yabai "window --space 11"]]
+                                         [:!Te [:yabai "space --focus 12 "] nil {:afterup [:yabai "window --focus mouse"]}]
 
+                                         [:!Ws [:yabai "window --focus west"]]
+                                         [:!Wd [:yabai "window --focus east"]]
+                                         [:!Wf [:yabai "window --focus stack.recent"]]
+                                         [:!Wa [:yabai "window --toggle zoom-fullscreen"]]
 
-                [:!Wb [:yabai "space --focus 10 "] nil {:afterup [:yabai "window --focus mouse"]}]
-                [:!WSb [:yabai "window --space 10"]]
-                [:!Tw [:yabai "space --focus 11 "] nil {:afterup [:yabai "window --focus mouse"]}]
-                [:!TSw [:yabai "window --space 11"]]
-                [:!Te [:yabai "space --focus 12 "] nil {:afterup [:yabai "window --focus mouse"]}]
-
-
-                [:!Ws [:yabai "window --focus west"]]
-                [:!Wd [:yabai "window --focus east"]]
-                [:!Wf [:yabai "window --focus stack.recent"]]
-                [:!Wa [:yabai "window --toggle zoom-fullscreen"]]
-                
-                [:!Ts [:yabai "window --focus west"]]
-                [:!Td [:yabai "window --focus east"]]
-                [:!Tf [:yabai "window --focus stack.recent"]]
-                [:!Ta [:yabai "window --toggle zoom-fullscreen"]]
+                                         [:!Ts [:yabai "window --focus west"]]
+                                         [:!Td [:yabai "window --focus east"]]
+                                         [:!Tf [:yabai "window --focus stack.recent"]]
+                                         [:!Ta [:yabai "window --toggle zoom-fullscreen"]]
                 ;; NAVIGATION TABS
-                [:!Ww :!SCopen_bracket]
-                [:!We :!SCclose_bracket]
-                [:!Wq :!Tu [:code]]
-                [:!Wr :!CTOp [:code]]
+                                         [:!Ww :!SCopen_bracket]
+                                         [:!We :!SCclose_bracket]
+                                         [:!Wq :!Tu [:code]]
+                                         [:!Wr :!CTOp [:code]]
 
                 ;; NAVIGATION SPACES
-                [:s [:yabai "space --focus prev"] :mouse-mode4]
-                [:d [:yabai "space --focus next"] :mouse-mode4]
+                                         [:s [:yabai "space --focus prev"] :mouse-mode4]
+                                         [:d [:yabai "space --focus next"] :mouse-mode4]]}
 
-            ]}
+        {:des "Toggle caps_lock by pressing left_shift then right_shift" :rules [[:!S#Pright_shift :caps_lock]
+                                                                                 [:!R#Pleft_shift :caps_lock]]}
+        {:des "Function to ESQ" :rules [[:fn :escape nil {:held :fn :params {:held 100}}]]}
+        {:des "Shift deletes Forward and Backward" :rules [[:#Pright_shift :right_shift  nil {:alone :!OFdelete_or_backspace}]
+                                                           [:#Pleft_shift :left_shift  nil {:alone :!Odelete_or_backspace}]]}
+        {:des "Media control" :rules [[:!F#Pm :play_or_pause]
+                                      [:!F#Pcomma :rewind]
+                                      [:!F#Pperiod :fast_forward]
+                                      [:#Pv :play_or_pause :mouse-mode4]
+                                      [:#Px :rewind :mouse-mode4]
+                                      [:#Pc :fast_forward :mouse-mode4]]}
 
-            {:des "Toggle caps_lock by pressing left_shift then right_shift" :rules[
-               [:!S#Pright_shift :caps_lock]
-               [:!R#Pleft_shift :caps_lock]
-            ]}
-            {:des "Function to ESQ" :rules[
-                 [:fn :escape nil {:held :fn :params{:held 100}}]
-            ]}
-            {:des "Shift deletes Forward and Backward" :rules[
-                [:#Pright_shift :right_shift  nil {:alone :!OFdelete_or_backspace}]
-                [:#Pleft_shift :left_shift  nil {:alone :!Odelete_or_backspace}]
-            ]}
-            {:des "Media control" :rules[
-                [:!F#Pm :play_or_pause]
-                [:!F#Pcomma :rewind]
-                [:!F#Pperiod :fast_forward]
-                [:#Pv :play_or_pause :mouse-mode4]
-                [:#Px :rewind :mouse-mode4]
-                [:#Pc :fast_forward :mouse-mode4]
+        {:des "Volume control" :rules [:x-mode
+                                       [:comma :volume_decrement]
+                                       [:period :volume_increment]]}
+        {:des "Brightness control" :rules [[:comma :display_brightness_decrement :z-mode]
+                                           [:period :display_brightness_increment :z-mode]
+                                           [:#Pw :display_brightness_decrement :mouse-mode4]
+                                           [:#Pe :display_brightness_increment :mouse-mode4]]}
+        {:des "Directional Keys" :rules [[:!F##j :up_arrow]
+                                         [:!F##k :left_arrow]
+                                         [:!F##l :right_arrow]
+                                         [:!F##semicolon :down_arrow]]}
 
-            ]}
-            {:des "Volume control" :rules[
-                :x-mode
-                [:comma :volume_decrement]
-                [:period :volume_increment]
-            ]}
-            {:des "Brightness control" :rules[
-                [:comma :display_brightness_decrement :z-mode]
-                [:period :display_brightness_increment :z-mode]
-                [:#Pw :display_brightness_decrement :mouse-mode4]
-                [:#Pe :display_brightness_increment :mouse-mode4]
-            ]}
-            {:des "Directional Keys" :rules[
-                 [:!F##j :up_arrow]
-                 [:!F##k :left_arrow]
-                 [:!F##l :right_arrow]
-                 [:!F##semicolon :down_arrow]
-            ]}
-        
-            {:des "Navigation Tabs" :rules[
-                 [:!F#Pi :!SCopen_bracket]
-                 [:!F#Po :!SCclose_bracket]
-            ]}
-            {:des "Scroll control" :rules[
-                
-                 [:!F#CP9 {:mkey {:vwheel 30 :speed 2}}]
-                 [:!F#CP8 {:mkey {:vwheel -30 :speed 2}}]
+        {:des "Navigation Tabs" :rules [[:!F#Pi :!SCopen_bracket]
+                                        [:!F#Po :!SCclose_bracket]]}
+        {:des "Scroll control" :rules [[:!F#CP9 {:mkey {:vwheel 30 :speed 2}}]
+                                       [:!F#CP8 {:mkey {:vwheel -30 :speed 2}}]
                 ;;  [:!O#CP9 {:mkey {:hwheel -20 :speed 2}}]
                 ;;  [:!O#CP8 {:mkey {:hwheel 20 :speed 2}}]
-            ]}
+                                       ]}
+;; ===== APPS =====
+        {:des "Next, Prev Cursor VsCode" :rules [:code
+                                                 [:!F#Pu :!Tu]
+                                                 [:!F#Pp :!CTOp]
+                                                 [:!F#Pn :!Ttab]
+                                                 [:!F#Pslash :!Ff12]]}
+        {:des "Anki controls" :rules [:anki
+                                      [:left_control :!SCz]
+                                      [:right_control :!Cz]
+                                      [[{:pkey :button1} {:pkey :button2}] ["anki-layer" 1] :!anki-layer]
+                                      [[{:pkey :button1} {:pkey :button2}] ["anki-layer" 0] :anki-layer]
+                                      [{:pkey :button1} :return_or_enter :anki-layer]
+                                      [{:pkey :button2} :semicolon :anki-layer]]}
 
-
-            ;; ===== APPS =====
-            {:des "Next, Prev Cursor VsCode" :rules[
-                :code
-                [:!F#Pu :!Tu]
-                [:!F#Pp :!CTOp]
-                [:!F#Pn :!Ttab]
-                [:!F#Pslash :!Ff12]
-            ]}
-            {:des "Anki controls" :rules[
-                :anki
-                [:left_control :!SCz]
-                [:right_control :!Cz]
-            ]}
-            {:des "Next, Prev Cursor intellij" :rules[
-                [:!F#Pu :!Thyphen :intellij]
-                [:!F#Pp :!SThyphen :intellij]
-            ]}
-            {:des "ShortCat" :rules[
-                 [:!F#Ph :!COTspacebar]
-            ]}
+        {:des "Next, Prev Cursor intellij" :rules [[:!F#Pu :!Thyphen :intellij]
+                                                   [:!F#Pp :!SThyphen :intellij]]}
+        {:des "ShortCat" :rules [[:!F#Ph :!COTspacebar]]}
             ;; {:des "Pika" :rules[
             ;;      [:!F#Pc :!Op]
             ;; ]}
-            {:des "DeepL" :rules[
-                 ;[:!F#Pt :!CTOt nil {:delayed {:invoked [:!Ctab :fn] :canceled []} :params {:delay 200}}]
-                 [:!F#Pt :!CTOt]
-                 [{:pkey :button13} [{:pkey :button1} {:pkey :button1} :!CTOt]]
-            ]}
+        {:des "DeepL" :rules [;[:!F#Pt :!CTOt nil {:delayed {:invoked [:!Ctab :fn] :canceled []} :params {:delay 200}}]
+                              [:!F#Pt :!CTOt]
+                              [{:pkey :button13} [{:pkey :button1} {:pkey :button1} :!CTOt]]]}
             ;; {:des "Mouse Pinter control" :rules[
             ;;      [:!F#Pw  {:mkey {:y -1536 :speed 1.0}}]
             ;;      [:!F#Ps {:mkey {:y 1536 :speed 1.0}}]
             ;;      [:!F#Pa {:mkey {:x -1536 :speed 1.0}}]
             ;;      [:!F#Pd {:mkey {:x 1536 :speed 1.0}}]
             ;;     ;;  [:!F#Pspacebar {:pkey :button1}]
-                
+
             ;; ]}
-            {:des "Opening Apps" :rules[
-                :launch-mode
-                [:#Pm [:launch-app "music"]]
-                [:#Pw [:launch-app "WhatsApp"]]
-                [:#Pn [:launch-app "Notion"]]
-                [:#Py [:launch-app "System Preferences"]]
-                [:#Pi [:launch-app "IntelliJ IDEA CE"]]
-                [:#Pg [:launch-app "Google Chrome"]]
-                [:#Ps [:launch-app "Safari"]]
-                [:#Pb [:launch-app "Dbeaver"]]
-                [:#Pe [:launch-app "Insomnia"]]
-                [:#Pc [:launch-app "KeyboardCleanTool"]]
-                [:#Pd [:directory "Downloads"]]
-                [:!S#Pd [:directory "Desktop"]]
-                [:#Pr [:directory ""]]
+        {:des "Opening Apps" :rules [:launch-mode
+                                     [:#Pm [:launch-app "music"]]
+                                     [:#Pw [:launch-app "WhatsApp"]]
+                                     [:#Pn [:launch-app "Notion"]]
+                                     [:#Py [:launch-app "System Preferences"]]
+                                     [:#Pi [:launch-app "IntelliJ IDEA CE"]]
+                                     [:#Pg [:launch-app "Google Chrome"]]
+                                     [:#Ps [:launch-app "Safari"]]
+                                     [:#Pb [:launch-app "Dbeaver"]]
+                                     [:#Pe [:launch-app "Insomnia"]]
+                                     [:#Pc [:launch-app "KeyboardCleanTool"]]
+                                     [:#Pd [:directory "Downloads"]]
+                                     [:!S#Pd [:directory "Desktop"]]
+                                     [:#Pr [:directory ""]]
 
                 ;; [[:p :g] [:launch-app "pgAdmin 4"] nil {:params {:held 100 :sim 30}}]
                 ;; [[:s :p] [:launch-app "System Preferences"] nil {:params {:held 100 :sim 30}}]
@@ -442,54 +376,48 @@
                 ;; [[:d :l] [] nil {:held "open ~/Downloads" :params {:held 100 :sim 30}}]
                 ;; [[:d :s] [] nil {:held "open ~/Desktop" :params {:held 100 :sim 30}}]
                 ;; [[:a :p] [] nil {:held "open /Applications" :params {:held 100 :sim 30}}]
-            ]}
-            
-            {:des "Comma Mode [,] as Trigger Key" :rules[
-                :comma-mode
-                 [:a :open_bracket]
-                 [:s :close_bracket]
-                 [:d :!S7]
-                 [:f :!S8]
-                 [:q :!Shyphen]
-                 [:w :!Sequal_sign]
-                 [:e :!S5]
-                 [:r :!S6]]}
-             {:des "Period Mode [.] as Trigger Key" :rules[
-                :period-mode
-                 [:comma ["period-comma-mode" 1] nil {:alone :comma :afterup ["period-comma-mode" 0]}]
-                 [:a [:!Sgrave_accent_and_tilde :slash]]
-                 [:s [:period :!S8]]
-                 [:d :!S9]
-                 [:f :!S0]
-                 [:q :hyphen]
-                 [:w :equal_sign]
-                 [:e :!Sopen_bracket]
-                 [:r :!Sclose_bracket]]}
-            {:des "HYPER: Hyper+B = Universal sidebar toggle" :rules[
-                
-            ; Show sidebar
-                    [:!F#Pb  [:!C#Pbackslash]  :postman]
-                    [:!F#Pb  [:!OCs]  :notes]
-                    [:!F#Pb  [:!SCl]  :safari]
-                    [:!F#Pb  [:!COb]  :chrome]          ; shows bookmark manager
-                    [:!F#Pb  [:!CTb]  :nova] 
-                    [:!F#Pb  [:!Cb]   :code]
-                    [:!F#Pb  [:!Cb]   :windsurf]
-                    [:!F#Pb  [:!CTs]  :finder]
-                    [:!F#Pb  [:!Cbackslash]  :notion]
-                    [:!F#Pb  [:!SCl]  :obsidian]
-                    [:!F#Pv  [:!CTs]  :obsidian]
-                    [:!F#Pb [:!CSp]  :finder]
-                    [:!F#Pb  [:!CTs]  :mail]
-                    [:!F#Pb  [:!CO2   ["previewsidebar" 0]] :preview1]
-                    [:!F#Pb  [:!CO1   ["previewsidebar" 1]] :preview0]
-                    [:!F#Pb  [:!CSbackslash] :terminal] ; no sidebar so tab overview
-                    [:!F#Pb  [:!CTs]]]}                   ; default cmd-ctrl-s to show/hide
+                                     ]}
+
+        {:des "Comma Mode [,] as Trigger Key" :rules [:comma-mode
+                                                      [:a :open_bracket]
+                                                      [:s :close_bracket]
+                                                      [:d :!S7]
+                                                      [:f :!S8]
+                                                      [:q :!Shyphen]
+                                                      [:w :!Sequal_sign]
+                                                      [:e :!S5]
+                                                      [:r :!S6]]}
+        {:des "Period Mode [.] as Trigger Key" :rules [:period-mode
+                                                       [:comma ["period-comma-mode" 1] nil {:alone :comma :afterup ["period-comma-mode" 0]}]
+                                                       [:a [:!Sgrave_accent_and_tilde :slash]]
+                                                       [:s [:period :!S8]]
+                                                       [:d :!S9]
+                                                       [:f :!S0]
+                                                       [:q :hyphen]
+                                                       [:w :equal_sign]
+                                                       [:e :!Sopen_bracket]
+                                                       [:r :!Sclose_bracket]]}
+        {:des "HYPER: Hyper+B = Universal sidebar toggle" :rules [; Show sidebar
+                                                                  [:!F#Pb  [:!C#Pbackslash]  :postman]
+                                                                  [:!F#Pb  [:!OCs]  :notes]
+                                                                  [:!F#Pb  [:!SCl]  :safari]
+                                                                  [:!F#Pb  [:!COb]  :chrome]          ; shows bookmark manager
+                                                                  [:!F#Pb  [:!CTb]  :nova]
+                                                                  [:!F#Pb  [:!Cb]   :code]
+                                                                  [:!F#Pb  [:!Cb]   :windsurf]
+                                                                  [:!F#Pb  [:!CTs]  :finder]
+                                                                  [:!F#Pb  [:!Cbackslash]  :notion]
+                                                                  [:!F#Pb  [:!SCl]  :obsidian]
+                                                                  [:!F#Pv  [:!CTs]  :obsidian]
+                                                                  [:!F#Pb [:!CSp]  :finder]
+                                                                  [:!F#Pb  [:!CTs]  :mail]
+                                                                  [:!F#Pb  [:!CO2   ["previewsidebar" 0]] :preview1]
+                                                                  [:!F#Pb  [:!CO1   ["previewsidebar" 1]] :preview0]
+                                                                  [:!F#Pb  [:!CSbackslash] :terminal] ; no sidebar so tab overview
+                                                                  [:!F#Pb  [:!CTs]]]}                   ; default cmd-ctrl-s to show/hide
                                                         ; sidebar in other apps.
                                                         ; might be better to remove this?
-         
-    ]
-}
+        ]}
 ;;          ===GokuRakuJoudo Official===
 ;; https://github.com/yqrashawn/GokuRakuJoudo/blob/master/examples.org
 ;; https://github.com/yqrashawn/GokuRakuJoudo/blob/master/tutorial.md
@@ -510,9 +438,6 @@
 ; https://github.com/nanoxd/dotfiles/blob/main/config/karabiner.edn (hyper)
 ; https://github.com/loudoguno/goku/blob/master/karabiner.edn (v. complex)
 ; https://gist.github.com/gsinclair/f4ab34da53034374eb6164698a0a8ace (simlayer)
-
-
-
 
 ;; <other options> section
 ;; to_if_alone                                    | :alone
@@ -569,9 +494,7 @@
 ;; ["cd" "ls"] | multiple shell command
 ;; [{:set ["variable name" "variable value"]}] | set variable's value to string (fallback to `tos` definition)
 
-
-
-   ;; :x {:mouse_key true}
+;; :x {:mouse_key true}
    ;; :y {:mouse_key true}
 ;;    :any {:modifier true :both true}
 ;;    :command {:modifier true :both true}
