@@ -421,6 +421,8 @@
                 [:#Pi [:launch-app "IntelliJ IDEA CE"]]
                 [:#Pg [:launch-app "Google Chrome"]]
                 [:#Ps [:launch-app "Safari"]]
+                [:#Pb [:launch-app "Dbeaver"]]
+                [:#Pe [:launch-app "Insomnia"]]
                 [:#Pc [:launch-app "KeyboardCleanTool"]]
                 [:#Pd [:directory "Downloads"]]
                 [:!S#Pd [:directory "Desktop"]]
