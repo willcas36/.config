@@ -48,12 +48,13 @@
                 :directory "open ~/%s"
                 }
 
-    :devices {:g305-device [{:vendor_id 1133 :product_id 50495}]}
+    :devices {:g305-device [{:vendor_id 1133 :product_id 50495}]
+    }
 
     :layers {
                 :hyper-mode {:key :caps_lock :alone {:key :return_or_enter}}
-                :mouse-mode1 {:key :keypad_1 :condi :g305-device :alone {:key :!Cc}}
-                :mouse-mode2 {:key :keypad_2 :condi :g305-device :alone {:key :!Cv}}
+                :mouse-mode1 {:key :keypad_1 :condi :g305-device :alone {:key :!Copen_bracket}}
+                :mouse-mode2 {:key :keypad_2 :condi :g305-device :alone {:key :!Cclose_bracket}}
                 :mouse-mode3 {:key :keypad_3 :condi :g305-device :alone {:pkey :button3}}
                 :mouse-mode4 {:key :keypad_4 :condi :g305-device :alone {:key :!Tup_arrow}}
              :launch-mode {:key :slash}
@@ -68,6 +69,11 @@
     :main [
             {:des "Capslock to Hyper, Return if alone" :rules[
                  [:##caps_lock :fn nil {:alone :return_or_enter}]
+            ]}
+            {:des "Mouse mode" :rules[
+                :g305-device
+                [:left_control :left_control nil {:alone :!C#Pclose_bracket}]
+                [:right_control :right_control nil {:alone :!C#Popen_bracket}]
             ]}
             {:des, "Yabai keybinds", :rules[
                 ;;====NAVIGATION====
@@ -265,49 +271,49 @@
             ;; :condi for multiple conditions
             {:des "Mouse navigation" :rules[
                 ;;[:condi :g305-device :f1-mode :z-mode] for multiple conditions use :condi as the first element
-                [:v [:yabai "space --focus 4 "] :mouse-mode2 {:afterup [:yabai "window --focus mouse"]}]
-                [:c [:yabai "space --focus 3 "] :mouse-mode2 {:afterup [:yabai "window --focus mouse"]}]
-                [:x [:yabai "space --focus 2 "] :mouse-mode2 {:afterup [:yabai "window --focus mouse"]}]
-                [:z [:yabai "space --focus 1 "] :mouse-mode2 {:afterup [:yabai "window --focus mouse"]}]
+                [:!Wv [:yabai "space --focus 4 "] nil {:afterup [:yabai "window --focus mouse"]}]
+                [:!Wc [:yabai "space --focus 3 "] nil {:afterup [:yabai "window --focus mouse"]}]
+                [:!Wx [:yabai "space --focus 2 "] nil {:afterup [:yabai "window --focus mouse"]}]
+                [:!Wz [:yabai "space --focus 1 "] nil {:afterup [:yabai "window --focus mouse"]}]
 
-                [:!Sv [:yabai "window --space 4"] :mouse-mode2]
-                [:!Sc [:yabai "window --space 3"] :mouse-mode2]
-                [:!Sx [:yabai "window --space 2"] :mouse-mode2]
-                [:!Sz [:yabai "window --space 1"] :mouse-mode2]
-
-
-                [:v [:yabai "space --focus 8 "] :mouse-mode1 {:afterup [:yabai "window --focus mouse"]}]
-                [:c [:yabai "space --focus 7 "] :mouse-mode1 {:afterup [:yabai "window --focus mouse"]}]
-                [:x [:yabai "space --focus 6 "] :mouse-mode1 {:afterup [:yabai "window --focus mouse"]}]
-                [:z [:yabai "space --focus 5 "] :mouse-mode1 {:afterup [:yabai "window --focus mouse"]}]
-
-                [:!Sv [:yabai "window --space 8"] :mouse-mode1]
-                [:!Sc [:yabai "window --space 7"] :mouse-mode1]
-                [:!Sx [:yabai "window --space 6"] :mouse-mode1]
-                [:!Sz [:yabai "window --space 5"] :mouse-mode1]
+                [:!WSv [:yabai "window --space 4"]]
+                [:!WSc [:yabai "window --space 3"]]
+                [:!WSx [:yabai "window --space 2"]]
+                [:!WSz [:yabai "window --space 1"]] 
 
 
-                [:b [:yabai "space --focus 10 "] :mouse-mode2 {:afterup [:yabai "window --focus mouse"]}]
-                [:!Sb [:yabai "window --space 10"] :mouse-mode2]
-                [:w [:yabai "space --focus 11 "] :mouse-mode1 {:afterup [:yabai "window --focus mouse"]}]
-                [:!Sw [:yabai "window --space 11"] :mouse-mode1]
-                [:e [:yabai "space --focus 12 "] :mouse-mode1 {:afterup [:yabai "window --focus mouse"]}]
+                [:!Tv [:yabai "space --focus 8 "] nil {:afterup [:yabai "window --focus mouse"]}]
+                [:!Tc [:yabai "space --focus 7 "] nil {:afterup [:yabai "window --focus mouse"]}]
+                [:!Tx [:yabai "space --focus 6 "] nil {:afterup [:yabai "window --focus mouse"]}]
+                [:!Tz [:yabai "space --focus 5 "] nil {:afterup [:yabai "window --focus mouse"]}]
+
+                [:!TSv [:yabai "window --space 8"]]
+                [:!TSc [:yabai "window --space 7"]]
+                [:!TSx [:yabai "window --space 6"]]
+                [:!TSz [:yabai "window --space 5"]]
 
 
-                [:s [:yabai "window --focus west"] :mouse-mode2]
-                [:d [:yabai "window --focus east"] :mouse-mode2]
-                [:f [:yabai "window --focus stack.recent"] :mouse-mode2]
-                [:a [:yabai "window --toggle zoom-fullscreen"] :mouse-mode2]
+                [:!Wb [:yabai "space --focus 10 "] nil {:afterup [:yabai "window --focus mouse"]}]
+                [:!WSb [:yabai "window --space 10"]]
+                [:!Tw [:yabai "space --focus 11 "] nil {:afterup [:yabai "window --focus mouse"]}]
+                [:!TSw [:yabai "window --space 11"]]
+                [:!Te [:yabai "space --focus 12 "] nil {:afterup [:yabai "window --focus mouse"]}]
+
+
+                [:!Ws [:yabai "window --focus west"]]
+                [:!Wd [:yabai "window --focus east"]]
+                [:!Wf [:yabai "window --focus stack.recent"]]
+                [:!Wa [:yabai "window --toggle zoom-fullscreen"]]
                 
-                [:s [:yabai "window --focus west"] :mouse-mode1]
-                [:d [:yabai "window --focus east"] :mouse-mode1]
-                [:f [:yabai "window --focus stack.recent"] :mouse-mode1]
-                [:a [:yabai "window --toggle zoom-fullscreen"] :mouse-mode1]
+                [:!Ts [:yabai "window --focus west"]]
+                [:!Td [:yabai "window --focus east"]]
+                [:!Tf [:yabai "window --focus stack.recent"]]
+                [:!Ta [:yabai "window --toggle zoom-fullscreen"]]
                 ;; NAVIGATION TABS
-                [:w :!SCopen_bracket :mouse-mode2]
-                [:e :!SCclose_bracket :mouse-mode2]
-                [:q :!Tu [:code :mouse-mode2]]
-                [:r :!CTOp [:code :mouse-mode2]]
+                [:!Ww :!SCopen_bracket]
+                [:!We :!SCclose_bracket]
+                [:!Wq :!Tu [:code]]
+                [:!Wr :!CTOp [:code]]
 
                 ;; NAVIGATION SPACES
                 [:s [:yabai "space --focus prev"] :mouse-mode4]

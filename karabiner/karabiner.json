@@ -13,62 +13,6 @@
           "type" : "basic",
           "to" : [ {
             "set_variable" : {
-              "name" : "mouse-mode2",
-              "value" : 1
-            }
-          } ],
-          "from" : {
-            "key_code" : "keypad_2"
-          },
-          "to_after_key_up" : [ {
-            "set_variable" : {
-              "name" : "mouse-mode2",
-              "value" : 0
-            }
-          } ],
-          "to_if_alone" : [ {
-            "key_code" : "v",
-            "modifiers" : [ "left_command" ]
-          } ],
-          "conditions" : [ {
-            "identifiers" : [ {
-              "vendor_id" : 1133,
-              "product_id" : 50495
-            } ],
-            "type" : "device_if"
-          } ]
-        }, {
-          "type" : "basic",
-          "to" : [ {
-            "set_variable" : {
-              "name" : "mouse-mode1",
-              "value" : 1
-            }
-          } ],
-          "from" : {
-            "key_code" : "keypad_1"
-          },
-          "to_after_key_up" : [ {
-            "set_variable" : {
-              "name" : "mouse-mode1",
-              "value" : 0
-            }
-          } ],
-          "to_if_alone" : [ {
-            "key_code" : "c",
-            "modifiers" : [ "left_command" ]
-          } ],
-          "conditions" : [ {
-            "identifiers" : [ {
-              "vendor_id" : 1133,
-              "product_id" : 50495
-            } ],
-            "type" : "device_if"
-          } ]
-        }, {
-          "type" : "basic",
-          "to" : [ {
-            "set_variable" : {
               "name" : "mouse-mode4",
               "value" : 1
             }
@@ -128,6 +72,47 @@
           },
           "to" : [ {
             "key_code" : "fn"
+          } ],
+          "type" : "basic"
+        } ]
+      }, {
+        "description" : "Mouse mode",
+        "manipulators" : [ {
+          "to_if_alone" : [ {
+            "key_code" : "close_bracket",
+            "modifiers" : [ "left_command" ]
+          } ],
+          "from" : {
+            "key_code" : "left_control"
+          },
+          "to" : [ {
+            "key_code" : "left_control"
+          } ],
+          "conditions" : [ {
+            "identifiers" : [ {
+              "vendor_id" : 1133,
+              "product_id" : 50495
+            } ],
+            "type" : "device_if"
+          } ],
+          "type" : "basic"
+        }, {
+          "to_if_alone" : [ {
+            "key_code" : "open_bracket",
+            "modifiers" : [ "left_command" ]
+          } ],
+          "from" : {
+            "key_code" : "right_control"
+          },
+          "to" : [ {
+            "key_code" : "right_control"
+          } ],
+          "conditions" : [ {
+            "identifiers" : [ {
+              "vendor_id" : 1133,
+              "product_id" : 50495
+            } ],
+            "type" : "device_if"
           } ],
           "type" : "basic"
         } ]
@@ -1194,255 +1179,199 @@
             "shell_command" : "/opt/homebrew/bin/yabai -m window --focus mouse"
           } ],
           "from" : {
-            "key_code" : "v"
+            "key_code" : "v",
+            "modifiers" : {
+              "mandatory" : [ "right_control" ]
+            }
           },
           "to" : [ {
             "shell_command" : "/opt/homebrew/bin/yabai -m space --focus 4 "
           } ],
-          "conditions" : [ {
-            "name" : "mouse-mode2",
-            "value" : 1,
-            "type" : "variable_if"
-          } ],
           "type" : "basic"
         }, {
           "to_after_key_up" : [ {
             "shell_command" : "/opt/homebrew/bin/yabai -m window --focus mouse"
           } ],
           "from" : {
-            "key_code" : "c"
+            "key_code" : "c",
+            "modifiers" : {
+              "mandatory" : [ "right_control" ]
+            }
           },
           "to" : [ {
             "shell_command" : "/opt/homebrew/bin/yabai -m space --focus 3 "
           } ],
-          "conditions" : [ {
-            "name" : "mouse-mode2",
-            "value" : 1,
-            "type" : "variable_if"
-          } ],
           "type" : "basic"
         }, {
           "to_after_key_up" : [ {
             "shell_command" : "/opt/homebrew/bin/yabai -m window --focus mouse"
           } ],
           "from" : {
-            "key_code" : "x"
+            "key_code" : "x",
+            "modifiers" : {
+              "mandatory" : [ "right_control" ]
+            }
           },
           "to" : [ {
             "shell_command" : "/opt/homebrew/bin/yabai -m space --focus 2 "
           } ],
-          "conditions" : [ {
-            "name" : "mouse-mode2",
-            "value" : 1,
-            "type" : "variable_if"
-          } ],
           "type" : "basic"
         }, {
           "to_after_key_up" : [ {
             "shell_command" : "/opt/homebrew/bin/yabai -m window --focus mouse"
           } ],
           "from" : {
-            "key_code" : "z"
+            "key_code" : "z",
+            "modifiers" : {
+              "mandatory" : [ "right_control" ]
+            }
           },
           "to" : [ {
             "shell_command" : "/opt/homebrew/bin/yabai -m space --focus 1 "
-          } ],
-          "conditions" : [ {
-            "name" : "mouse-mode2",
-            "value" : 1,
-            "type" : "variable_if"
           } ],
           "type" : "basic"
         }, {
           "from" : {
             "key_code" : "v",
             "modifiers" : {
-              "mandatory" : [ "left_shift" ]
+              "mandatory" : [ "left_shift", "right_control" ]
             }
           },
           "to" : [ {
             "shell_command" : "/opt/homebrew/bin/yabai -m window --space 4"
           } ],
-          "conditions" : [ {
-            "name" : "mouse-mode2",
-            "value" : 1,
-            "type" : "variable_if"
-          } ],
           "type" : "basic"
         }, {
           "from" : {
             "key_code" : "c",
             "modifiers" : {
-              "mandatory" : [ "left_shift" ]
+              "mandatory" : [ "left_shift", "right_control" ]
             }
           },
           "to" : [ {
             "shell_command" : "/opt/homebrew/bin/yabai -m window --space 3"
-          } ],
-          "conditions" : [ {
-            "name" : "mouse-mode2",
-            "value" : 1,
-            "type" : "variable_if"
           } ],
           "type" : "basic"
         }, {
           "from" : {
             "key_code" : "x",
             "modifiers" : {
-              "mandatory" : [ "left_shift" ]
+              "mandatory" : [ "left_shift", "right_control" ]
             }
           },
           "to" : [ {
             "shell_command" : "/opt/homebrew/bin/yabai -m window --space 2"
-          } ],
-          "conditions" : [ {
-            "name" : "mouse-mode2",
-            "value" : 1,
-            "type" : "variable_if"
           } ],
           "type" : "basic"
         }, {
           "from" : {
             "key_code" : "z",
             "modifiers" : {
-              "mandatory" : [ "left_shift" ]
+              "mandatory" : [ "left_shift", "right_control" ]
             }
           },
           "to" : [ {
             "shell_command" : "/opt/homebrew/bin/yabai -m window --space 1"
           } ],
-          "conditions" : [ {
-            "name" : "mouse-mode2",
-            "value" : 1,
-            "type" : "variable_if"
-          } ],
           "type" : "basic"
         }, {
           "to_after_key_up" : [ {
             "shell_command" : "/opt/homebrew/bin/yabai -m window --focus mouse"
           } ],
           "from" : {
-            "key_code" : "v"
+            "key_code" : "v",
+            "modifiers" : {
+              "mandatory" : [ "left_control" ]
+            }
           },
           "to" : [ {
             "shell_command" : "/opt/homebrew/bin/yabai -m space --focus 8 "
           } ],
-          "conditions" : [ {
-            "name" : "mouse-mode1",
-            "value" : 1,
-            "type" : "variable_if"
-          } ],
           "type" : "basic"
         }, {
           "to_after_key_up" : [ {
             "shell_command" : "/opt/homebrew/bin/yabai -m window --focus mouse"
           } ],
           "from" : {
-            "key_code" : "c"
+            "key_code" : "c",
+            "modifiers" : {
+              "mandatory" : [ "left_control" ]
+            }
           },
           "to" : [ {
             "shell_command" : "/opt/homebrew/bin/yabai -m space --focus 7 "
           } ],
-          "conditions" : [ {
-            "name" : "mouse-mode1",
-            "value" : 1,
-            "type" : "variable_if"
-          } ],
           "type" : "basic"
         }, {
           "to_after_key_up" : [ {
             "shell_command" : "/opt/homebrew/bin/yabai -m window --focus mouse"
           } ],
           "from" : {
-            "key_code" : "x"
+            "key_code" : "x",
+            "modifiers" : {
+              "mandatory" : [ "left_control" ]
+            }
           },
           "to" : [ {
             "shell_command" : "/opt/homebrew/bin/yabai -m space --focus 6 "
           } ],
-          "conditions" : [ {
-            "name" : "mouse-mode1",
-            "value" : 1,
-            "type" : "variable_if"
-          } ],
           "type" : "basic"
         }, {
           "to_after_key_up" : [ {
             "shell_command" : "/opt/homebrew/bin/yabai -m window --focus mouse"
           } ],
           "from" : {
-            "key_code" : "z"
+            "key_code" : "z",
+            "modifiers" : {
+              "mandatory" : [ "left_control" ]
+            }
           },
           "to" : [ {
             "shell_command" : "/opt/homebrew/bin/yabai -m space --focus 5 "
-          } ],
-          "conditions" : [ {
-            "name" : "mouse-mode1",
-            "value" : 1,
-            "type" : "variable_if"
           } ],
           "type" : "basic"
         }, {
           "from" : {
             "key_code" : "v",
             "modifiers" : {
-              "mandatory" : [ "left_shift" ]
+              "mandatory" : [ "left_control", "left_shift" ]
             }
           },
           "to" : [ {
             "shell_command" : "/opt/homebrew/bin/yabai -m window --space 8"
-          } ],
-          "conditions" : [ {
-            "name" : "mouse-mode1",
-            "value" : 1,
-            "type" : "variable_if"
           } ],
           "type" : "basic"
         }, {
           "from" : {
             "key_code" : "c",
             "modifiers" : {
-              "mandatory" : [ "left_shift" ]
+              "mandatory" : [ "left_control", "left_shift" ]
             }
           },
           "to" : [ {
             "shell_command" : "/opt/homebrew/bin/yabai -m window --space 7"
-          } ],
-          "conditions" : [ {
-            "name" : "mouse-mode1",
-            "value" : 1,
-            "type" : "variable_if"
           } ],
           "type" : "basic"
         }, {
           "from" : {
             "key_code" : "x",
             "modifiers" : {
-              "mandatory" : [ "left_shift" ]
+              "mandatory" : [ "left_control", "left_shift" ]
             }
           },
           "to" : [ {
             "shell_command" : "/opt/homebrew/bin/yabai -m window --space 6"
-          } ],
-          "conditions" : [ {
-            "name" : "mouse-mode1",
-            "value" : 1,
-            "type" : "variable_if"
           } ],
           "type" : "basic"
         }, {
           "from" : {
             "key_code" : "z",
             "modifiers" : {
-              "mandatory" : [ "left_shift" ]
+              "mandatory" : [ "left_control", "left_shift" ]
             }
           },
           "to" : [ {
             "shell_command" : "/opt/homebrew/bin/yabai -m window --space 5"
-          } ],
-          "conditions" : [ {
-            "name" : "mouse-mode1",
-            "value" : 1,
-            "type" : "variable_if"
           } ],
           "type" : "basic"
         }, {
@@ -1450,31 +1379,24 @@
             "shell_command" : "/opt/homebrew/bin/yabai -m window --focus mouse"
           } ],
           "from" : {
-            "key_code" : "b"
+            "key_code" : "b",
+            "modifiers" : {
+              "mandatory" : [ "right_control" ]
+            }
           },
           "to" : [ {
             "shell_command" : "/opt/homebrew/bin/yabai -m space --focus 10 "
-          } ],
-          "conditions" : [ {
-            "name" : "mouse-mode2",
-            "value" : 1,
-            "type" : "variable_if"
           } ],
           "type" : "basic"
         }, {
           "from" : {
             "key_code" : "b",
             "modifiers" : {
-              "mandatory" : [ "left_shift" ]
+              "mandatory" : [ "left_shift", "right_control" ]
             }
           },
           "to" : [ {
             "shell_command" : "/opt/homebrew/bin/yabai -m window --space 10"
-          } ],
-          "conditions" : [ {
-            "name" : "mouse-mode2",
-            "value" : 1,
-            "type" : "variable_if"
           } ],
           "type" : "basic"
         }, {
@@ -1482,31 +1404,24 @@
             "shell_command" : "/opt/homebrew/bin/yabai -m window --focus mouse"
           } ],
           "from" : {
-            "key_code" : "w"
+            "key_code" : "w",
+            "modifiers" : {
+              "mandatory" : [ "left_control" ]
+            }
           },
           "to" : [ {
             "shell_command" : "/opt/homebrew/bin/yabai -m space --focus 11 "
-          } ],
-          "conditions" : [ {
-            "name" : "mouse-mode1",
-            "value" : 1,
-            "type" : "variable_if"
           } ],
           "type" : "basic"
         }, {
           "from" : {
             "key_code" : "w",
             "modifiers" : {
-              "mandatory" : [ "left_shift" ]
+              "mandatory" : [ "left_control", "left_shift" ]
             }
           },
           "to" : [ {
             "shell_command" : "/opt/homebrew/bin/yabai -m window --space 11"
-          } ],
-          "conditions" : [ {
-            "name" : "mouse-mode1",
-            "value" : 1,
-            "type" : "variable_if"
           } ],
           "type" : "basic"
         }, {
@@ -1514,152 +1429,133 @@
             "shell_command" : "/opt/homebrew/bin/yabai -m window --focus mouse"
           } ],
           "from" : {
-            "key_code" : "e"
+            "key_code" : "e",
+            "modifiers" : {
+              "mandatory" : [ "left_control" ]
+            }
           },
           "to" : [ {
             "shell_command" : "/opt/homebrew/bin/yabai -m space --focus 12 "
           } ],
-          "conditions" : [ {
-            "name" : "mouse-mode1",
-            "value" : 1,
-            "type" : "variable_if"
-          } ],
           "type" : "basic"
         }, {
           "from" : {
-            "key_code" : "s"
+            "key_code" : "s",
+            "modifiers" : {
+              "mandatory" : [ "right_control" ]
+            }
           },
           "to" : [ {
             "shell_command" : "/opt/homebrew/bin/yabai -m window --focus west"
           } ],
-          "conditions" : [ {
-            "name" : "mouse-mode2",
-            "value" : 1,
-            "type" : "variable_if"
-          } ],
           "type" : "basic"
         }, {
           "from" : {
-            "key_code" : "d"
+            "key_code" : "d",
+            "modifiers" : {
+              "mandatory" : [ "right_control" ]
+            }
           },
           "to" : [ {
             "shell_command" : "/opt/homebrew/bin/yabai -m window --focus east"
           } ],
-          "conditions" : [ {
-            "name" : "mouse-mode2",
-            "value" : 1,
-            "type" : "variable_if"
-          } ],
           "type" : "basic"
         }, {
           "from" : {
-            "key_code" : "f"
+            "key_code" : "f",
+            "modifiers" : {
+              "mandatory" : [ "right_control" ]
+            }
           },
           "to" : [ {
             "shell_command" : "/opt/homebrew/bin/yabai -m window --focus stack.recent"
           } ],
-          "conditions" : [ {
-            "name" : "mouse-mode2",
-            "value" : 1,
-            "type" : "variable_if"
-          } ],
           "type" : "basic"
         }, {
           "from" : {
-            "key_code" : "a"
+            "key_code" : "a",
+            "modifiers" : {
+              "mandatory" : [ "right_control" ]
+            }
           },
           "to" : [ {
             "shell_command" : "/opt/homebrew/bin/yabai -m window --toggle zoom-fullscreen"
           } ],
-          "conditions" : [ {
-            "name" : "mouse-mode2",
-            "value" : 1,
-            "type" : "variable_if"
-          } ],
           "type" : "basic"
         }, {
           "from" : {
-            "key_code" : "s"
+            "key_code" : "s",
+            "modifiers" : {
+              "mandatory" : [ "left_control" ]
+            }
           },
           "to" : [ {
             "shell_command" : "/opt/homebrew/bin/yabai -m window --focus west"
           } ],
-          "conditions" : [ {
-            "name" : "mouse-mode1",
-            "value" : 1,
-            "type" : "variable_if"
-          } ],
           "type" : "basic"
         }, {
           "from" : {
-            "key_code" : "d"
+            "key_code" : "d",
+            "modifiers" : {
+              "mandatory" : [ "left_control" ]
+            }
           },
           "to" : [ {
             "shell_command" : "/opt/homebrew/bin/yabai -m window --focus east"
           } ],
-          "conditions" : [ {
-            "name" : "mouse-mode1",
-            "value" : 1,
-            "type" : "variable_if"
-          } ],
           "type" : "basic"
         }, {
           "from" : {
-            "key_code" : "f"
+            "key_code" : "f",
+            "modifiers" : {
+              "mandatory" : [ "left_control" ]
+            }
           },
           "to" : [ {
             "shell_command" : "/opt/homebrew/bin/yabai -m window --focus stack.recent"
           } ],
-          "conditions" : [ {
-            "name" : "mouse-mode1",
-            "value" : 1,
-            "type" : "variable_if"
-          } ],
           "type" : "basic"
         }, {
           "from" : {
-            "key_code" : "a"
+            "key_code" : "a",
+            "modifiers" : {
+              "mandatory" : [ "left_control" ]
+            }
           },
           "to" : [ {
             "shell_command" : "/opt/homebrew/bin/yabai -m window --toggle zoom-fullscreen"
           } ],
-          "conditions" : [ {
-            "name" : "mouse-mode1",
-            "value" : 1,
-            "type" : "variable_if"
-          } ],
           "type" : "basic"
         }, {
           "from" : {
-            "key_code" : "w"
+            "key_code" : "w",
+            "modifiers" : {
+              "mandatory" : [ "right_control" ]
+            }
           },
           "to" : [ {
             "key_code" : "open_bracket",
             "modifiers" : [ "left_command", "left_shift" ]
           } ],
-          "conditions" : [ {
-            "name" : "mouse-mode2",
-            "value" : 1,
-            "type" : "variable_if"
-          } ],
           "type" : "basic"
         }, {
           "from" : {
-            "key_code" : "e"
+            "key_code" : "e",
+            "modifiers" : {
+              "mandatory" : [ "right_control" ]
+            }
           },
           "to" : [ {
             "key_code" : "close_bracket",
             "modifiers" : [ "left_command", "left_shift" ]
           } ],
-          "conditions" : [ {
-            "name" : "mouse-mode2",
-            "value" : 1,
-            "type" : "variable_if"
-          } ],
           "type" : "basic"
         }, {
           "from" : {
-            "key_code" : "q"
+            "key_code" : "q",
+            "modifiers" : {
+              "mandatory" : [ "right_control" ]
+            }
           },
           "to" : [ {
             "key_code" : "u",
@@ -1668,15 +1564,14 @@
           "conditions" : [ {
             "type" : "frontmost_application_if",
             "bundle_identifiers" : [ "^com\\.visualstudio\\.code\\.oss$", "^com\\.microsoft\\.VSCode(Insiders)?$", "^com\\.microsoft\\.VSCode?$", "com\\.exafunction\\.windsurf", "com.google.antigravity" ]
-          }, {
-            "name" : "mouse-mode2",
-            "value" : 1,
-            "type" : "variable_if"
           } ],
           "type" : "basic"
         }, {
           "from" : {
-            "key_code" : "r"
+            "key_code" : "r",
+            "modifiers" : {
+              "mandatory" : [ "right_control" ]
+            }
           },
           "to" : [ {
             "key_code" : "p",
@@ -1685,10 +1580,6 @@
           "conditions" : [ {
             "type" : "frontmost_application_if",
             "bundle_identifiers" : [ "^com\\.visualstudio\\.code\\.oss$", "^com\\.microsoft\\.VSCode(Insiders)?$", "^com\\.microsoft\\.VSCode?$", "com\\.exafunction\\.windsurf", "com.google.antigravity" ]
-          }, {
-            "name" : "mouse-mode2",
-            "value" : 1,
-            "type" : "variable_if"
           } ],
           "type" : "basic"
         }, {
@@ -2288,17 +2179,7 @@
         "description" : "Anki controls",
         "manipulators" : [ {
           "from" : {
-            "simultaneous" : [ {
-              "pointing_button" : "button6"
-            }, {
-              "pointing_button" : "button1"
-            } ],
-            "simultaneous_options" : {
-              "detect_key_down_uninterruptedly" : false,
-              "key_down_order" : "insensitive",
-              "key_up_order" : "insensitive",
-              "key_up_when" : "any"
-            }
+            "key_code" : "left_control"
           },
           "to" : [ {
             "key_code" : "z",
@@ -2311,181 +2192,7 @@
           "type" : "basic"
         }, {
           "from" : {
-            "simultaneous" : [ {
-              "pointing_button" : "button4"
-            }, {
-              "pointing_button" : "button1"
-            } ],
-            "simultaneous_options" : {
-              "detect_key_down_uninterruptedly" : false,
-              "key_down_order" : "insensitive",
-              "key_up_order" : "insensitive",
-              "key_up_when" : "any"
-            }
-          },
-          "to" : [ {
-            "key_code" : "z",
-            "modifiers" : [ "left_command", "left_shift" ]
-          } ],
-          "conditions" : [ {
-            "type" : "frontmost_application_if",
-            "bundle_identifiers" : [ "^net\\.ankiweb\\.dtop" ]
-          } ],
-          "type" : "basic"
-        }, {
-          "from" : {
-            "simultaneous" : [ {
-              "pointing_button" : "button6"
-            }, {
-              "pointing_button" : "button2"
-            } ],
-            "simultaneous_options" : {
-              "detect_key_down_uninterruptedly" : false,
-              "key_down_order" : "insensitive",
-              "key_up_order" : "insensitive",
-              "key_up_when" : "any"
-            }
-          },
-          "to" : [ {
-            "key_code" : "i"
-          } ],
-          "conditions" : [ {
-            "type" : "frontmost_application_if",
-            "bundle_identifiers" : [ "^net\\.ankiweb\\.dtop" ]
-          } ],
-          "type" : "basic"
-        }, {
-          "from" : {
-            "simultaneous" : [ {
-              "pointing_button" : "button4"
-            }, {
-              "pointing_button" : "button2"
-            } ],
-            "simultaneous_options" : {
-              "detect_key_down_uninterruptedly" : false,
-              "key_down_order" : "insensitive",
-              "key_up_order" : "insensitive",
-              "key_up_when" : "any"
-            }
-          },
-          "to" : [ {
-            "key_code" : "t"
-          } ],
-          "conditions" : [ {
-            "type" : "frontmost_application_if",
-            "bundle_identifiers" : [ "^net\\.ankiweb\\.dtop" ]
-          } ],
-          "type" : "basic"
-        }, {
-          "from" : {
-            "pointing_button" : "button3"
-          },
-          "to" : [ {
-            "key_code" : "escape"
-          } ],
-          "conditions" : [ {
-            "type" : "frontmost_application_if",
-            "bundle_identifiers" : [ "^net\\.ankiweb\\.dtop" ]
-          } ],
-          "type" : "basic"
-        }, {
-          "from" : {
-            "pointing_button" : "button6"
-          },
-          "to" : [ {
-            "key_code" : "return_or_enter"
-          } ],
-          "conditions" : [ {
-            "type" : "frontmost_application_if",
-            "bundle_identifiers" : [ "^net\\.ankiweb\\.dtop" ]
-          } ],
-          "type" : "basic"
-        }, {
-          "from" : {
-            "pointing_button" : "button4"
-          },
-          "to" : [ {
-            "key_code" : "j"
-          } ],
-          "conditions" : [ {
-            "type" : "frontmost_application_if",
-            "bundle_identifiers" : [ "^net\\.ankiweb\\.dtop" ]
-          } ],
-          "type" : "basic"
-        }, {
-          "from" : {
-            "simultaneous" : [ {
-              "pointing_button" : "button1"
-            }, {
-              "pointing_button" : "button2"
-            } ],
-            "simultaneous_options" : {
-              "detect_key_down_uninterruptedly" : false,
-              "key_down_order" : "insensitive",
-              "key_up_order" : "insensitive",
-              "key_up_when" : "any"
-            }
-          },
-          "to" : [ {
-            "pointing_button" : "button1"
-          }, {
-            "pointing_button" : "button1"
-          }, {
-            "pointing_button" : "button1"
-          }, {
-            "key_code" : "t",
-            "modifiers" : [ "left_command", "left_control", "left_option" ]
-          } ],
-          "conditions" : [ {
-            "type" : "frontmost_application_if",
-            "bundle_identifiers" : [ "^net\\.ankiweb\\.dtop" ]
-          } ],
-          "type" : "basic"
-        }, {
-          "from" : {
-            "pointing_button" : "button13"
-          },
-          "to" : [ {
-            "pointing_button" : "button1"
-          }, {
-            "pointing_button" : "button1"
-          }, {
-            "key_code" : "t",
-            "modifiers" : [ "left_command", "left_control", "left_option" ]
-          } ],
-          "conditions" : [ {
-            "type" : "frontmost_application_if",
-            "bundle_identifiers" : [ "^net\\.ankiweb\\.dtop" ]
-          } ],
-          "type" : "basic"
-        }, {
-          "from" : {
-            "key_code" : "semicolon"
-          },
-          "to" : [ {
-            "key_code" : "return_or_enter"
-          } ],
-          "conditions" : [ {
-            "type" : "frontmost_application_if",
-            "bundle_identifiers" : [ "^net\\.ankiweb\\.dtop" ]
-          } ],
-          "type" : "basic"
-        }, {
-          "from" : {
-            "key_code" : "comma"
-          },
-          "to" : [ {
-            "key_code" : "z",
-            "modifiers" : [ "left_command" ]
-          } ],
-          "conditions" : [ {
-            "type" : "frontmost_application_if",
-            "bundle_identifiers" : [ "^net\\.ankiweb\\.dtop" ]
-          } ],
-          "type" : "basic"
-        }, {
-          "from" : {
-            "key_code" : "period"
+            "key_code" : "right_control"
           },
           "to" : [ {
             "key_code" : "z",
