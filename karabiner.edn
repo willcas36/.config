@@ -317,10 +317,10 @@
                                                  [:!F#Pn :!Ttab]
                                                  [:!F#Pslash :!Ff12]]}
         {:des "Anki controls" :rules [:anki
+                                      [[:right_control :left_control] ["anki-layer" 1] :!anki-layer]
+                                      [[:right_control :left_control] ["anki-layer" 0] :anki-layer]
                                       [:left_control :!SCz]
                                       [:right_control :!Cz]
-                                      [[{:pkey :button1} {:pkey :button2}] ["anki-layer" 1] :!anki-layer]
-                                      [[{:pkey :button1} {:pkey :button2}] ["anki-layer" 0] :anki-layer]
                                       [{:pkey :button1} :return_or_enter :anki-layer]
                                       [{:pkey :button2} :semicolon :anki-layer]
                                       [:keypad_3 :escape]]}
