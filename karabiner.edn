@@ -72,15 +72,15 @@
             ]}
             {:des "Mouse mode" :rules[
                 :g305-device
-                [:left_control :left_control nil {:alone :!C#Pclose_bracket}]
-                [:right_control :right_control nil {:alone :!C#Popen_bracket}]
+                [:left_control :left_control :!anki {:alone :!C#Pclose_bracket}]
+                [:right_control :right_control :!anki {:alone :!C#Popen_bracket}]
             ]}
             {:des, "Yabai keybinds", :rules[
                 ;;====NAVIGATION====
 
                 ;;Focus Spaces
 
-                ;; SIP Activated
+                    ;; SIP Activated
                 ;; [:!E#Pz [:!Ez [:yabai "display --focus 1"]]]
                 ;; [:!E#Px [:!Ex [:yabai "display --focus 1"]]]
                 ;; [:!E#Pc [:!Ec [:yabai "display --focus 1"]]]
@@ -382,18 +382,8 @@
             ]}
             {:des "Anki controls" :rules[
                 :anki
-                 [[{:pkey :button6} {:pkey :button1}] :!Cz]
-                 [[{:pkey :button4} {:pkey :button1}] :!SCz]
-                 [[{:pkey :button6} {:pkey :button2}] :i]
-                 [[{:pkey :button4} {:pkey :button2}] :t]
-                 [{:pkey :button3} :escape]
-                 [{:pkey :button6} [:return_or_enter]]
-                 [{:pkey :button4} :j]
-                 [[{:pkey :button1} {:pkey :button2}] [{:pkey :button1} {:pkey :button1} {:pkey :button1} :!CTOt]]
-                 [{:pkey :button13} [{:pkey :button1} {:pkey :button1} :!CTOt]]
-                 [:semicolon :return_or_enter]
-                 [:comma :!Cz]
-                 [:period :!SCz]
+                [:left_control :!SCz]
+                [:right_control :!Cz]
             ]}
             {:des "Next, Prev Cursor intellij" :rules[
                 [:!F#Pu :!Thyphen :intellij]

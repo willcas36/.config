@@ -89,6 +89,9 @@
             "key_code" : "left_control"
           } ],
           "conditions" : [ {
+            "type" : "frontmost_application_unless",
+            "bundle_identifiers" : [ "^net\\.ankiweb\\.dtop" ]
+          }, {
             "identifiers" : [ {
               "vendor_id" : 1133,
               "product_id" : 50495
@@ -108,6 +111,9 @@
             "key_code" : "right_control"
           } ],
           "conditions" : [ {
+            "type" : "frontmost_application_unless",
+            "bundle_identifiers" : [ "^net\\.ankiweb\\.dtop" ]
+          }, {
             "identifiers" : [ {
               "vendor_id" : 1133,
               "product_id" : 50495
@@ -2183,7 +2189,7 @@
           },
           "to" : [ {
             "key_code" : "z",
-            "modifiers" : [ "left_command" ]
+            "modifiers" : [ "left_command", "left_shift" ]
           } ],
           "conditions" : [ {
             "type" : "frontmost_application_if",
@@ -2196,7 +2202,7 @@
           },
           "to" : [ {
             "key_code" : "z",
-            "modifiers" : [ "left_command", "left_shift" ]
+            "modifiers" : [ "left_command" ]
           } ],
           "conditions" : [ {
             "type" : "frontmost_application_if",
