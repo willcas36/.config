@@ -64,7 +64,9 @@
              :x-mode {:key :x} 
              }
     :main [
-
+            {:des "Capslock to Hyper, Return if alone" :rules[
+                 [:##caps_lock :fn nil {:alone :return_or_enter}]
+            ]}
             {:des, "Yabai keybinds", :rules[
                 ;;====NAVIGATION====
 
@@ -314,9 +316,6 @@
             {:des "Toggle caps_lock by pressing left_shift then right_shift" :rules[
                [:!S#Pright_shift :caps_lock]
                [:!R#Pleft_shift :caps_lock]
-            ]}
-            {:des "Capslock to Hyper, Return if alone" :rules[
-                 [:##caps_lock :fn nil {:alone :return_or_enter}]
             ]}
             {:des "Function to ESQ" :rules[
                  [:fn :escape nil {:held :fn :params{:held 100}}]

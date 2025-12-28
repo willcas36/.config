@@ -95,6 +95,23 @@
           } ]
         } ]
       }, {
+        "description" : "Capslock to Hyper, Return if alone",
+        "manipulators" : [ {
+          "to_if_alone" : [ {
+            "key_code" : "return_or_enter"
+          } ],
+          "from" : {
+            "key_code" : "caps_lock",
+            "modifiers" : {
+              "optional" : [ "any" ]
+            }
+          },
+          "to" : [ {
+            "key_code" : "fn"
+          } ],
+          "type" : "basic"
+        } ]
+      }, {
         "description" : "Yabai keybinds",
         "manipulators" : [ {
           "to_after_key_up" : [ {
@@ -1705,23 +1722,6 @@
           },
           "to" : [ {
             "key_code" : "caps_lock"
-          } ],
-          "type" : "basic"
-        } ]
-      }, {
-        "description" : "Capslock to Hyper, Return if alone",
-        "manipulators" : [ {
-          "to_if_alone" : [ {
-            "key_code" : "return_or_enter"
-          } ],
-          "from" : {
-            "key_code" : "caps_lock",
-            "modifiers" : {
-              "optional" : [ "any" ]
-            }
-          },
-          "to" : [ {
-            "key_code" : "fn"
           } ],
           "type" : "basic"
         } ]
