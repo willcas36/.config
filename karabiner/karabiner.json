@@ -794,7 +794,7 @@
           "type" : "basic"
         }, {
           "from" : {
-            "key_code" : "x",
+            "key_code" : "z",
             "modifiers" : {
               "mandatory" : [ "fn" ],
               "optional" : [ "caps_lock" ]

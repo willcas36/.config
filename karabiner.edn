@@ -187,7 +187,7 @@
                 ;;[[{:pkey :button6} {:pkey :button4}] [:yabai "window --toggle anki"]]
                 
                 [:!F#Ps [:yabai "window --toggle sticky"]]
-                [:!F#Px [:yabai "window --toggle pip"]]
+                [:!F#Pz [:yabai "window --toggle pip"]]
 
 
                 [:!F#Pz [:yabai "window --raise"]]
@@ -412,7 +412,6 @@
                 
             ;; ]}
             {:des "Opening Apps" :rules[
-                
                 [[:p :g] [:launch-app "pgAdmin 4"] nil {:params {:held 100 :sim 30}}]
                 [[:s :p] [:launch-app "System Preferences"] nil {:params {:held 100 :sim 30}}]
                 [[:w :p] [:launch-app "WhatsApp"] nil {:params {:held 100 :sim 30}}]
