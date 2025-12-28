@@ -46,9 +46,6 @@
  :devices {:g305-device [{:vendor_id 1133 :product_id 50495}]}
 
  :layers {:hyper-mode {:key :caps_lock :alone {:key :return_or_enter}}
-          :mouse-mode1 {:key :keypad_1 :condi :g305-device :alone {:key :!Copen_bracket}}
-          :mouse-mode2 {:key :keypad_2 :condi :g305-device :alone {:key :!Cclose_bracket}}
-          :mouse-mode3 {:key :keypad_3 :condi :g305-device :alone {:pkey :button3}}
           :mouse-mode4 {:key :keypad_4 :condi :g305-device :alone {:key :!Tup_arrow}}
           :launch-mode {:key :slash}}
  :simlayers {:tmux-winmove-mode {:key :q :condi :Terminals}
@@ -59,7 +56,8 @@
  :main [{:des "Capslock to Hyper, Return if alone" :rules [[:##caps_lock :fn nil {:alone :return_or_enter}]]}
         {:des "Mouse mode" :rules [:g305-device
                                    [:left_control :left_control :!anki {:alone :!C#Pclose_bracket}]
-                                   [:right_control :right_control :!anki {:alone :!C#Popen_bracket}]]}
+                                   [:right_control :right_control :!anki {:alone :!C#Popen_bracket}]
+                                   [:keypad_3 :!C#Ptab :!anki {:alone :!C#Pclose_bracket}]]}
         {:des, "Yabai keybinds", :rules [;;====NAVIGATION====
 
                 ;;Focus Spaces
@@ -324,7 +322,8 @@
                                       [[{:pkey :button1} {:pkey :button2}] ["anki-layer" 1] :!anki-layer]
                                       [[{:pkey :button1} {:pkey :button2}] ["anki-layer" 0] :anki-layer]
                                       [{:pkey :button1} :return_or_enter :anki-layer]
-                                      [{:pkey :button2} :semicolon :anki-layer]]}
+                                      [{:pkey :button2} :semicolon :anki-layer]
+                                      [:keypad_3 :escape]]}
 
         {:des "Next, Prev Cursor intellij" :rules [[:!F#Pu :!Thyphen :intellij]
                                                    [:!F#Pp :!SThyphen :intellij]]}

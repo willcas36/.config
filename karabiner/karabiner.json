@@ -121,6 +121,29 @@
             "type" : "device_if"
           } ],
           "type" : "basic"
+        }, {
+          "to_if_alone" : [ {
+            "key_code" : "close_bracket",
+            "modifiers" : [ "left_command" ]
+          } ],
+          "from" : {
+            "key_code" : "keypad_3"
+          },
+          "to" : [ {
+            "key_code" : "tab",
+            "modifiers" : [ "left_command" ]
+          } ],
+          "conditions" : [ {
+            "type" : "frontmost_application_unless",
+            "bundle_identifiers" : [ "^net\\.ankiweb\\.dtop" ]
+          }, {
+            "identifiers" : [ {
+              "vendor_id" : 1133,
+              "product_id" : 50495
+            } ],
+            "type" : "device_if"
+          } ],
+          "type" : "basic"
         } ]
       }, {
         "description" : "Yabai keybinds",
@@ -2297,6 +2320,18 @@
             "name" : "anki-layer",
             "value" : 1,
             "type" : "variable_if"
+          } ],
+          "type" : "basic"
+        }, {
+          "from" : {
+            "key_code" : "keypad_3"
+          },
+          "to" : [ {
+            "key_code" : "escape"
+          } ],
+          "conditions" : [ {
+            "type" : "frontmost_application_if",
+            "bundle_identifiers" : [ "^net\\.ankiweb\\.dtop" ]
           } ],
           "type" : "basic"
         } ]
