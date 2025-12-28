@@ -44,7 +44,9 @@
 
     :templates {:yabai "/opt/homebrew/bin/yabai -m %s"
                 :launch-app "open -a '%s'"
-                :open "open -n '/Applications/%s.app'"}
+                :open "open -n '/Applications/%s.app'"
+                :directory "open ~/%s"
+                }
 
     :devices {:g305-device [{:vendor_id 1133 :product_id 50495}]}
 
@@ -54,9 +56,9 @@
                 :mouse-mode2 {:key :keypad_2 :condi :g305-device :alone {:key :!Cv}}
                 :mouse-mode3 {:key :keypad_3 :condi :g305-device :alone {:pkey :button3}}
                 :mouse-mode4 {:key :keypad_4 :condi :g305-device :alone {:key :!Tup_arrow}}
+             :launch-mode {:key :slash}
             }
     :simlayers {
-             :launch-mode {:key :slash}
              :tmux-winmove-mode {:key :q :condi :Terminals}
              :period-mode {:key :period}
              :comma-mode {:key :comma} 
@@ -411,25 +413,37 @@
                 
             ;; ]}
             {:des "Opening Apps" :rules[
-                [[:p :g] [:launch-app "pgAdmin 4"] nil {:params {:held 100 :sim 30}}]
-                [[:s :p] [:launch-app "System Preferences"] nil {:params {:held 100 :sim 30}}]
-                [[:w :p] [:launch-app "WhatsApp"] nil {:params {:held 100 :sim 30}}]
-                [[:n :i] [:launch-app "Notion"] nil {:params {:held 100 :sim 30}}]
-                [[:o :b] [:launch-app "Obsidian"] nil {:params {:held 100 :sim 30}}]
-                [[:m :s] [:launch-app "music"] nil {:params {:held 100 :sim 30}}]
-                [[:p :m] [:launch-app "postman"] nil {:params {:held 100 :sim 30}}]
-                [[:c :g] [:launch-app "chatgpt"] nil {:params {:held 100 :sim 30}}]
-                [[:t :m] [:launch-app "warp"] nil {:params {:held 100 :sim 30}}]
-                [[:c :l] [:launch-app "KeyboardCleanTool"] nil {:params {:held 100 :sim 30}}]
-                [[:v :s] [:open "Visual Studio Code"] nil {:params {:held 100 :sim 30}}]
-                [[:i :n] [:open "IntelliJ IDEA CE"] nil {:params {:held 100 :sim 30}}]
-                [[:c :r] [:open "Google Chrome"] nil {:params {:held 100 :sim 30}}]
-                [[:s :f] [:open "Safari"] nil {:params {:held 100 :sim 30}}]
-                ;;[[:t :m] [] nil {:held "open -a iTerm --new" :params {:held 100 :sim 30}}]
-                [[:f :d] [] nil {:held "open ~" :params {:held 100 :sim 30}}]
-                [[:d :l] [] nil {:held "open ~/Downloads" :params {:held 100 :sim 30}}]
-                [[:d :s] [] nil {:held "open ~/Desktop" :params {:held 100 :sim 30}}]
-                [[:a :p] [] nil {:held "open /Applications" :params {:held 100 :sim 30}}]
+                :launch-mode
+                [:#Pm [:launch-app "music"]]
+                [:#Pw [:launch-app "WhatsApp"]]
+                [:#Pn [:launch-app "Notion"]]
+                [:#Py [:launch-app "System Preferences"]]
+                [:#Pi [:launch-app "IntelliJ IDEA CE"]]
+                [:#Pg [:launch-app "Google Chrome"]]
+                [:#Ps [:launch-app "Safari"]]
+                [:#Pc [:launch-app "KeyboardCleanTool"]]
+                [:#Pd [:directory "Downloads"]]
+                [:!S#Pd [:directory "Desktop"]]
+                [:#Pr [:directory ""]]
+
+                ;; [[:p :g] [:launch-app "pgAdmin 4"] nil {:params {:held 100 :sim 30}}]
+                ;; [[:s :p] [:launch-app "System Preferences"] nil {:params {:held 100 :sim 30}}]
+                ;; [[:w :p] [:launch-app "WhatsApp"] nil {:params {:held 100 :sim 30}}]
+                ;; [[:n :i] [:launch-app "Notion"] nil {:params {:held 100 :sim 30}}]
+                ;; [[:o :b] [:launch-app "Obsidian"] nil {:params {:held 100 :sim 30}}]
+                ;; [[:m :s] [:launch-app "music"] nil {:params {:held 100 :sim 30}}]
+                ;; [[:p :m] [:launch-app "postman"] nil {:params {:held 100 :sim 30}}]
+                ;; [[:c :g] [:launch-app "chatgpt"] nil {:params {:held 100 :sim 30}}]
+                ;; [[:c :l] [:launch-app "KeyboardCleanTool"] nil {:params {:held 100 :sim 30}}]
+                ;; [[:v :s] [:open "Visual Studio Code"] nil {:params {:held 100 :sim 30}}]
+                ;; [[:i :n] [:open "IntelliJ IDEA CE"] nil {:params {:held 100 :sim 30}}]
+                ;; [[:c :r] [:open "Google Chrome"] nil {:params {:held 100 :sim 30}}]
+                ;; [[:s :f] [:open "Safari"] nil {:params {:held 100 :sim 30}}]
+                ;; ;;[[:t :m] [] nil {:held "open -a iTerm --new" :params {:held 100 :sim 30}}]
+                ;; [[:f :d] [] nil {:held "open ~" :params {:held 100 :sim 30}}]
+                ;; [[:d :l] [] nil {:held "open ~/Downloads" :params {:held 100 :sim 30}}]
+                ;; [[:d :s] [] nil {:held "open ~/Desktop" :params {:held 100 :sim 30}}]
+                ;; [[:a :p] [] nil {:held "open /Applications" :params {:held 100 :sim 30}}]
             ]}
             
             {:des "Comma Mode [,] as Trigger Key" :rules[
