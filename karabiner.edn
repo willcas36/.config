@@ -54,6 +54,7 @@
              :z-mode {:key :z}
              :x-mode {:key :x}}
  :main [{:des "Capslock to Hyper, Return if alone" :rules [[:##caps_lock :fn nil {:alone :return_or_enter}]]}
+        {:des "Toggle Anki" :rules [[[:left_control {:pkey :button1}] [:yabai "window --toggle anki || open -a Anki"] nil {:afterup [:yabai "window --focus mouse"]}]]}
         {:des "Mouse mode" :rules [:g305-device
                                    [:left_control :left_control :!anki {:alone :!C#Pclose_bracket}]
                                    [:right_control :right_control :!anki {:alone :!C#Popen_bracket}]
@@ -165,7 +166,7 @@
                                          [:!F#Pc [:yabai "window --toggle gpt || open -a ChatGPT"]]
                                          [:!F#Pg [:yabai "window --toggle gatherv2 || open -a GatherV2"]]
                                          [:!F#Pe [:yabai "window --toggle mail || open -a Mail"]]
-                                         [:!F#Pa [:yabai "window --toggle anki || open -a Anki"]]
+                                         [:!F#Pa [:yabai "window --toggle anki || open -a Anki"] nil {:afterup [:yabai "window --focus mouse"]}]
                                          [:!F#Pv [:yabai "window --toggle obsidian || open -a Obsidian"]]
                                          [:!F#Py [:yabai "window --toggle simulator || open -a Simulator"]]
                                          [:!F#Pz [:yabai "window --toggle vocabsieve || open -a vocabsieve"]]
@@ -328,9 +329,9 @@
         {:des "Next, Prev Cursor intellij" :rules [[:!F#Pu :!Thyphen :intellij]
                                                    [:!F#Pp :!SThyphen :intellij]]}
         {:des "ShortCat" :rules [[:!F#Ph :!COTspacebar]]}
-            ;; {:des "Pika" :rules[
-            ;;      [:!F#Pc :!Op]
-            ;; ]}
+        ;; {:des "Pika" :rules[
+        ;;      [:!F#Pc :!Op]
+        ;; ]}
         {:des "DeepL" :rules [;[:!F#Pt :!CTOt nil {:delayed {:invoked [:!Ctab :fn] :canceled []} :params {:delay 200}}]
                               [:!F#Pt :!CTOt]
                               [{:pkey :button13} [{:pkey :button1} {:pkey :button1} :!CTOt]]]}
