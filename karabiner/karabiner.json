@@ -808,6 +808,9 @@
           } ],
           "type" : "basic"
         }, {
+          "to_after_key_up" : [ {
+            "shell_command" : "/opt/homebrew/bin/yabai -m window --focus mouse"
+          } ],
           "from" : {
             "key_code" : "a",
             "modifiers" : {
@@ -2286,6 +2289,35 @@
             "name" : "anki-layer",
             "value" : 1,
             "type" : "variable_if"
+          } ],
+          "type" : "basic"
+        }, {
+          "from" : {
+            "simultaneous" : [ {
+              "pointing_button" : "button1"
+            }, {
+              "pointing_button" : "button2"
+            } ],
+            "simultaneous_options" : {
+              "detect_key_down_uninterruptedly" : false,
+              "key_down_order" : "insensitive",
+              "key_up_order" : "insensitive",
+              "key_up_when" : "any"
+            }
+          },
+          "to" : [ {
+            "pointing_button" : "button1"
+          }, {
+            "pointing_button" : "button1"
+          }, {
+            "pointing_button" : "button1"
+          }, {
+            "key_code" : "t",
+            "modifiers" : [ "left_command", "left_control", "left_option" ]
+          } ],
+          "conditions" : [ {
+            "type" : "frontmost_application_if",
+            "bundle_identifiers" : [ "^net\\.ankiweb\\.dtop" ]
           } ],
           "type" : "basic"
         }, {
