@@ -55,10 +55,10 @@
              :z-mode {:key :z}
              :x-mode {:key :x}}
  :main [{:des "Capslock to Hyper, Return if alone" :rules [[:##caps_lock :fn nil {:alone :return_or_enter}]]}
-        {:des "Toggle Anki" :rules [[[:right_option {:pkey :button1}] [:yabai "window --toggle anki || open -a Anki"] nil {:afterup [:yabai "window --focus mouse"]}]]}
+        {:des "Toggle Anki" :rules [[[:right_command {:pkey :button1}] [:yabai "window --toggle anki || open -a Anki"] nil {:afterup [:yabai "window --focus mouse"]}]]}
         {:des "Mouse mode" :rules [:g305-device
-                                   [:right_option :right_option :!anki {:alone :!C#Pclose_bracket}]
-                                   [:left_option :left_option :!anki {:alone :!C#Popen_bracket}]
+                                   [:right_command :right_command :!anki {:alone :!C#Pclose_bracket}]
+                                   [:right_control :right_option :!anki {:alone :!C#Popen_bracket}]
                                    [:keypad_3 :!C#Ptab :!anki {:alone :!C#Pclose_bracket}]]}
         {:des, "Yabai keybinds", :rules [;;====NAVIGATION====
 
@@ -233,26 +233,36 @@
                                                              [:!Ch []]]}
             ;; :condi for multiple conditions
         {:des "Mouse navigation" :rules [;;[:condi :g305-device :f1-mode :z-mode] for multiple conditions use :condi as the first element
-                                         [:!Ov [:yabai "space --focus 4 "] nil {:afterup [:yabai "window --focus mouse"]}]
-                                         [:!Oc [:yabai "space --focus 3 "] nil {:afterup [:yabai "window --focus mouse"]}]
-                                         [:!Ox [:yabai "space --focus 2 "] nil {:afterup [:yabai "window --focus mouse"]}]
-                                         [:!Oz [:yabai "space --focus 1 "] nil {:afterup [:yabai "window --focus mouse"]}]
+                                         [:!Wv [:yabai "space --focus 4 "] nil {:afterup [:yabai "window --focus mouse"]}]
+                                         [:!Wc [:yabai "space --focus 3 "] nil {:afterup [:yabai "window --focus mouse"]}]
+                                         [:!Wx [:yabai "space --focus 2 "] nil {:afterup [:yabai "window --focus mouse"]}]
+                                         [:!Wz [:yabai "space --focus 1 "] nil {:afterup [:yabai "window --focus mouse"]}]
 
-                                         [:!OSv [:yabai "window --space 4"]]
-                                         [:!OSc [:yabai "window --space 3"]]
-                                         [:!OSx [:yabai "window --space 2"]]
-                                         [:!OSz [:yabai "window --space 1"]]
+                                         [:!Wv [:yabai "window --space 4"]]
+                                         [:!Wc [:yabai "window --space 3"]]
+                                         [:!Wx [:yabai "window --space 2"]]
+                                         [:!Wz [:yabai "window --space 1"]]
 
-                                         [:!Ob [:yabai "space --focus 10 "] nil {:afterup [:yabai "window --focus mouse"]}]
-                                         [:!OSb [:yabai "window --space 10"]]
-                                         [:!Ow [:yabai "space --focus 11 "] nil {:afterup [:yabai "window --focus mouse"]}]
-                                         [:!OSw [:yabai "window --space 11"]]
-                                         [:!Oe [:yabai "space --focus 12 "] nil {:afterup [:yabai "window --focus mouse"]}]
+                                         [:!Qv [:yabai "space --focus 8 "] nil {:afterup [:yabai "window --focus mouse"]}]
+                                         [:!Qc [:yabai "space --focus 7 "] nil {:afterup [:yabai "window --focus mouse"]}]
+                                         [:!Qx [:yabai "space --focus 6 "] nil {:afterup [:yabai "window --focus mouse"]}]
+                                         [:!Qz [:yabai "space --focus 5 "] nil {:afterup [:yabai "window --focus mouse"]}]
 
-                                         [:!Os [:yabai "window --focus west"]]
-                                         [:!Od [:yabai "window --focus east"]]
-                                         [:!Of [:yabai "window --focus stack.recent"]]
-                                         [:!Oa [:yabai "window --toggle zoom-fullscreen"]]
+                                         [:!Qv [:yabai "window --space 8"]]
+                                         [:!Qc [:yabai "window --space 7"]]
+                                         [:!Qx [:yabai "window --space 6"]]
+                                         [:!Qz [:yabai "window --space 5"]]
+
+                                         [:!Wb [:yabai "space --focus 10 "] nil {:afterup [:yabai "window --focus mouse"]}]
+                                         [:!WSb [:yabai "window --space 10"]]
+                                         [:!Ww [:yabai "space --focus 11 "] nil {:afterup [:yabai "window --focus mouse"]}]
+                                         [:!WSw [:yabai "window --space 11"]]
+                                         [:!We [:yabai "space --focus 12 "] nil {:afterup [:yabai "window --focus mouse"]}]
+
+                                         [:!Ws [:yabai "window --focus west"]]
+                                         [:!Wd [:yabai "window --focus east"]]
+                                         [:!Wf [:yabai "window --focus stack.recent"]]
+                                         [:!Wa [:yabai "window --toggle zoom-fullscreen"]]
                 ;; NAVIGATION TAB
                                          [:!Ew :!SCopen_bracket]
                                          [:!Ee :!SCclose_bracket]
@@ -302,11 +312,11 @@
                                                  [:!F#Pn :!Ttab]
                                                  [:!F#Pslash :!Ff12]]}
         {:des "Anki controls" :rules [:anki
-                                      [[:right_option :left_option] ["anki-layer" 1] :!anki-layer]
-                                      [[:right_option :left_option] ["anki-layer" 0] :anki-layer]
+                                      [[:right_control :right_command] ["anki-layer" 1] :!anki-layer]
+                                      [[:right_control :right_command] ["anki-layer" 0] :anki-layer]
                                       [[{:pkey :button1} {:pkey :button2}] [{:pkey :button1} {:pkey :button1} {:pkey :button1} :!CTOt]]
-                                      [:right_option :!SCz]
-                                      [:left_option :!Cz]
+                                      [:right_command :!SCz]
+                                      [:right_control :!Cz]
                                       [{:pkey :button1} :return_or_enter :anki-layer]
                                       [{:pkey :button2} :semicolon :anki-layer]
                                       [:keypad_3 :escape]]}
