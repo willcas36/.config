@@ -83,7 +83,7 @@
           } ],
           "from" : {
             "simultaneous" : [ {
-              "key_code" : "left_control"
+              "key_code" : "right_option"
             }, {
               "pointing_button" : "button1"
             } ],
@@ -107,10 +107,10 @@
             "modifiers" : [ "left_command" ]
           } ],
           "from" : {
-            "key_code" : "left_control"
+            "key_code" : "right_option"
           },
           "to" : [ {
-            "key_code" : "left_control"
+            "key_code" : "right_option"
           } ],
           "conditions" : [ {
             "type" : "frontmost_application_unless",
@@ -129,10 +129,10 @@
             "modifiers" : [ "left_command" ]
           } ],
           "from" : {
-            "key_code" : "right_control"
+            "key_code" : "left_option"
           },
           "to" : [ {
-            "key_code" : "right_control"
+            "key_code" : "left_option"
           } ],
           "conditions" : [ {
             "type" : "frontmost_application_unless",
@@ -908,30 +908,6 @@
           "type" : "basic"
         }, {
           "from" : {
-            "key_code" : "w",
-            "modifiers" : {
-              "mandatory" : [ "right_option" ],
-              "optional" : [ "caps_lock" ]
-            }
-          },
-          "to" : [ {
-            "shell_command" : "/opt/homebrew/bin/yabai -m window --insert south"
-          } ],
-          "type" : "basic"
-        }, {
-          "from" : {
-            "key_code" : "q",
-            "modifiers" : {
-              "mandatory" : [ "right_option" ],
-              "optional" : [ "caps_lock" ]
-            }
-          },
-          "to" : [ {
-            "shell_command" : "/opt/homebrew/bin/yabai -m window --insert east"
-          } ],
-          "type" : "basic"
-        }, {
-          "from" : {
             "key_code" : "s",
             "modifiers" : {
               "mandatory" : [ "right_option" ],
@@ -940,18 +916,6 @@
           },
           "to" : [ {
             "shell_command" : "/opt/homebrew/bin/yabai -m window --insert stack"
-          } ],
-          "type" : "basic"
-        }, {
-          "from" : {
-            "key_code" : "e",
-            "modifiers" : {
-              "mandatory" : [ "right_option" ],
-              "optional" : [ "caps_lock" ]
-            }
-          },
-          "to" : [ {
-            "shell_command" : "/opt/homebrew/bin/yabai -m window --toggle split"
           } ],
           "type" : "basic"
         }, {
@@ -1237,7 +1201,7 @@
           "from" : {
             "key_code" : "v",
             "modifiers" : {
-              "mandatory" : [ "right_control" ]
+              "mandatory" : [ "left_option" ]
             }
           },
           "to" : [ {
@@ -1251,7 +1215,7 @@
           "from" : {
             "key_code" : "c",
             "modifiers" : {
-              "mandatory" : [ "right_control" ]
+              "mandatory" : [ "left_option" ]
             }
           },
           "to" : [ {
@@ -1265,7 +1229,7 @@
           "from" : {
             "key_code" : "x",
             "modifiers" : {
-              "mandatory" : [ "right_control" ]
+              "mandatory" : [ "left_option" ]
             }
           },
           "to" : [ {
@@ -1279,7 +1243,7 @@
           "from" : {
             "key_code" : "z",
             "modifiers" : {
-              "mandatory" : [ "right_control" ]
+              "mandatory" : [ "left_option" ]
             }
           },
           "to" : [ {
@@ -1290,7 +1254,7 @@
           "from" : {
             "key_code" : "v",
             "modifiers" : {
-              "mandatory" : [ "left_shift", "right_control" ]
+              "mandatory" : [ "left_option", "left_shift" ]
             }
           },
           "to" : [ {
@@ -1301,7 +1265,7 @@
           "from" : {
             "key_code" : "c",
             "modifiers" : {
-              "mandatory" : [ "left_shift", "right_control" ]
+              "mandatory" : [ "left_option", "left_shift" ]
             }
           },
           "to" : [ {
@@ -1312,7 +1276,7 @@
           "from" : {
             "key_code" : "x",
             "modifiers" : {
-              "mandatory" : [ "left_shift", "right_control" ]
+              "mandatory" : [ "left_option", "left_shift" ]
             }
           },
           "to" : [ {
@@ -1323,7 +1287,7 @@
           "from" : {
             "key_code" : "z",
             "modifiers" : {
-              "mandatory" : [ "left_shift", "right_control" ]
+              "mandatory" : [ "left_option", "left_shift" ]
             }
           },
           "to" : [ {
@@ -1335,109 +1299,9 @@
             "shell_command" : "/opt/homebrew/bin/yabai -m window --focus mouse"
           } ],
           "from" : {
-            "key_code" : "v",
-            "modifiers" : {
-              "mandatory" : [ "left_control" ]
-            }
-          },
-          "to" : [ {
-            "shell_command" : "/opt/homebrew/bin/yabai -m space --focus 8 "
-          } ],
-          "type" : "basic"
-        }, {
-          "to_after_key_up" : [ {
-            "shell_command" : "/opt/homebrew/bin/yabai -m window --focus mouse"
-          } ],
-          "from" : {
-            "key_code" : "c",
-            "modifiers" : {
-              "mandatory" : [ "left_control" ]
-            }
-          },
-          "to" : [ {
-            "shell_command" : "/opt/homebrew/bin/yabai -m space --focus 7 "
-          } ],
-          "type" : "basic"
-        }, {
-          "to_after_key_up" : [ {
-            "shell_command" : "/opt/homebrew/bin/yabai -m window --focus mouse"
-          } ],
-          "from" : {
-            "key_code" : "x",
-            "modifiers" : {
-              "mandatory" : [ "left_control" ]
-            }
-          },
-          "to" : [ {
-            "shell_command" : "/opt/homebrew/bin/yabai -m space --focus 6 "
-          } ],
-          "type" : "basic"
-        }, {
-          "to_after_key_up" : [ {
-            "shell_command" : "/opt/homebrew/bin/yabai -m window --focus mouse"
-          } ],
-          "from" : {
-            "key_code" : "z",
-            "modifiers" : {
-              "mandatory" : [ "left_control" ]
-            }
-          },
-          "to" : [ {
-            "shell_command" : "/opt/homebrew/bin/yabai -m space --focus 5 "
-          } ],
-          "type" : "basic"
-        }, {
-          "from" : {
-            "key_code" : "v",
-            "modifiers" : {
-              "mandatory" : [ "left_control", "left_shift" ]
-            }
-          },
-          "to" : [ {
-            "shell_command" : "/opt/homebrew/bin/yabai -m window --space 8"
-          } ],
-          "type" : "basic"
-        }, {
-          "from" : {
-            "key_code" : "c",
-            "modifiers" : {
-              "mandatory" : [ "left_control", "left_shift" ]
-            }
-          },
-          "to" : [ {
-            "shell_command" : "/opt/homebrew/bin/yabai -m window --space 7"
-          } ],
-          "type" : "basic"
-        }, {
-          "from" : {
-            "key_code" : "x",
-            "modifiers" : {
-              "mandatory" : [ "left_control", "left_shift" ]
-            }
-          },
-          "to" : [ {
-            "shell_command" : "/opt/homebrew/bin/yabai -m window --space 6"
-          } ],
-          "type" : "basic"
-        }, {
-          "from" : {
-            "key_code" : "z",
-            "modifiers" : {
-              "mandatory" : [ "left_control", "left_shift" ]
-            }
-          },
-          "to" : [ {
-            "shell_command" : "/opt/homebrew/bin/yabai -m window --space 5"
-          } ],
-          "type" : "basic"
-        }, {
-          "to_after_key_up" : [ {
-            "shell_command" : "/opt/homebrew/bin/yabai -m window --focus mouse"
-          } ],
-          "from" : {
             "key_code" : "b",
             "modifiers" : {
-              "mandatory" : [ "right_control" ]
+              "mandatory" : [ "left_option" ]
             }
           },
           "to" : [ {
@@ -1448,7 +1312,7 @@
           "from" : {
             "key_code" : "b",
             "modifiers" : {
-              "mandatory" : [ "left_shift", "right_control" ]
+              "mandatory" : [ "left_option", "left_shift" ]
             }
           },
           "to" : [ {
@@ -1462,7 +1326,7 @@
           "from" : {
             "key_code" : "w",
             "modifiers" : {
-              "mandatory" : [ "left_control" ]
+              "mandatory" : [ "left_option" ]
             }
           },
           "to" : [ {
@@ -1473,7 +1337,7 @@
           "from" : {
             "key_code" : "w",
             "modifiers" : {
-              "mandatory" : [ "left_control", "left_shift" ]
+              "mandatory" : [ "left_option", "left_shift" ]
             }
           },
           "to" : [ {
@@ -1487,7 +1351,7 @@
           "from" : {
             "key_code" : "e",
             "modifiers" : {
-              "mandatory" : [ "left_control" ]
+              "mandatory" : [ "left_option" ]
             }
           },
           "to" : [ {
@@ -1498,7 +1362,7 @@
           "from" : {
             "key_code" : "s",
             "modifiers" : {
-              "mandatory" : [ "right_control" ]
+              "mandatory" : [ "left_option" ]
             }
           },
           "to" : [ {
@@ -1509,7 +1373,7 @@
           "from" : {
             "key_code" : "d",
             "modifiers" : {
-              "mandatory" : [ "right_control" ]
+              "mandatory" : [ "left_option" ]
             }
           },
           "to" : [ {
@@ -1520,7 +1384,7 @@
           "from" : {
             "key_code" : "f",
             "modifiers" : {
-              "mandatory" : [ "right_control" ]
+              "mandatory" : [ "left_option" ]
             }
           },
           "to" : [ {
@@ -1531,51 +1395,7 @@
           "from" : {
             "key_code" : "a",
             "modifiers" : {
-              "mandatory" : [ "right_control" ]
-            }
-          },
-          "to" : [ {
-            "shell_command" : "/opt/homebrew/bin/yabai -m window --toggle zoom-fullscreen"
-          } ],
-          "type" : "basic"
-        }, {
-          "from" : {
-            "key_code" : "s",
-            "modifiers" : {
-              "mandatory" : [ "left_control" ]
-            }
-          },
-          "to" : [ {
-            "shell_command" : "/opt/homebrew/bin/yabai -m window --focus west"
-          } ],
-          "type" : "basic"
-        }, {
-          "from" : {
-            "key_code" : "d",
-            "modifiers" : {
-              "mandatory" : [ "left_control" ]
-            }
-          },
-          "to" : [ {
-            "shell_command" : "/opt/homebrew/bin/yabai -m window --focus east"
-          } ],
-          "type" : "basic"
-        }, {
-          "from" : {
-            "key_code" : "f",
-            "modifiers" : {
-              "mandatory" : [ "left_control" ]
-            }
-          },
-          "to" : [ {
-            "shell_command" : "/opt/homebrew/bin/yabai -m window --focus stack.recent"
-          } ],
-          "type" : "basic"
-        }, {
-          "from" : {
-            "key_code" : "a",
-            "modifiers" : {
-              "mandatory" : [ "left_control" ]
+              "mandatory" : [ "left_option" ]
             }
           },
           "to" : [ {
@@ -1586,7 +1406,7 @@
           "from" : {
             "key_code" : "w",
             "modifiers" : {
-              "mandatory" : [ "right_control" ]
+              "mandatory" : [ "right_option" ]
             }
           },
           "to" : [ {
@@ -1598,7 +1418,7 @@
           "from" : {
             "key_code" : "e",
             "modifiers" : {
-              "mandatory" : [ "right_control" ]
+              "mandatory" : [ "right_option" ]
             }
           },
           "to" : [ {
@@ -1610,7 +1430,7 @@
           "from" : {
             "key_code" : "q",
             "modifiers" : {
-              "mandatory" : [ "right_control" ]
+              "mandatory" : [ "right_option" ]
             }
           },
           "to" : [ {
@@ -1626,7 +1446,7 @@
           "from" : {
             "key_code" : "r",
             "modifiers" : {
-              "mandatory" : [ "right_control" ]
+              "mandatory" : [ "right_option" ]
             }
           },
           "to" : [ {
@@ -1921,6 +1741,32 @@
               } ]
             }
           }
+        }, {
+          "from" : {
+            "key_code" : "q"
+          },
+          "to" : [ {
+            "consumer_key_code" : "volume_decrement"
+          } ],
+          "conditions" : [ {
+            "name" : "mouse-mode4",
+            "value" : 1,
+            "type" : "variable_if"
+          } ],
+          "type" : "basic"
+        }, {
+          "from" : {
+            "key_code" : "r"
+          },
+          "to" : [ {
+            "consumer_key_code" : "volume_increment"
+          } ],
+          "conditions" : [ {
+            "name" : "mouse-mode4",
+            "value" : 1,
+            "type" : "variable_if"
+          } ],
+          "type" : "basic"
         } ]
       }, {
         "description" : "Brightness control",
@@ -2236,9 +2082,9 @@
         "manipulators" : [ {
           "from" : {
             "simultaneous" : [ {
-              "key_code" : "right_control"
+              "key_code" : "right_option"
             }, {
-              "key_code" : "left_control"
+              "key_code" : "left_option"
             } ],
             "simultaneous_options" : {
               "detect_key_down_uninterruptedly" : false,
@@ -2265,9 +2111,9 @@
         }, {
           "from" : {
             "simultaneous" : [ {
-              "key_code" : "right_control"
+              "key_code" : "right_option"
             }, {
-              "key_code" : "left_control"
+              "key_code" : "left_option"
             } ],
             "simultaneous_options" : {
               "detect_key_down_uninterruptedly" : false,
@@ -2322,7 +2168,7 @@
           "type" : "basic"
         }, {
           "from" : {
-            "key_code" : "left_control"
+            "key_code" : "right_option"
           },
           "to" : [ {
             "key_code" : "z",
@@ -2335,7 +2181,7 @@
           "type" : "basic"
         }, {
           "from" : {
-            "key_code" : "right_control"
+            "key_code" : "left_option"
           },
           "to" : [ {
             "key_code" : "z",

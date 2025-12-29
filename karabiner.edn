@@ -43,7 +43,8 @@
              :open "open -n '/Applications/%s.app'"
              :directory "open ~/%s"}
 
- :devices {:g305-device [{:vendor_id 1133 :product_id 50495}]}
+ :devices {:g305-device [{:vendor_id 1133 :product_id 50495}]
+           :internal-keyboard [{:vendor_id 1452 :product_id 835}]}
 
  :layers {:hyper-mode {:key :caps_lock :alone {:key :return_or_enter}}
           :mouse-mode4 {:key :keypad_4 :condi :g305-device :alone {:key :!Tup_arrow}}
@@ -54,10 +55,10 @@
              :z-mode {:key :z}
              :x-mode {:key :x}}
  :main [{:des "Capslock to Hyper, Return if alone" :rules [[:##caps_lock :fn nil {:alone :return_or_enter}]]}
-        {:des "Toggle Anki" :rules [[[:left_control {:pkey :button1}] [:yabai "window --toggle anki || open -a Anki"] nil {:afterup [:yabai "window --focus mouse"]}]]}
+        {:des "Toggle Anki" :rules [[[:right_option {:pkey :button1}] [:yabai "window --toggle anki || open -a Anki"] nil {:afterup [:yabai "window --focus mouse"]}]]}
         {:des "Mouse mode" :rules [:g305-device
-                                   [:left_control :left_control :!anki {:alone :!C#Pclose_bracket}]
-                                   [:right_control :right_control :!anki {:alone :!C#Popen_bracket}]
+                                   [:right_option :right_option :!anki {:alone :!C#Pclose_bracket}]
+                                   [:left_option :left_option :!anki {:alone :!C#Popen_bracket}]
                                    [:keypad_3 :!C#Ptab :!anki {:alone :!C#Pclose_bracket}]]}
         {:des, "Yabai keybinds", :rules [;;====NAVIGATION====
 
@@ -179,10 +180,7 @@
                                          [:!F#Px [:yabai "window --minimize"]]
 
 ;;Set insertion point in focused cotainer
-                                         [:!E#Pw [:yabai "window --insert south"]]
-                                         [:!E#Pq [:yabai "window --insert east"]]
                                          [:!E#Ps [:yabai "window --insert stack"]]
-                                         [:!E#Pe [:yabai "window --toggle split"]]
 
 ;;Equalize size of windows
                                          [:!FC#Pe [:yabai "space --balance"]]
@@ -235,46 +233,31 @@
                                                              [:!Ch []]]}
             ;; :condi for multiple conditions
         {:des "Mouse navigation" :rules [;;[:condi :g305-device :f1-mode :z-mode] for multiple conditions use :condi as the first element
-                                         [:!Wv [:yabai "space --focus 4 "] nil {:afterup [:yabai "window --focus mouse"]}]
-                                         [:!Wc [:yabai "space --focus 3 "] nil {:afterup [:yabai "window --focus mouse"]}]
-                                         [:!Wx [:yabai "space --focus 2 "] nil {:afterup [:yabai "window --focus mouse"]}]
-                                         [:!Wz [:yabai "space --focus 1 "] nil {:afterup [:yabai "window --focus mouse"]}]
+                                         [:!Ov [:yabai "space --focus 4 "] nil {:afterup [:yabai "window --focus mouse"]}]
+                                         [:!Oc [:yabai "space --focus 3 "] nil {:afterup [:yabai "window --focus mouse"]}]
+                                         [:!Ox [:yabai "space --focus 2 "] nil {:afterup [:yabai "window --focus mouse"]}]
+                                         [:!Oz [:yabai "space --focus 1 "] nil {:afterup [:yabai "window --focus mouse"]}]
 
-                                         [:!WSv [:yabai "window --space 4"]]
-                                         [:!WSc [:yabai "window --space 3"]]
-                                         [:!WSx [:yabai "window --space 2"]]
-                                         [:!WSz [:yabai "window --space 1"]]
+                                         [:!OSv [:yabai "window --space 4"]]
+                                         [:!OSc [:yabai "window --space 3"]]
+                                         [:!OSx [:yabai "window --space 2"]]
+                                         [:!OSz [:yabai "window --space 1"]]
 
-                                         [:!Tv [:yabai "space --focus 8 "] nil {:afterup [:yabai "window --focus mouse"]}]
-                                         [:!Tc [:yabai "space --focus 7 "] nil {:afterup [:yabai "window --focus mouse"]}]
-                                         [:!Tx [:yabai "space --focus 6 "] nil {:afterup [:yabai "window --focus mouse"]}]
-                                         [:!Tz [:yabai "space --focus 5 "] nil {:afterup [:yabai "window --focus mouse"]}]
+                                         [:!Ob [:yabai "space --focus 10 "] nil {:afterup [:yabai "window --focus mouse"]}]
+                                         [:!OSb [:yabai "window --space 10"]]
+                                         [:!Ow [:yabai "space --focus 11 "] nil {:afterup [:yabai "window --focus mouse"]}]
+                                         [:!OSw [:yabai "window --space 11"]]
+                                         [:!Oe [:yabai "space --focus 12 "] nil {:afterup [:yabai "window --focus mouse"]}]
 
-                                         [:!TSv [:yabai "window --space 8"]]
-                                         [:!TSc [:yabai "window --space 7"]]
-                                         [:!TSx [:yabai "window --space 6"]]
-                                         [:!TSz [:yabai "window --space 5"]]
-
-                                         [:!Wb [:yabai "space --focus 10 "] nil {:afterup [:yabai "window --focus mouse"]}]
-                                         [:!WSb [:yabai "window --space 10"]]
-                                         [:!Tw [:yabai "space --focus 11 "] nil {:afterup [:yabai "window --focus mouse"]}]
-                                         [:!TSw [:yabai "window --space 11"]]
-                                         [:!Te [:yabai "space --focus 12 "] nil {:afterup [:yabai "window --focus mouse"]}]
-
-                                         [:!Ws [:yabai "window --focus west"]]
-                                         [:!Wd [:yabai "window --focus east"]]
-                                         [:!Wf [:yabai "window --focus stack.recent"]]
-                                         [:!Wa [:yabai "window --toggle zoom-fullscreen"]]
-
-                                         [:!Ts [:yabai "window --focus west"]]
-                                         [:!Td [:yabai "window --focus east"]]
-                                         [:!Tf [:yabai "window --focus stack.recent"]]
-                                         [:!Ta [:yabai "window --toggle zoom-fullscreen"]]
-                ;; NAVIGATION TABS
-                                         [:!Ww :!SCopen_bracket]
-                                         [:!We :!SCclose_bracket]
-                                         [:!Wq :!Tu [:code]]
-                                         [:!Wr :!CTOp [:code]]
+                                         [:!Os [:yabai "window --focus west"]]
+                                         [:!Od [:yabai "window --focus east"]]
+                                         [:!Of [:yabai "window --focus stack.recent"]]
+                                         [:!Oa [:yabai "window --toggle zoom-fullscreen"]]
+                ;; NAVIGATION TAB
+                                         [:!Ew :!SCopen_bracket]
+                                         [:!Ee :!SCclose_bracket]
+                                         [:!Eq :!Tu [:code]]
+                                         [:!Er :!CTOp [:code]]
 
                 ;; NAVIGATION SPACES
                                          [:s [:yabai "space --focus prev"] :mouse-mode4]
@@ -292,9 +275,10 @@
                                       [:#Px :rewind :mouse-mode4]
                                       [:#Pc :fast_forward :mouse-mode4]]}
 
-        {:des "Volume control" :rules [:x-mode
-                                       [:comma :volume_decrement]
-                                       [:period :volume_increment]]}
+        {:des "Volume control" :rules [[:comma :volume_decrement :x-mode]
+                                       [:period :volume_increment :x-mode]
+                                       [:q :volume_decrement :mouse-mode4]
+                                       [:r :volume_increment :mouse-mode4]]}
         {:des "Brightness control" :rules [[:comma :display_brightness_decrement :z-mode]
                                            [:period :display_brightness_increment :z-mode]
                                            [:#Pw :display_brightness_decrement :mouse-mode4]
@@ -318,11 +302,11 @@
                                                  [:!F#Pn :!Ttab]
                                                  [:!F#Pslash :!Ff12]]}
         {:des "Anki controls" :rules [:anki
-                                      [[:right_control :left_control] ["anki-layer" 1] :!anki-layer]
-                                      [[:right_control :left_control] ["anki-layer" 0] :anki-layer]
+                                      [[:right_option :left_option] ["anki-layer" 1] :!anki-layer]
+                                      [[:right_option :left_option] ["anki-layer" 0] :anki-layer]
                                       [[{:pkey :button1} {:pkey :button2}] [{:pkey :button1} {:pkey :button1} {:pkey :button1} :!CTOt]]
-                                      [:left_control :!SCz]
-                                      [:right_control :!Cz]
+                                      [:right_option :!SCz]
+                                      [:left_option :!Cz]
                                       [{:pkey :button1} :return_or_enter :anki-layer]
                                       [{:pkey :button2} :semicolon :anki-layer]
                                       [:keypad_3 :escape]]}
