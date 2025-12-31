@@ -40,6 +40,7 @@
 
  :templates {:yabai "/opt/homebrew/bin/yabai -m %s"
              :launch-app "open -a '%s'"
+             :close-app "osascript -e 'quit app \"%s\"'"
              :open "open -n '/Applications/%s.app'"
              :directory "open ~/%s"}
 
@@ -47,8 +48,8 @@
            :internal-keyboard [{:vendor_id 1452 :product_id 835}]}
 
  :layers {:hyper-mode {:key :caps_lock :alone {:key :return_or_enter}}
-          :mouse-mode4 {:key :keypad_4 :condi :g305-device :alone {:key :!Tup_arrow}}
-          :launch-mode {:key :slash}}
+          :launch-mode {:key :slash}
+          :mouse-mode4 {:key :keypad_4 :condi :g305-device :alone {:key :!Tup_arrow}}}
  :simlayers {:tmux-winmove-mode {:key :q :condi :Terminals}
              :period-mode {:key :period}
              :comma-mode {:key :comma}
@@ -273,6 +274,8 @@
                                          [:s [:yabai "space --focus prev"] :mouse-mode4]
                                          [:d [:yabai "space --focus next"] :mouse-mode4]]}
 
+        {:des "Clean Keyboard mode" :rules [[:#Pc [["clean-mode" 1] [:launch-app "KeyboardCleanTool"]] [:launch-mode :!clean-mode]]
+                                            [:#Pc [["clean-mode" 0] [:close-app "KeyboardCleanTool"]] [:launch-mode :clean-mode]]]}
         {:des "Toggle caps_lock by pressing left_shift then right_shift" :rules [[:!S#Pright_shift :caps_lock]
                                                                                  [:!R#Pleft_shift :caps_lock]]}
         {:des "Function to ESQ" :rules [[:fn :escape nil {:held :fn :params {:held 100}}]]}
@@ -348,7 +351,6 @@
                                      [:#Ps [:launch-app "Safari"]]
                                      [:#Pb [:launch-app "Dbeaver"]]
                                      [:#Pe [:launch-app "Insomnia"]]
-                                     [:#Pc [:launch-app "KeyboardCleanTool"]]
                                      [:#Pd [:directory "Downloads"]]
                                      [:!S#Pd [:directory "Desktop"]]
                                      [:#Pr [:directory ""]]
