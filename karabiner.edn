@@ -60,7 +60,7 @@
         {:des "Mouse mode" :rules [:g305-device
                                    [:right_command :right_command :!anki {:alone :!C#Pclose_bracket}]
                                    [:right_control :right_control :!anki {:alone :!C#Popen_bracket}]
-                                   [:keypad_3 :!C#Ptab :!anki {:alone :!C#Pclose_bracket}]]}
+                                   [:keypad_3 :!C#Ptab :!anki]]}
         {:des, "Yabai keybinds", :rules [;;====NAVIGATION====
 
                 ;;Focus Spaces

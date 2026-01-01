@@ -146,10 +146,6 @@
           } ],
           "type" : "basic"
         }, {
-          "to_if_alone" : [ {
-            "key_code" : "close_bracket",
-            "modifiers" : [ "left_command" ]
-          } ],
           "from" : {
             "key_code" : "keypad_3"
           },
