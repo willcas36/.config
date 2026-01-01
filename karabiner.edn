@@ -59,7 +59,7 @@
         {:des "Toggle Anki" :rules [[[:right_command {:pkey :button1}] [:yabai "window --toggle anki || open -a Anki"] nil {:afterup [:yabai "window --focus mouse"]}]]}
         {:des "Mouse mode" :rules [:g305-device
                                    [:right_command :right_command :!anki {:alone :!C#Pclose_bracket}]
-                                   [:right_control :right_option :!anki {:alone :!C#Popen_bracket}]
+                                   [:right_control :right_control :!anki {:alone :!C#Popen_bracket}]
                                    [:keypad_3 :!C#Ptab :!anki {:alone :!C#Pclose_bracket}]]}
         {:des, "Yabai keybinds", :rules [;;====NAVIGATION====
 

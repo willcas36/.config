@@ -132,7 +132,7 @@
             "key_code" : "right_control"
           },
           "to" : [ {
-            "key_code" : "right_control"
+            "key_code" : "right_option"
           } ],
           "conditions" : [ {
             "type" : "frontmost_application_unless",
