@@ -290,12 +290,12 @@
 
         {:des "Volume control" :rules [[:comma :volume_decrement :x-mode]
                                        [:period :volume_increment :x-mode]
-                                       [:q :volume_decrement :mouse-mode4]
-                                       [:r :volume_increment :mouse-mode4]]}
+                                       [:w :volume_decrement :mouse-mode4]
+                                       [:e :volume_increment :mouse-mode4]]}
         {:des "Brightness control" :rules [[:comma :display_brightness_decrement :z-mode]
                                            [:period :display_brightness_increment :z-mode]
-                                           [:#Pw :display_brightness_decrement :mouse-mode4]
-                                           [:#Pe :display_brightness_increment :mouse-mode4]]}
+                                           [:#Pq :display_brightness_decrement :mouse-mode4]
+                                           [:#Pr :display_brightness_increment :mouse-mode4]]}
         {:des "Directional Keys" :rules [[:!F##j :up_arrow]
                                          [:!F##k :left_arrow]
                                          [:!F##l :right_arrow]
