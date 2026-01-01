@@ -1892,7 +1892,7 @@
           }
         }, {
           "from" : {
-            "key_code" : "q"
+            "key_code" : "w"
           },
           "to" : [ {
             "consumer_key_code" : "volume_decrement"
@@ -1905,7 +1905,7 @@
           "type" : "basic"
         }, {
           "from" : {
-            "key_code" : "r"
+            "key_code" : "e"
           },
           "to" : [ {
             "consumer_key_code" : "volume_increment"
@@ -2011,7 +2011,7 @@
           }
         }, {
           "from" : {
-            "key_code" : "w",
+            "key_code" : "q",
             "modifiers" : {
               "optional" : [ "caps_lock" ]
             }
@@ -2027,7 +2027,7 @@
           "type" : "basic"
         }, {
           "from" : {
-            "key_code" : "e",
+            "key_code" : "r",
             "modifiers" : {
               "optional" : [ "caps_lock" ]
             }
