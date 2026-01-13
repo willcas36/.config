@@ -265,10 +265,10 @@
                                          [:!Wf [:yabai "window --focus stack.recent"]]
                                          [:!Wa [:yabai "window --toggle zoom-fullscreen"]]
                 ;; NAVIGATION TAB
-                                         [:!Ew :!SCopen_bracket]
-                                         [:!Ee :!SCclose_bracket]
-                                         [:!Eq :!Tu [:code]]
-                                         [:!Er :!CTOp [:code]]
+                                         [:!Qw :!SCopen_bracket]
+                                         [:!Qe :!SCclose_bracket]
+                                         [:!Qq :!Tu [:code]]
+                                         [:!Qr :!CTOp [:code]]
 
                 ;; NAVIGATION SPACES
                                          [:s [:yabai "space --focus prev"] :mouse-mode4]
