@@ -151,6 +151,11 @@
                                          [:!FO#Pc [:yabai "window --space 7"]]
                                          [:!FO#Pv [:yabai "window --space 8"]]
 
+                                         [:!FE#Pz [:yabai "window --space 5"]]
+                                         [:!FE#Px [:yabai "window --space 6"]]
+                                         [:!FE#Pc [:yabai "window --space 7"]]
+                                         [:!FE#Pv [:yabai "window --space 8"]]
+
                                          [:!FO#Pb [:yabai "window --space 9"]]
                                          [:!FO#Pn [:yabai "window --space 10"]]
                                          [:!FO#Pi [:yabai "window --space 11"]]
