@@ -1,0 +1,17 @@
+# Always extract audio
+-x
+
+# Format audio
+--audio-format alac
+
+# Keep video after post processiong
+-k
+
+# Downloas MP4
+-f mp4
+
+# Save all under YT-dlp directory
+-P "/Users/williamquinones/Music/Archivos_Descargados/yt-dlp"
+
+# Save all videos under YouTube directory in your home directory
+-o "%(title)s.%(ext)s"
