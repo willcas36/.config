@@ -338,7 +338,9 @@
                                       [:#Pquote :i]
                                       [:open_bracket :t]
                                       [:close_bracket :o]
-                                      [:backslash :escape]]}
+                                      [:backslash :escape]
+                                      [:comma :!C#Pz]
+                                      [:period :!SC#Pz]]}
 
         {:des "Next, Prev Cursor intellij" :rules [[:!F#Pu :!Thyphen :intellij]
                                                    [:!F#Pp :!SThyphen :intellij]]}
