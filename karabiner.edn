@@ -335,7 +335,10 @@
                                       [:right_control :volume_increment]
                                       [{:pkey :button1} :return_or_enter :anki-layer]
                                       [{:pkey :button2} :semicolon :anki-layer]
-                                      [:#Pquote :t]]}
+                                      [:#Pquote :i]
+                                      [:open_bracket :t]
+                                      [:close_bracket :o]
+                                      [:backslash :escape]]}
 
         {:des "Next, Prev Cursor intellij" :rules [[:!F#Pu :!Thyphen :intellij]
                                                    [:!F#Pp :!SThyphen :intellij]]}
