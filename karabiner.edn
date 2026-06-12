@@ -55,7 +55,8 @@
              :period-mode {:key :period}
              :comma-mode {:key :comma}
              :z-mode {:key :z}
-             :x-mode {:key :x}}
+             :x-mode {:key :x}
+             :c-mode {:key :c}}
  :main [{:des "Capslock to Hyper, Return if alone" :rules [[:##caps_lock :fn nil {:alone :return_or_enter}]]}
         {:des "Toggle Anki" :rules [[[:right_control {:pkey :button2}] [:yabai "window --toggle anki || open -a Anki"]]]}
         {:des "Mouse mode" :rules [:g305-device
@@ -302,6 +303,8 @@
                                        [:e :volume_increment :mouse-mode4]]}
         {:des "Brightness control" :rules [[:comma :display_brightness_decrement :z-mode]
                                            [:period :display_brightness_increment :z-mode]
+                                           [:#Pcomma :illumination_decrement :c-mode]
+                                           [:#Pperiod :illumination_increment :c-mode]
                                            [:#Pq :display_brightness_decrement :mouse-mode4]
                                            [:#Pr :display_brightness_increment :mouse-mode4]]}
         {:des "Directional Keys" :rules [[:!F##j :up_arrow]
