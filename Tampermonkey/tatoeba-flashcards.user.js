@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Tatoeba - Flashcards (Sentence Mining)
 // @namespace    https://tatoeba.org/
-// @version      3.21
+// @version      4.1
 // @description  Flashcards tipo Anki sobre la búsqueda filtrada de Tatoeba (mobile + teclado)
 // @icon         https://tatoeba.org/img/tatoeba.svg?1781334885
 // @match        https://tatoeba.org/*/sentences/search*
@@ -15,9 +15,9 @@
   const LIST_ID = 174916;
 
   const FETCH_DEFAULTS = {
-    query: '', from: 'eng', to: 'spa', word_min: '2', word_max: '',
+    query: '', from: 'eng', word_min: '2', word_max: '',
     user: '', original: true, orphans: 'no', unapproved: 'no', native: 'yes', has_audio: 'yes', tags: '', list: '',
-    trans_filter: 'limit', trans_to: 'spa', trans_link: 'direct', trans_user: '',
+    trans_to: 'spa', trans_link: 'direct', trans_user: '',
     trans_orphan: '', trans_unapproved: 'no', trans_native: '', trans_has_audio: '',
     sort: 'random', sort_reverse: false,
   };
@@ -42,8 +42,8 @@
 
   const PREFETCH_AT = 4;
   const DARK_DEFAULT = false;
-  const LIST_FETCHES_PER_PAGE = 3;
   const AUDIO_LANG = 'eng';   // el audio SIEMPRE se reproduce en este idioma, sin importar la config de display
+  const API_BASE = 'https://api.tatoeba.org/v1';   // API oficial ESTABLE y versionada (no /unstable, que cambia)
 
   const LANGUAGES = [
     { code: 'spa', name: 'Español' }, { code: 'eng', name: 'Inglés' },
@@ -77,7 +77,6 @@
   const saveListDisplay = () => localStorage.setItem(K.listDisplay, JSON.stringify(LIST_DISPLAY));
 
   const langSeg = () => (location.pathname.match(/^\/([a-z]{2,3})\//) || [, 'es'])[1];
-  const randomSeed = () => Math.random().toString(36).slice(2, 8);
 
   function makeIcon(name) {
     const i = document.createElement('span');
@@ -94,82 +93,73 @@
     toastTimer = setTimeout(() => toastEl.classList.remove('show'), 2200);
   }
 
+  // En la API nueva el dueño viene como string `owner` (no `user.username`) y las traducciones son un array PLANO.
   function getTextByLang(card, lang) {
-    if (card.lang === lang) return { text: card.text, audios: card.audios || [], id: card.id, user: card.user && card.user.username };
-    const all = [...((card.translations && card.translations[0]) || []), ...((card.translations && card.translations[1]) || [])];
-    const t = all.find((x) => x.lang === lang);
-    if (t) return { text: t.text, audios: t.audios || [], id: t.id, user: null };
+    if (card.lang === lang) return { text: card.text, audios: card.audios || [], id: card.id, owner: card.owner };
+    const t = (card.translations || []).find((x) => x.lang === lang);
+    if (t) return { text: t.text, audios: t.audios || [], id: t.id, owner: t.owner };
     return null;
   }
-  const frontOf = (c) => getTextByLang(c, DISPLAY.front) || { text: c.text, audios: c.audios || [], id: c.id, user: c.user && c.user.username };
-  const backOf = (c) => getTextByLang(c, DISPLAY.back) || { text: '(sin traducción)', audios: [], id: null };
+  const frontOf = (c) => getTextByLang(c, DISPLAY.front) || { text: c.text, audios: c.audios || [], id: c.id, owner: c.owner };
+  const backOf = (c) => getTextByLang(c, DISPLAY.back) || { text: '(sin traducción)', audios: [], id: null, owner: null };
 
-  /* ============ API ============ */
+  /* ============ API (api.tatoeba.org) ============ */
+
+  function wordRange(min, max) {
+    min = (min == null ? '' : String(min)).trim();
+    max = (max == null ? '' : String(max)).trim();
+    return (min || max) ? `${min}-${max}` : '';   // "2-15", "2-", "-15"
+  }
 
   function buildQuery() {
     const f = filters;
-    const p = new URLSearchParams({ query: f.query || '', from: f.from, to: f.to, sort: f.sort || 'random', rand_seed: randomSeed() });
-    if (f.word_min) p.set('word_count_min', f.word_min);
-    if (f.word_max) p.set('word_count_max', f.word_max);
-    if (f.user) p.set('user', f.user);
-    if (f.original) p.set('original', 'yes');
-    if (f.orphans) p.set('orphans', f.orphans);
-    if (f.unapproved) p.set('unapproved', f.unapproved);
-    if (f.native) p.set('native', f.native);
+    const p = new URLSearchParams();
+    p.set('lang', f.from);                                   // from -> lang
+    p.set('sort', (f.sort_reverse ? '-' : '') + (f.sort || 'random'));   // sort_reverse -> prefijo '-'
+    p.set('showtrans', 'matching');                          // mostrar solo las traducciones que matchean trans:lang
+    p.set('include', 'audios');                              // trae el audio en el mismo payload
+    p.set('limit', '20');
+    if (f.query) p.set('q', f.query);                        // query -> q
+    if (f.user) p.set('owner', f.user);                      // user -> owner
+    if (f.original) p.set('origin', 'original');             // original -> origin=original
+    if (f.orphans) p.set('is_orphan', f.orphans);
+    if (f.unapproved) p.set('is_unapproved', f.unapproved);
+    if (f.native) p.set('is_native', f.native);
     if (f.has_audio) p.set('has_audio', f.has_audio);
-    if (f.tags) p.set('tags', f.tags);
     if (f.list) p.set('list', f.list);
-    if (f.trans_filter) p.set('trans_filter', f.trans_filter);
-    if (f.trans_to) p.set('trans_to', f.trans_to);
-    if (f.trans_link) p.set('trans_link', f.trans_link);
-    if (f.trans_user) p.set('trans_user', f.trans_user);
-    if (f.trans_orphan) p.set('trans_orphan', f.trans_orphan);
-    if (f.trans_unapproved) p.set('trans_unapproved', f.trans_unapproved);
-    if (f.trans_native) p.set('trans_native', f.trans_native);
-    if (f.trans_has_audio) p.set('trans_has_audio', f.trans_has_audio);
-    if (f.sort_reverse) p.set('sort_reverse', 'yes');
+    if (f.tags) f.tags.split(',').map((s) => s.trim()).filter(Boolean).forEach((t) => p.append('tag', t));
+    const wc = wordRange(f.word_min, f.word_max); if (wc) p.set('word_count', wc);
+    // --- Traducciones ---
+    if (f.trans_to) p.set('trans:lang', f.trans_to);   // restringe a oraciones CON traducción en ese idioma
+    if (f.trans_link === 'direct') p.set('trans:is_direct', 'yes');
+    else if (f.trans_link === 'indirect') p.set('trans:is_direct', 'no');
+    if (f.trans_user) p.set('trans:owner', f.trans_user);
+    if (f.trans_orphan) p.set('trans:is_orphan', f.trans_orphan);
+    if (f.trans_unapproved) p.set('trans:is_unapproved', f.trans_unapproved);
+    if (f.trans_native) p.set('trans:is_native', f.trans_native);
+    if (f.trans_has_audio) p.set('trans:has_audio', f.trans_has_audio);
     return p.toString();
   }
 
-  async function apiSearch(qs) {
-    const res = await fetch(`/${langSeg()}/api_v0/search?${qs}`, { credentials: 'same-origin' });
+  // Acepta un query string (lo arma sobre API_BASE) o una URL completa (cursor `paging.next`).
+  async function apiSearch(qsOrUrl) {
+    const url = /^https?:/.test(qsOrUrl) ? qsOrUrl : `${API_BASE}/sentences?${qsOrUrl}`;
+    const res = await fetch(url, { credentials: 'omit' });   // API pública -> sin cookies (evita líos de CORS)
     return res.json();
-  }
-  async function fetchOwner(id) {
-    try { const r = await fetch(`/${langSeg()}/api_v0/sentence/${id}`, { credentials: 'same-origin' }); if (!r.ok) return null; const d = await r.json(); return (d && d.user && d.user.username) || null; }
-    catch (e) { return null; }
-  }
-
-  // Rellena un <span> con el dueño de un texto. Usa el dato del payload si está; si no, lo trae (cache por id).
-  const ownerCache = new Map();
-  function fillOwner(span, t) {
-    if (!span || !t) return;
-    if (t.user) { span.textContent = t.user; return; }
-    if (!t.id) { span.textContent = '—'; return; }
-    if (ownerCache.has(t.id)) { span.textContent = ownerCache.get(t.id) || '—'; return; }
-    span.innerHTML = '<span class="fc-dot-load"><i></i><i></i><i></i></span>';
-    fetchOwner(t.id).then((o) => { ownerCache.set(t.id, o || ''); if (span.isConnected) span.textContent = o || '—'; });
-  }
-
-  // Resuelve el dueño como promesa (payload, cache o fetch) — para animar recién con el dato final.
-  function resolveOwner(t) {
-    if (!t) return Promise.resolve('');
-    if (t.user) return Promise.resolve(t.user);
-    if (!t.id) return Promise.resolve('');
-    if (ownerCache.has(t.id)) return Promise.resolve(ownerCache.get(t.id));
-    return fetchOwner(t.id).then((o) => { ownerCache.set(t.id, o || ''); return o || ''; });
   }
 
   /* ============ MAZO + HISTORIAL ============ */
 
-  let cards = [], index = -1, fetching = false;
+  let cards = [], index = -1, fetching = false, nextUrl = null;
   const seenIds = new Set();
   const currentCard = () => cards[index] || null;
 
   async function fetchBatch() {
-    const data = await apiSearch(buildQuery());
+    // Primera vez: arma el query (nueva búsqueda random). Después: sigue el cursor `paging.next`.
+    const data = await apiSearch(nextUrl || buildQuery());
+    nextUrl = (data.paging && data.paging.has_next) ? data.paging.next : null;
     let added = 0;
-    for (const r of (data.results || [])) {
+    for (const r of (data.data || [])) {
       if (!seenIds.has(r.id)) { seenIds.add(r.id); cards.push(r); added++; }
     }
     return added;
@@ -452,9 +442,8 @@
     frontEl.textContent = f.text;
     backEl.textContent = b.text;
     backEl.style.visibility = 'hidden';            // reservado: el reverso no mueve nada al revelar
-    ownersEl.innerHTML = `Oración: <span id="fc-fo"></span><span id="fc-tw"></span>`;
+    ownersEl.innerHTML = `Oración: ${f.owner || '—'}<span id="fc-tw"></span>`;   // dueño del frente (ya viene en el dato)
     ownersEl.style.transition = ''; ownersEl.style.transform = '';   // reset de la animación
-    fillOwner(ownersEl.querySelector('#fc-fo'), f);   // dueño del frente
     hintEl.style.visibility = 'visible';
     updateId(); updateBar();
   }
@@ -480,26 +469,8 @@
     updateBar();
 
     const tw = ownersEl.querySelector('#fc-tw'); if (!tw) return;
-    const back = backOf(c);
-    const cached = back && back.user ? back.user
-      : (back && back.id && ownerCache.has(back.id)) ? (ownerCache.get(back.id) || '—') : null;
-
-    if (cached !== null) {
-      // Ya tenemos el dueño -> una sola animación con el nombre final.
-      tw.textContent = ` · Traducción: ${cached}`;
-      flipOwners(oldLeft);
-    } else {
-      // No está -> mostramos puntitos y animamos YA (al tap); al llegar el nombre, segundo FLIP suave.
-      tw.innerHTML = ' · Traducción: <span id="fc-to"><span class="fc-dot-load"><i></i><i></i><i></i></span></span>';
-      flipOwners(oldLeft);
-      resolveOwner(back).then((owner) => {
-        if (!revealed || currentCard() !== c) return;   // cambió de carta mientras cargaba
-        const to = ownersEl.querySelector('#fc-to'); if (!to) return;
-        const before = ownersEl.getBoundingClientRect().left;
-        to.textContent = owner || '—';
-        flipOwners(before);   // ajusta el ancho (puntitos -> nombre) suavemente
-      });
-    }
+    tw.textContent = ` · Traducción: ${backOf(c).owner || '—'}`;   // dueño ya viene en el dato -> instantáneo
+    flipOwners(oldLeft);   // anima el corrimiento horizontal de la línea
   }
 
   function updateBar() {
@@ -519,7 +490,7 @@
 
   /* ============ PANELES ============ */
 
-  let historyPanel, listPanel, listPage = 1;
+  let historyPanel, listPanel, listPage = 1, listUrls = [];   // listUrls[page] = URL (cursor) de cada página
   function buildPanels() { historyPanel = makePanel('Historial'); listPanel = makePanel('Mi lista'); }
   function makePanel(title) {
     const p = document.createElement('div'); p.className = 'fc-panel';
@@ -549,12 +520,23 @@
     const wrap = document.createElement('div'); wrap.className = 'fc-list-ctrls';
     wrap.innerHTML = `<label>Oraciones en:<select id="ld-front">${langOpts(LIST_DISPLAY.front)}</select></label>` +
                      `<label>Mostrar traducciones en:<select id="ld-back">${langOpts(LIST_DISPLAY.back)}</select></label>`;
-    wrap.querySelector('#ld-front').addEventListener('change', (e) => { LIST_DISPLAY.front = e.target.value; saveListDisplay(); listPage = 1; loadListPage(); });
-    wrap.querySelector('#ld-back').addEventListener('change', (e) => { LIST_DISPLAY.back = e.target.value; saveListDisplay(); listPage = 1; loadListPage(); });
+    wrap.querySelector('#ld-front').addEventListener('change', (e) => { LIST_DISPLAY.front = e.target.value; saveListDisplay(); listPage = 1; listUrls = []; loadListPage(); });
+    wrap.querySelector('#ld-back').addEventListener('change', (e) => { LIST_DISPLAY.back = e.target.value; saveListDisplay(); listPage = 1; listUrls = []; loadListPage(); });
     return wrap;
   }
 
-  function openList() { listPage = 1; uiBlocked = true; listPanel.classList.add('open'); loadListPage(); }
+  function openList() { listPage = 1; listUrls = []; uiBlocked = true; listPanel.classList.add('open'); loadListPage(); }
+
+  function buildListQuery() {
+    const p = new URLSearchParams();
+    p.set('lang', filters.from);               // idioma de las oraciones agregadas a la lista (la "principal")
+    p.set('list', String(LIST_ID));
+    p.set('sort', '-created');                 // más recientes primero (la API nueva no ordena por id)
+    p.set('showtrans', 'all');                 // todas las traducciones -> el display (LIST_DISPLAY) elige front/back
+    p.set('include', 'audios');
+    p.set('limit', '30');
+    return p.toString();
+  }
 
   async function loadListPage() {
     const body = listPanel._body; body.innerHTML = '';
@@ -563,16 +545,12 @@
     area.innerHTML = '<div class="fc-list-load"><div class="fc-load-dots"><span></span><span></span><span></span></div><div class="lbl">Cargando lista…</div></div>';
     body.appendChild(area);
     try {
-      const startApi = (listPage - 1) * LIST_FETCHES_PER_PAGE + 1;
-      const all = []; let hasNext = false;
-      for (let i = 0; i < LIST_FETCHES_PER_PAGE; i++) {
-        const p = new URLSearchParams({ list: String(LIST_ID), to: LIST_DISPLAY.back, trans_to: LIST_DISPLAY.back, trans_filter: 'limit', page: String(startApi + i), sort: 'id', direction: 'desc' });
-        const data = await apiSearch(p.toString());
-        all.push(...(data.results || []));
-        hasNext = !!(data.paging && data.paging.Sentences && data.paging.Sentences.nextPage);
-        if (!hasNext) break;
-      }
-      renderListPage(area, all, hasNext);
+      const url = listUrls[listPage] || `${API_BASE}/sentences?${buildListQuery()}`;
+      const data = await apiSearch(url);
+      listUrls[listPage] = url;
+      const hasNext = !!(data.paging && data.paging.has_next);
+      if (hasNext) listUrls[listPage + 1] = data.paging.next;   // cursor de la próxima página
+      renderListPage(area, data.data || [], hasNext);
     } catch (e) { area.textContent = 'Error cargando la lista.'; }
   }
 
@@ -580,15 +558,14 @@
     area.innerHTML = '';
     if (!all.length) area.textContent = listPage === 1 ? 'La lista está vacía.' : 'No hay más oraciones.';
     for (const c of all) {
-      const ft = getTextByLang(c, LIST_DISPLAY.front) || { text: c.text, id: c.id, user: c.user && c.user.username };
+      const ft = getTextByLang(c, LIST_DISPLAY.front) || { text: c.text, id: c.id, owner: c.owner };
       const bt = getTextByLang(c, LIST_DISPLAY.back) || { text: '', id: null };
       const row = document.createElement('div'); row.className = 'fc-row';
-      row.innerHTML = `<div class="meta">Oración #${ft.id || '—'} · <span class="fo"></span></div>
+      row.innerHTML = `<div class="meta">Oración #${ft.id || '—'} · ${ft.owner || '—'}</div>
         <div class="es">${ft.text}</div>
         <div class="en">${bt.text}</div>
         <div class="meta">Traducción #${bt.id || '—'}</div>
         <div class="acts"><button class="go">Abrir</button><button class="rm">Quitar</button></div>`;
-      fillOwner(row.querySelector('.fo'), ft);
       row.querySelector('.go').addEventListener('click', () => window.open(`/${langSeg()}/sentences/show/${c.id}`, '_blank'));
       row.querySelector('.rm').addEventListener('click', async () => { if (await listById('remove_sentence_from_list', c.id, 'quitada', 'Error')) row.remove(); });
       area.appendChild(row);
@@ -620,7 +597,6 @@
       <h4>Oraciones</h4>
       <label>Palabras:<input type="text" id="f-query" value="${f.query || ''}" placeholder="Escriba una palabra o una frase"></label>
       <label>Idioma:<select id="f-from">${langOpts(f.from)}</select></label>
-      <label>Mostrar traducciones en:<select id="f-to">${langOpts(f.to)}</select></label>
       <div class="row"><span>Length:</span> At least <input type="number" id="f-wmin" value="${f.word_min}" style="width:60px"> At most <input type="number" id="f-wmax" value="${f.word_max}" style="width:60px"></div>
       <label>Dueño:<input type="text" id="f-user" value="${f.user || ''}" placeholder="nombre de usuario"></label>
       <div class="row"><input type="checkbox" id="f-original" ${f.original ? 'checked' : ''}><span>Is original</span></div>
@@ -631,7 +607,6 @@
       <label>Etiquetas:<input type="text" id="f-tags" value="${f.tags || ''}" placeholder="separadas por comas"></label>
       <label>Pertenece a la lista (ID, opcional):<input type="text" id="f-list" value="${f.list || ''}" placeholder="Sin especificar"></label>
       <h4>Traducciones</h4>
-      <label>Restringir a:<select id="f-tfilter"><option value="limit" ${f.trans_filter === 'limit' ? 'selected' : ''}>Restringir a</option><option value="exclude" ${f.trans_filter === 'exclude' ? 'selected' : ''}>Excluir</option><option value="" ${!f.trans_filter ? 'selected' : ''}>No filtrar</option></select></label>
       <label>Idioma:<select id="f-tto">${langOpts(f.trans_to, 'Cualquier idioma')}</select></label>
       <label>Enlace: ${linkSel('f-tlink', f.trans_link)}</label>
       <label>Dueño:<input type="text" id="f-tuser" value="${f.trans_user || ''}" placeholder="nombre de usuario"></label>
@@ -657,11 +632,11 @@
     m.querySelector('#fc-apply').addEventListener('click', () => {
       const g = (id) => m.querySelector(id);
       filters = {
-        query: g('#f-query').value.trim(), from: g('#f-from').value, to: g('#f-to').value,
+        query: g('#f-query').value.trim(), from: g('#f-from').value,
         word_min: g('#f-wmin').value, word_max: g('#f-wmax').value, user: g('#f-user').value.trim(),
         original: g('#f-original').checked, orphans: g('#f-orphans').value, unapproved: g('#f-unapproved').value,
         native: g('#f-native').value, has_audio: g('#f-audio').value, tags: g('#f-tags').value.trim(), list: g('#f-list').value.trim(),
-        trans_filter: g('#f-tfilter').value, trans_to: g('#f-tto').value, trans_link: g('#f-tlink').value, trans_user: g('#f-tuser').value.trim(),
+        trans_to: g('#f-tto').value, trans_link: g('#f-tlink').value, trans_user: g('#f-tuser').value.trim(),
         trans_orphan: g('#f-torphan').value, trans_unapproved: g('#f-tunap').value, trans_native: g('#f-tnative').value,
         trans_has_audio: g('#f-thas').value, sort: g('#f-sort').value, sort_reverse: g('#f-reverse').checked,
       };
@@ -673,7 +648,7 @@
   const closeModal = () => { uiBlocked = false; document.getElementById('fc-modal').classList.remove('open'); };
 
   async function resetDeck() {
-    cards = []; index = -1; seenIds.clear();
+    cards = []; index = -1; nextUrl = null; seenIds.clear();
     showLoading(true);
     frontEl.textContent = ''; backEl.textContent = ''; ownersEl.textContent = '';
     await ensureBuffer(true);
