@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Tatoeba - Flashcards (Sentence Mining)
 // @namespace    https://tatoeba.org/
-// @version      4.13
+// @version      4.19
 // @description  Flashcards tipo Anki sobre la búsqueda filtrada de Tatoeba (mobile + teclado)
 // @icon         https://tatoeba.org/img/tatoeba.svg?1781334885
 // @match        https://tatoeba.org/*/sentences/search*
@@ -250,7 +250,7 @@
       #fc-overlay.hidden { display:none; }
       #fc-overlay .material-icons { line-height:1; font-size:inherit; color:inherit; display:block; }
       #fc-top { display:flex; align-items:center; gap:8px; padding:calc(env(safe-area-inset-top,0px) + 8px) 12px 8px; }
-      #fc-id { font-size:12px; color:var(--muted); font-weight:600; line-height:1.3; }
+      #fc-id { font-size:12px; color:var(--muted); font-weight:600; line-height:1.3; margin-right:auto; }
       .fc-dot-load { display:inline-flex; gap:3px; vertical-align:middle; }
       .fc-dot-load i { width:4px; height:4px; border-radius:50%; background:currentColor; opacity:.4; animation:fc-bounce 1s ease-in-out infinite; }
       .fc-dot-load i:nth-child(2) { animation-delay:.16s; }
@@ -304,6 +304,9 @@
         background:var(--bg,#fff); color:var(--fg,#222); transform:translateX(100%); transition:transform .25s ease;
         display:flex; flex-direction:column; box-shadow:-2px 0 12px rgba(0,0,0,.2); }
       .fc-panel.open { transform:translateX(0); }
+      .fc-panel-backdrop { position:fixed; inset:0; z-index:2147483499; background:rgba(0,0,0,.35);
+        opacity:0; pointer-events:none; transition:opacity .25s ease; }
+      .fc-panel-backdrop.open { opacity:1; pointer-events:auto; }
       .fc-panel header { display:flex; align-items:center; gap:8px; padding:calc(env(safe-area-inset-top,0px) + 14px) 14px 14px;
         border-bottom:1px solid var(--line,#eee); font-weight:600; }
       .fc-panel header .spacer { flex:1; }
@@ -327,9 +330,15 @@
         background:rgba(0,0,0,.5); opacity:0; pointer-events:none; transition:opacity .2s ease; }
       #fc-modal.open { opacity:1; pointer-events:auto; }
       #fc-modal .box { background:var(--bg,#fff); color:var(--fg,#222); border:1px solid var(--line); border-radius:12px; width:min(92vw,400px);
-        max-height:88vh; overflow:hidden; display:flex; flex-direction:column; font-size:14px;
+        height:min(86vh,600px); overflow:hidden; display:flex; flex-direction:column; font-size:14px;
         transform:scale(.94); transition:transform .2s ease; }
       #fc-modal.open .box { transform:scale(1); }
+      #fc-modal .fc-tabs { display:flex; gap:2px; padding:8px 8px 0; border-bottom:1px solid var(--line); }
+      #fc-modal .fc-tabs button { flex:1; padding:9px 4px; border:none; background:transparent; color:var(--muted);
+        font-size:13px; cursor:pointer; border-bottom:2px solid transparent; border-radius:6px 6px 0 0; }
+      #fc-modal .fc-tabs button.active { color:var(--fg); border-bottom-color:var(--accent); font-weight:600; }
+      #fc-modal .fc-pane { display:none; flex-direction:column; gap:10px; }
+      #fc-modal .fc-pane.active { display:flex; }
       #fc-modal .box-scroll { overflow:auto; flex:1 1 auto; min-height:0; padding:18px; display:flex; flex-direction:column; gap:10px; scrollbar-width:none; -ms-overflow-style:none; }
       #fc-modal .box-scroll::-webkit-scrollbar { width:0; height:0; display:none; }
       #fc-modal h4 { margin:6px 0 0; border-bottom:1px solid var(--line,#eee); padding-bottom:4px; }
@@ -499,19 +508,27 @@
 
   /* ============ PANELES ============ */
 
-  let historyPanel, listPanel, listPage = 1, listUrls = [];   // listUrls[page] = URL (cursor) de cada página
-  function buildPanels() { historyPanel = makePanel('Historial'); listPanel = makePanel('Mi lista'); }
+  let historyPanel, listPanel, panelBackdrop, listPage = 1, listUrls = [];   // listUrls[page] = URL (cursor) de cada página
+  function buildPanels() {
+    historyPanel = makePanel('Historial'); listPanel = makePanel('Mi lista');
+    panelBackdrop = document.createElement('div'); panelBackdrop.className = 'fc-panel-backdrop';
+    panelBackdrop.addEventListener('click', closePanels);
+    document.body.appendChild(panelBackdrop);
+    document.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape' && (historyPanel.classList.contains('open') || listPanel.classList.contains('open'))) closePanels();
+    });
+  }
   function makePanel(title) {
     const p = document.createElement('div'); p.className = 'fc-panel';
     const h = document.createElement('header');
     const t = document.createElement('div'); t.textContent = title;
     const s = document.createElement('div'); s.className = 'spacer';
-    const c = iconBtn('x', 'close', 'Cerrar', 'fc-icon'); c.addEventListener('click', () => { p.classList.remove('open'); uiBlocked = false; });
+    const c = iconBtn('x', 'close', 'Cerrar', 'fc-icon'); c.addEventListener('click', closePanels);
     h.append(t, s, c);
     const body = document.createElement('div'); body.className = 'body';
-    p.append(h, body); document.body.appendChild(p); p._body = body; return p;
+    p.append(h, body); document.body.appendChild(p); p._body = body; p._title = t; return p;
   }
-  function closePanels() { historyPanel.classList.remove('open'); listPanel.classList.remove('open'); uiBlocked = false; }
+  function closePanels() { historyPanel.classList.remove('open'); listPanel.classList.remove('open'); if (panelBackdrop) panelBackdrop.classList.remove('open'); uiBlocked = false; }
 
   function openHistory() {
     const body = historyPanel._body; body.innerHTML = '';
@@ -522,7 +539,7 @@
       row.addEventListener('click', () => jumpTo(i)); body.appendChild(row);
     }
     if (!body.children.length) body.textContent = 'Todavía no viste ninguna.';
-    uiBlocked = true; historyPanel.classList.add('open');
+    uiBlocked = true; panelBackdrop.classList.add('open'); historyPanel.classList.add('open');
   }
 
   function listControls() {
@@ -541,7 +558,11 @@
     return wrap;
   }
 
-  function openList() { listPage = 1; listUrls = []; uiBlocked = true; listPanel.classList.add('open'); loadListPage(); }
+  function openList() {
+    listPage = 1; listUrls = []; uiBlocked = true; panelBackdrop.classList.add('open'); listPanel.classList.add('open');
+    currentListName().then((n) => { listPanel._title.textContent = n; });
+    loadListPage();
+  }
 
   function buildListQuery() {
     const p = new URLSearchParams();
@@ -606,13 +627,23 @@
   const escHtml = (s) => String(s == null ? '' : s).replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
 
   // Trae las listas a las que el usuario puede agregar (propias + colaborativas), vía el sitio (con sesión).
+  let myListsCache = null;
   async function fetchMyLists() {
     try {
       const r = await fetch(`/${langSeg()}/sentences_lists/choices`, { credentials: 'same-origin', headers: { 'X-Requested-With': 'XMLHttpRequest' } });
       if (!r.ok) return null;
       const d = await r.json();
-      return (d && d.lists) || null;
+      const lists = (d && d.lists) || null;
+      if (lists) myListsCache = lists;
+      return lists;
     } catch (e) { return null; }
+  }
+  async function currentListName() {
+    const cur = String(LIST_ID);
+    const find = () => (myListsCache || []).find((l) => String(l.id) === cur);
+    if (!myListsCache) await fetchMyLists();
+    const l = find();
+    return l ? l.name : `Lista #${cur}`;
   }
 
   async function populateListSelect() {
@@ -634,9 +665,13 @@
     const originSel = (id, v) => { const o = (val, t) => `<option value="${val}" ${v === val ? 'selected' : ''}>${t}</option>`;
       return `<select id="${id}">${o('', 'Cualquiera')}${o('original', 'Original')}${o('translation', 'Traducción')}${o('known', 'Conocido')}${o('unknown', 'Desconocido')}</select>`; };
     m.innerHTML = `<div class="box">
+      <div class="fc-tabs">
+        <button type="button" class="active" data-pane="o">Oraciones</button>
+        <button type="button" data-pane="t">Traducción</button>
+        <button type="button" data-pane="e">Estudio</button>
+      </div>
       <div class="box-scroll">
-      <strong>Filtros</strong>
-      <h4>Oraciones</h4>
+      <div class="fc-pane active" data-pane="o">
       <label>Palabras:<input type="text" id="f-query" value="${f.query || ''}" placeholder="palabra o frase"></label>
       <div class="hint">Texto a buscar (sintaxis ManticoreSearch). Vacío = todas.</div>
       <label>Idioma:<select id="f-from">${langOpts(f.from)}</select></label>
@@ -659,7 +694,17 @@
       <div class="hint">Tags EXACTOS, separados por coma. Deben existir o la búsqueda da error.</div>
       <label>Pertenece a la lista (ID, opcional):<input type="text" id="f-list" value="${f.list || ''}" placeholder="Sin especificar"></label>
       <div class="hint">ID numérico de una lista de Tatoeba.</div>
-      <h4>Traducciones</h4>
+      <h4>Ordenación</h4>
+      <label>Orden:<select id="f-sort">
+        <option value="random" ${f.sort === 'random' ? 'selected' : ''}>Al azar</option>
+        <option value="relevance" ${f.sort === 'relevance' ? 'selected' : ''}>Relevancia (coincidencias exactas primero)</option>
+        <option value="words" ${f.sort === 'words' ? 'selected' : ''}>Palabras (más cortas primero)</option>
+        <option value="created" ${f.sort === 'created' ? 'selected' : ''}>Fecha de creación (más nuevas primero)</option>
+        <option value="modified" ${f.sort === 'modified' ? 'selected' : ''}>Última modificación (modificadas primero)</option></select></label>
+      <div class="hint">‘En orden inverso’ da vuelta el elegido (ej. más viejas / más largas primero).</div>
+      <div class="row"><input type="checkbox" id="f-reverse" ${f.sort_reverse ? 'checked' : ''}><span>En orden inverso</span></div>
+      </div>
+      <div class="fc-pane" data-pane="t">
       <label>Idioma:<select id="f-tto">${langOpts(f.trans_to, 'Cualquier idioma')}</select></label>
       <div class="hint">Solo trae oraciones que TIENEN traducción en este idioma (será el reverso).</div>
       <label>Enlace: ${linkSel('f-tlink', f.trans_link)}</label>
@@ -671,16 +716,8 @@
       <label>Is owned by a native: ${tri('f-tnative', f.trans_native)}</label>
       <label>Tiene voz: ${tri('f-thas', f.trans_has_audio)}</label>
       <div class="hint">Mismos criterios (Sí/No/Indistinto), aplicados a la traducción.</div>
-      <h4>Ordenación</h4>
-      <label>Orden:<select id="f-sort">
-        <option value="random" ${f.sort === 'random' ? 'selected' : ''}>Al azar</option>
-        <option value="relevance" ${f.sort === 'relevance' ? 'selected' : ''}>Relevancia (coincidencias exactas primero)</option>
-        <option value="words" ${f.sort === 'words' ? 'selected' : ''}>Palabras (más cortas primero)</option>
-        <option value="created" ${f.sort === 'created' ? 'selected' : ''}>Fecha de creación (más nuevas primero)</option>
-        <option value="modified" ${f.sort === 'modified' ? 'selected' : ''}>Última modificación (modificadas primero)</option></select></label>
-      <div class="hint">‘En orden inverso’ da vuelta el elegido (ej. más viejas / más largas primero).</div>
-      <div class="row"><input type="checkbox" id="f-reverse" ${f.sort_reverse ? 'checked' : ''}><span>En orden inverso</span></div>
-      <h4>Estudio</h4>
+      </div>
+      <div class="fc-pane" data-pane="e">
       <label>Lista objetivo:<select id="f-listid"><option value="${LIST_ID}" selected>Cargando tus listas…</option></select></label>
       <div class="hint">Elegí entre tus listas. Define dónde agregás/quitás y qué ves en "Mi lista".</div>
       <label>Idioma del audio:<select id="f-audiolang">${langOpts(AUDIO_LANG)}</select></label>
@@ -691,10 +728,17 @@
       <label>Luego (reverso):<select id="d-back">${langOpts(DISPLAY.back)}</select></label>
       <div class="hint">Idioma que se revela (la "respuesta"). El audio siempre es inglés.</div>
       </div>
+      </div>
       <div class="actions"><button id="fc-cancel">Cancelar</button><button id="fc-apply">Aplicar</button></div>
     </div>`;
     document.body.appendChild(m);
+    m.querySelectorAll('.fc-tabs button').forEach((b) => b.addEventListener('click', () => {
+      m.querySelectorAll('.fc-tabs button').forEach((x) => x.classList.toggle('active', x === b));
+      m.querySelectorAll('.fc-pane').forEach((p) => p.classList.toggle('active', p.dataset.pane === b.dataset.pane));
+      m.querySelector('.box-scroll').scrollTop = 0;
+    }));
     m.addEventListener('click', (e) => { if (e.target === m) closeModal(); });
+    document.addEventListener('keydown', (e) => { if (e.key === 'Escape' && m.classList.contains('open')) closeModal(); });
     m.querySelector('#fc-cancel').addEventListener('click', closeModal);
     m.querySelector('#fc-apply').addEventListener('click', () => {
       const g = (id) => m.querySelector(id);
