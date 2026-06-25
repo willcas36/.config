@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Tatoeba - Flashcards (Sentence Mining)
 // @namespace    https://tatoeba.org/
-// @version      4.19
+// @version      4.20
 // @description  Flashcards tipo Anki sobre la búsqueda filtrada de Tatoeba (mobile + teclado)
 // @icon         https://tatoeba.org/img/tatoeba.svg?1781334885
 // @match        https://tatoeba.org/*/sentences/search*
@@ -31,6 +31,8 @@
     audio: '/',        // Reproducir audio
     addList: '.',      // Agregar a la lista
     removeList: ',',   // Quitar de la lista
+    list: '[',         // (modo ordenador) alterna abrir/cerrar Mi lista
+    history: ']',      // (modo ordenador) alterna abrir/cerrar Historial
   };
   
 
@@ -43,6 +45,7 @@
   const PREFETCH_AT = 4;
   const DARK_DEFAULT = false;
   let AUDIO_LANG = localStorage.getItem('sm-fc-audiolang') || 'eng';   // idioma del audio (editable en el modal)
+  let DESKTOP_MODE = localStorage.getItem('sm-fc-desktop') === '1';   // PC: paneles laterales que empujan + atajos [ ]
   const API_BASE = 'https://api.tatoeba.org/v1';   // API oficial ESTABLE y versionada (no /unstable, que cambia)
 
   const LANGUAGES = [
@@ -244,7 +247,8 @@
       #fc-overlay { --bg:#fafafa; --fg:#222; --muted:#999; --card:#fff; --line:#eee;
         --btn:#ececec; --btnfg:#444; --accent:#4b8b3b; --back:#2e7d32;
         position:fixed; inset:0; z-index:2147483000; background:var(--bg); color:var(--fg);
-        display:flex; flex-direction:column; font-family:sans-serif; }
+        display:flex; flex-direction:column; font-family:sans-serif; transition:padding-right .25s ease; }
+      #fc-overlay.panel-push { padding-right:min(88vw,380px); }
       #fc-overlay.dark { --bg:#1c1c1e; --fg:#eaeaea; --muted:#888; --card:#2a2a2c; --line:#3a3a3c;
         --btn:#3a3a3c; --btnfg:#ddd; --back:#6bbf59; }
       #fc-overlay.hidden { display:none; }
@@ -528,7 +532,15 @@
     const body = document.createElement('div'); body.className = 'body';
     p.append(h, body); document.body.appendChild(p); p._body = body; p._title = t; return p;
   }
-  function closePanels() { historyPanel.classList.remove('open'); listPanel.classList.remove('open'); if (panelBackdrop) panelBackdrop.classList.remove('open'); uiBlocked = false; }
+  function closePanels() { historyPanel.classList.remove('open'); listPanel.classList.remove('open'); if (panelBackdrop) panelBackdrop.classList.remove('open'); overlay.classList.remove('panel-push'); uiBlocked = false; }
+  function toggleList() { if (listPanel.classList.contains('open')) closePanels(); else openList(); }
+  function toggleHistory() { if (historyPanel.classList.contains('open')) closePanels(); else openHistory(); }
+  function showPanelChrome() {   // muestra backdrop (flotante) o empuje (PC), cierra el otro panel
+    historyPanel.classList.remove('open'); listPanel.classList.remove('open');
+    uiBlocked = !DESKTOP_MODE;
+    if (DESKTOP_MODE) { panelBackdrop.classList.remove('open'); overlay.classList.add('panel-push'); }
+    else { overlay.classList.remove('panel-push'); panelBackdrop.classList.add('open'); }
+  }
 
   function openHistory() {
     const body = historyPanel._body; body.innerHTML = '';
@@ -539,7 +551,7 @@
       row.addEventListener('click', () => jumpTo(i)); body.appendChild(row);
     }
     if (!body.children.length) body.textContent = 'Todavía no viste ninguna.';
-    uiBlocked = true; panelBackdrop.classList.add('open'); historyPanel.classList.add('open');
+    showPanelChrome(); historyPanel.classList.add('open');
   }
 
   function listControls() {
@@ -559,7 +571,7 @@
   }
 
   function openList() {
-    listPage = 1; listUrls = []; uiBlocked = true; panelBackdrop.classList.add('open'); listPanel.classList.add('open');
+    listPage = 1; listUrls = []; showPanelChrome(); listPanel.classList.add('open');
     currentListName().then((n) => { listPanel._title.textContent = n; });
     loadListPage();
   }
@@ -727,6 +739,9 @@
       <div class="hint">Idioma que ves ANTES de revelar.</div>
       <label>Luego (reverso):<select id="d-back">${langOpts(DISPLAY.back)}</select></label>
       <div class="hint">Idioma que se revela (la "respuesta"). El audio siempre es inglés.</div>
+      <h4>Interacción</h4>
+      <div class="row"><input type="checkbox" id="f-desktop" ${DESKTOP_MODE ? 'checked' : ''}><span>Modo ordenador (paneles laterales)</span></div>
+      <div class="hint">En PC: Historial y Mi lista se abren al costado y empujan el contenido en vez de flotar. Atajos: <b>[</b> alterna Mi lista, <b>]</b> alterna Historial.</div>
       </div>
       </div>
       <div class="actions"><button id="fc-cancel">Cancelar</button><button id="fc-apply">Aplicar</button></div>
@@ -754,8 +769,11 @@
       DISPLAY = { front: g('#d-front').value, back: g('#d-back').value };
       LIST_ID = g('#f-listid').value.trim() || '174916';
       AUDIO_LANG = g('#f-audiolang').value;
+      DESKTOP_MODE = g('#f-desktop').checked;
       localStorage.setItem('sm-fc-listid', LIST_ID);
       localStorage.setItem('sm-fc-audiolang', AUDIO_LANG);
+      localStorage.setItem('sm-fc-desktop', DESKTOP_MODE ? '1' : '0');
+      closePanels();   // si cambió el modo, dejá los paneles en estado limpio
       listUrls = [];   // cambió la lista objetivo -> invalida los cursores de "Mi lista"
       saveFilters(); saveDisplay(); closeModal(); resetDeck();
     });
@@ -829,6 +847,18 @@
       if (!a) return;
       e.preventDefault();
       a();
+    });
+
+    // Atajos de panel (modo ordenador): viven aparte porque deben funcionar AUN con el panel abierto, para alternar/cerrar.
+    document.addEventListener('keydown', (e) => {
+      if (!DESKTOP_MODE || !isOpen()) return;
+      const modal = document.getElementById('fc-modal');
+      if (modal && modal.classList.contains('open')) return;
+      const el = document.activeElement;
+      if (el && (/^(INPUT|TEXTAREA|SELECT)$/.test(el.tagName) || el.isContentEditable)) return;
+      if (e.ctrlKey || e.metaKey || e.altKey) return;
+      if (e.key === KEYS.list) { e.preventDefault(); toggleList(); }
+      else if (e.key === KEYS.history) { e.preventDefault(); toggleHistory(); }
     });
   }
 
