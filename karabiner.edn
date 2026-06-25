@@ -329,6 +329,7 @@
                                       [[:right_control :right_command] ["anki-layer" 1] :!anki-layer]
                                       [[:right_control :right_command] ["anki-layer" 0] :anki-layer]
                                       [[{:pkey :button1} {:pkey :button2}] [{:pkey :button1} {:pkey :button1} {:pkey :button1} :!CTOt]]
+                                      [:hyphen [{:pkey :button1} {:pkey :button1} {:pkey :button1} :!CTOt]]
                                       [[:right_command {:pkey :button1}] :rewind]
                                       [[:right_command {:pkey :button2}] :fast_forward]
                                       [[:right_control {:pkey :button1}] :play_or_pause]
