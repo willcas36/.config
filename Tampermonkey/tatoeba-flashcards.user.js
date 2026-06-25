@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Tatoeba - Flashcards (Sentence Mining)
 // @namespace    https://tatoeba.org/
-// @version      4.30
+// @version      4.35
 // @description  Flashcards tipo Anki sobre la búsqueda filtrada de Tatoeba (mobile + teclado)
 // @icon         https://tatoeba.org/img/tatoeba.svg?1781334885
 // @match        https://tatoeba.org/*/sentences/search*
@@ -46,6 +46,9 @@
   const DARK_DEFAULT = false;
   let AUDIO_LANG = localStorage.getItem('sm-fc-audiolang') || 'eng';   // idioma del audio (editable en el modal)
   let DESKTOP_MODE = localStorage.getItem('sm-fc-desktop') === '1';   // PC: paneles laterales que empujan + atajos [ ]
+  let START_REVEALED = localStorage.getItem('sm-fc-startrevealed') === '1';   // al navegar, mostrar la carta ya revelada (default: oculta)
+  const PROFILE_DEFAULT = 'Predeterminado';   // perfil base, no se puede borrar
+  let activeProfile = localStorage.getItem('sm-fc-active') || PROFILE_DEFAULT;
   const API_BASE = 'https://api.tatoeba.org/v1';   // API oficial ESTABLE y versionada (no /unstable, que cambia)
 
   const LANGUAGES = [
@@ -151,19 +154,24 @@
   // Acepta un query string (lo arma sobre API_BASE) o una URL completa (cursor `paging.next`).
   async function apiSearch(qsOrUrl) {
     const url = /^https?:/.test(qsOrUrl) ? qsOrUrl : `${API_BASE}/sentences?${qsOrUrl}`;
-    const res = await fetch(url, { credentials: 'omit' });   // API pública -> sin cookies (evita líos de CORS)
+    const res = await fetch(url, { credentials: 'omit', signal: currentAbort ? currentAbort.signal : undefined });   // API pública -> sin cookies (evita líos de CORS)
     return res.json();
   }
 
   /* ============ MAZO + HISTORIAL ============ */
 
   let cards = [], index = -1, fetching = false, nextUrl = null, maxSeen = -1;   // maxSeen = índice más alto visitado (el historial no se recorta al retroceder)
+  let totalCount = null;   // paging.total -> cuántas oraciones matchean los filtros en TODO Tatoeba
+  let deckGen = 0, currentAbort = null;   // anti-race: cada búsqueda nueva incrementa gen y aborta la anterior
   const seenIds = new Set();
   const currentCard = () => cards[index] || null;
 
   async function fetchBatch() {
     // Primera vez: arma el query (nueva búsqueda random). Después: sigue el cursor `paging.next`.
+    const myGen = deckGen;
     const data = await apiSearch(nextUrl || buildQuery());
+    if (myGen !== deckGen) return 0;   // otra búsqueda más nueva tomó el control -> no contamines el mazo
+    if (data.paging && typeof data.paging.total === 'number') totalCount = data.paging.total;
     nextUrl = (data.paging && data.paging.has_next) ? data.paging.next : null;
     let added = 0;
     for (const r of (data.data || [])) {
@@ -176,7 +184,7 @@
     if (fetching) return;
     fetching = true;
     try { let n = 0; while (await fetchBatch() === 0 && n++ < 3) {} }
-    catch (e) { toast('Error trayendo oraciones', false); }
+    catch (e) { if (e.name !== 'AbortError') toast('Error trayendo oraciones', false); }
     finally { fetching = false; updateId(); }
   }
   async function next() {
@@ -250,10 +258,10 @@
     const s = document.createElement('style');
     s.textContent = `
       /* Tema scopeado a MIS raíces (overlay/panel/modal viven en <body>, por eso las vars se definen en los 3). */
-      #fc-overlay, .fc-panel, #fc-modal, #fc-confirm { --bg:#fafafa; --fg:#222; --muted:#8a8a8a; --card:#fff; --line:#e6e6e6;
+      #fc-overlay, .fc-panel, #fc-modal, #fc-confirm, #fc-prompt { --bg:#fafafa; --fg:#222; --muted:#8a8a8a; --card:#fff; --line:#e6e6e6;
         --btn:#ececec; --btnfg:#444; --accent:#4b8b3b; --back:#2e7d32;
         --rm-bg:#fde7e7; --rm-fg:#c62828; --go-bg:#e8f0e6; --go-fg:#2e7d32; --shadow:rgba(0,0,0,.18); }
-      .fc-dark #fc-overlay, .fc-dark .fc-panel, .fc-dark #fc-modal, .fc-dark #fc-confirm { --bg:#16161a; --fg:#ececf0; --muted:#9a9aa3;
+      .fc-dark #fc-overlay, .fc-dark .fc-panel, .fc-dark #fc-modal, .fc-dark #fc-confirm, .fc-dark #fc-prompt { --bg:#16161a; --fg:#ececf0; --muted:#9a9aa3;
         --card:#26262b; --line:#34343b; --btn:#34343b; --btnfg:#e2e2e8; --accent:#6bbf59; --back:#7ecb6a;
         --rm-bg:rgba(229,115,115,.16); --rm-fg:#ef9a9a; --go-bg:rgba(124,203,106,.16); --go-fg:#a5d6a7; --shadow:rgba(0,0,0,.55); }
       #fc-overlay { position:fixed; inset:0; z-index:2147483000; background:var(--bg); color:var(--fg);
@@ -263,6 +271,8 @@
       #fc-overlay .material-icons { line-height:1; font-size:inherit; color:inherit; display:block; }
       #fc-top { display:flex; align-items:center; gap:8px; padding:calc(env(safe-area-inset-top,0px) + 8px) 12px 8px; }
       #fc-id { font-size:12px; color:var(--muted); font-weight:600; line-height:1.3; margin-right:auto; }
+      #fc-id .fc-prof { color:var(--fg); font-weight:700; font-size:13px; margin-bottom:2px; }
+      #fc-id .fc-total { color:var(--accent); font-weight:700; margin-bottom:2px; }
       .fc-dot-load { display:inline-flex; gap:3px; vertical-align:middle; }
       .fc-dot-load i { width:4px; height:4px; border-radius:50%; background:currentColor; opacity:.4; animation:fc-bounce 1s ease-in-out infinite; }
       .fc-dot-load i:nth-child(2) { animation-delay:.16s; }
@@ -366,6 +376,16 @@
         height:min(86vh,600px); overflow:hidden; display:flex; flex-direction:column; font-size:14px; box-shadow:0 16px 48px var(--shadow);
         transform:scale(.94); transition:transform .2s ease; }
       #fc-modal.open .box { transform:scale(1); }
+      #fc-modal .fc-profiles { display:flex; flex-direction:column; gap:8px; padding:10px; border-bottom:1px solid var(--line); }
+      #fc-modal .fc-prof-row { display:flex; gap:6px; align-items:center; }
+      #fc-modal .fc-prof-row select { flex:1; min-width:0; }
+      #fc-modal #prof-new { background:var(--accent); color:#fff; border:none; border-radius:6px; width:36px; height:36px; flex:0 0 auto; cursor:pointer; display:flex; align-items:center; justify-content:center; }
+      #fc-modal .fc-prof-actions { display:flex; gap:6px; align-items:center; }
+      #fc-modal #prof-save, #fc-modal #prof-rename { flex:1; height:36px; border:none; border-radius:6px; cursor:pointer; font-size:13px; font-weight:600; }
+      #fc-modal #prof-save { background:var(--accent); color:#fff; }
+      #fc-modal #prof-rename { background:var(--btn); color:var(--btnfg); }
+      #fc-modal #prof-del { background:transparent; color:var(--muted); border:none; border-radius:6px; width:36px; height:36px; cursor:pointer; flex:0 0 auto; display:flex; align-items:center; justify-content:center; transition:color .15s, background .15s; }
+      #fc-modal #prof-del:hover { color:#d33; background:var(--btn); }
       #fc-modal .fc-tabs { display:flex; gap:2px; padding:8px 8px 0; border-bottom:1px solid var(--line); }
       #fc-modal .fc-tabs button { flex:1; padding:9px 4px; border:none; background:transparent; color:var(--muted);
         font-size:13px; cursor:pointer; border-bottom:2px solid transparent; border-radius:6px 6px 0 0; }
@@ -383,6 +403,12 @@
         background:var(--card,#fff); color:var(--fg,#222); transition:border-color .15s ease; }
       #fc-modal select:focus, #fc-modal input:focus { outline:none; border-color:var(--accent); }
       #fc-modal input[type=checkbox] { width:auto; accent-color:var(--accent); }
+      #fc-modal .fc-tagbox { display:flex; flex-wrap:wrap; gap:6px; padding:7px; border:1px solid var(--line); border-radius:6px; background:var(--card); min-height:40px; align-items:center; cursor:text; }
+      #fc-modal .fc-tagbox:focus-within { border-color:var(--accent); }
+      #fc-modal .fc-tagbox input { border:none; outline:none; background:transparent; flex:1; min-width:90px; padding:2px; color:var(--fg); font-size:15px; }
+      .fc-tag { display:inline-flex; align-items:center; gap:5px; background:var(--accent); color:#fff; border-radius:6px; padding:3px 5px 3px 9px; font-size:13px; }
+      .fc-tag button { border:none; background:transparent; color:#fff; cursor:pointer; font-size:16px; line-height:1; padding:0 2px; opacity:.85; }
+      .fc-tag button:hover { opacity:1; }
       #fc-modal .actions { display:flex; gap:8px; padding:10px 18px; border-top:1px solid var(--line); background:var(--bg,#fff); }
       #fc-modal .actions button { flex:1; height:42px; border:none; border-radius:8px; cursor:pointer; font-size:15px; }
       #fc-apply { background:var(--accent,#4b8b3b); color:#fff; font-weight:600; } #fc-cancel { background:var(--btn); color:var(--btnfg); }
@@ -398,6 +424,19 @@
       #fc-confirm .cbtns button { flex:1; height:42px; border:none; border-radius:8px; cursor:pointer; font-size:15px; font-weight:600; }
       #fc-confirm .c-cancel { background:var(--btn); color:var(--btnfg); }
       #fc-confirm .c-ok { background:#d33; color:#fff; }
+      #fc-prompt { position:fixed; inset:0; z-index:2147483800; display:flex; align-items:center; justify-content:center;
+        background:rgba(0,0,0,.5); opacity:0; pointer-events:none; transition:opacity .18s ease; }
+      #fc-prompt.open { opacity:1; pointer-events:auto; }
+      #fc-prompt .cbox { background:var(--bg); color:var(--fg); border:1px solid var(--line); border-radius:14px; width:min(90vw,340px);
+        padding:22px; box-shadow:0 16px 48px var(--shadow); transform:scale(.92); transition:transform .18s ease; display:flex; flex-direction:column; gap:14px; }
+      #fc-prompt.open .cbox { transform:scale(1); }
+      #fc-prompt .cmsg { font-size:15px; font-weight:600; }
+      #fc-prompt .pinput { padding:9px; border:1px solid var(--line); border-radius:8px; background:var(--card); color:var(--fg); font-size:15px; }
+      #fc-prompt .pinput:focus { outline:none; border-color:var(--accent); }
+      #fc-prompt .cbtns { display:flex; gap:10px; }
+      #fc-prompt .cbtns button { flex:1; height:40px; border:none; border-radius:8px; cursor:pointer; font-size:15px; font-weight:600; }
+      #fc-prompt .c-cancel { background:var(--btn); color:var(--btnfg); }
+      #fc-prompt .c-ok { background:var(--accent); color:#fff; }
     `;
     document.head.appendChild(s);
   }
@@ -490,9 +529,11 @@
 
   function updateId() {
     const c = currentCard(); if (!idEl) return;
-    if (!c) { idEl.innerHTML = '…'; return; }
+    const head = `<div class="fc-prof">${escHtml(activeProfile)}</div>`
+      + (totalCount != null ? `<div class="fc-total">${totalCount.toLocaleString('es')} en Tatoeba</div>` : '');   // perfil, y total debajo
+    if (!c) { idEl.innerHTML = head; return; }
     const f = frontOf(c), b = backOf(c);
-    idEl.innerHTML = `<div>Oración #${f.id || '—'}</div><div>Traducción #${b.id || '—'}${fetching ? ' …' : ''}</div>`;
+    idEl.innerHTML = head + `<div>Oración #${f.id || '—'}</div><div>Traducción #${b.id || '—'}${fetching ? ' …' : ''}</div>`;
   }
 
   function showLoading(on) {
@@ -514,6 +555,7 @@
     ownersEl.style.transition = ''; ownersEl.style.transform = '';   // reset de la animación
     hintEl.style.visibility = 'visible';
     updateId(); updateBar(); syncHistory();   // historial sigue en vivo a la oración actual
+    if (START_REVEALED) reveal();   // modo "ya revelada": mostrá el reverso de entrada
   }
 
   // FLIP horizontal de la línea de dueños: animar su corrimiento desde 'fromLeft' hasta su lugar actual.
@@ -559,6 +601,10 @@
   /* ============ PANELES ============ */
 
   let historyPanel, listPanel, panelBackdrop, listPage = 1, listUrls = [];   // listUrls[page] = URL (cursor) de cada página
+  let listName = '', listTotal = null;   // nombre + total de miembros de "Mi lista" (para el título)
+  function applyListTitle() {
+    if (listPanel && listPanel._title) listPanel._title.textContent = (listName || 'Mi lista') + (listTotal != null ? `  ·  ${listTotal.toLocaleString('es')}` : '');
+  }
   function buildPanels() {
     historyPanel = makePanel('Historial'); listPanel = makePanel('Mi lista');
     panelBackdrop = document.createElement('div'); panelBackdrop.className = 'fc-panel-backdrop';
@@ -703,8 +749,9 @@
   }
 
   function openList() {
-    listPage = 1; listUrls = []; showPanelChrome(); listPanel.classList.add('open');
-    currentListName().then((n) => { listPanel._title.textContent = n; });
+    listPage = 1; listUrls = []; listName = ''; listTotal = null; showPanelChrome(); listPanel.classList.add('open');
+    applyListTitle();
+    currentListName().then((n) => { listName = n; applyListTitle(); });
     loadListPage();
   }
 
@@ -729,6 +776,7 @@
     try {
       const url = listUrls[listPage] || `${API_BASE}/sentences?${buildListQuery()}`;
       const data = await apiSearch(url);
+      if (data.paging && typeof data.paging.total === 'number') { listTotal = data.paging.total; applyListTitle(); }
       listUrls[listPage] = url;
       const hasNext = !!(data.paging && data.paging.has_next);
       if (hasNext) listUrls[listPage + 1] = data.paging.next;   // cursor de la próxima página
@@ -807,6 +855,109 @@
     sel.innerHTML = html;
   }
 
+  /* ----- Chips de "Palabras" (query con OR via pipe) ----- */
+  function parseQueryChips(q) { return (q || '').split('|').map((s) => s.trim().replace(/^"(.*)"$/, '$1')).filter(Boolean); }
+  function tagsToQuery(tags) { return tags.map((t) => (/\s/.test(t) ? `"${t}"` : t)).join('|'); }
+  function readTags(box) { return [...box.querySelectorAll('.fc-tag')].map((t) => t.dataset.val); }
+  function addTag(box, input, val) {
+    val = (val || '').trim().replace(/^["']+|["']+$/g, '');
+    if (!val || readTags(box).some((t) => t.toLowerCase() === val.toLowerCase())) return;
+    const tag = document.createElement('span'); tag.className = 'fc-tag'; tag.dataset.val = val;
+    const lbl = document.createElement('span'); lbl.textContent = val;
+    const x = document.createElement('button'); x.type = 'button'; x.textContent = '×'; x.setAttribute('aria-label', 'Quitar');
+    x.addEventListener('click', () => tag.remove());
+    tag.append(lbl, x); box.insertBefore(tag, input);
+  }
+  function initTagBox(box, input, chips) {
+    chips.forEach((c) => addTag(box, input, c));
+    input.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter' || e.key === ',' || e.key === '|') { e.preventDefault(); addTag(box, input, input.value); input.value = ''; }
+      else if (e.key === 'Backspace' && !input.value) { const t = box.querySelectorAll('.fc-tag'); if (t.length) t[t.length - 1].remove(); }
+    });
+    input.addEventListener('blur', () => { if (input.value.trim()) { addTag(box, input, input.value); input.value = ''; } });
+    box.addEventListener('click', () => input.focus());
+  }
+
+  /* ----- Config: leer del modal / aplicar / perfiles ----- */
+  function readModalConfig(m) {
+    const g = (id) => m.querySelector(id);
+    return {
+      filters: {
+        query: tagsToQuery(readTags(g('#f-query-box'))), from: g('#f-from').value,
+        word_min: g('#f-wmin').value, word_max: g('#f-wmax').value, user: g('#f-user').value.trim(),
+        origin: g('#f-origin').value, orphans: g('#f-orphans').value, unapproved: g('#f-unapproved').value,
+        native: g('#f-native').value, has_audio: g('#f-audio').value, tags: g('#f-tags').value.trim(), list: g('#f-list').value.trim(),
+        trans_to: g('#f-tto').value, trans_link: g('#f-tlink').value, trans_user: g('#f-tuser').value.trim(),
+        trans_orphan: g('#f-torphan').value, trans_unapproved: g('#f-tunap').value, trans_native: g('#f-tnative').value,
+        trans_has_audio: g('#f-thas').value, sort: g('#f-sort').value, sort_reverse: g('#f-reverse').checked,
+      },
+      display: { front: g('#d-front').value, back: g('#d-back').value },
+      listId: g('#f-listid').value.trim() || '174916',
+      audioLang: g('#f-audiolang').value,
+      desktop: g('#f-desktop').checked,
+      startRevealed: g('#f-startrev').checked,
+    };
+  }
+  function applyConfig(cfg, persist) {
+    // Booleanos SIEMPRE coercionados (perfiles viejos sin el campo -> default false, no se "pegan" del anterior).
+    filters = cfg.filters; DISPLAY = cfg.display; LIST_ID = cfg.listId; AUDIO_LANG = cfg.audioLang;
+    DESKTOP_MODE = !!cfg.desktop; START_REVEALED = !!cfg.startRevealed;
+    if (cfg.listDisplay) LIST_DISPLAY = cfg.listDisplay;
+    if (cfg.listSort) listSort = cfg.listSort;
+    document.documentElement.classList.toggle('fc-desktop', DESKTOP_MODE);
+    if (persist) {
+      localStorage.setItem('sm-fc-listid', LIST_ID); localStorage.setItem('sm-fc-audiolang', AUDIO_LANG);
+      localStorage.setItem('sm-fc-desktop', DESKTOP_MODE ? '1' : '0'); localStorage.setItem('sm-fc-listsort', listSort);
+      localStorage.setItem('sm-fc-startrevealed', START_REVEALED ? '1' : '0');
+      saveFilters(); saveDisplay(); saveListDisplay();
+    }
+  }
+  const PROF_KEY = 'sm-fc-profiles';
+  function loadProfiles() { try { return JSON.parse(localStorage.getItem(PROF_KEY) || '{}'); } catch (e) { return {}; } }
+  function saveProfilesMap(p) { localStorage.setItem(PROF_KEY, JSON.stringify(p)); }
+  function refreshProfileSelect(sel) {
+    const others = Object.keys(loadProfiles()).filter((n) => n !== PROFILE_DEFAULT).sort((a, b) => a.localeCompare(b));
+    const ordered = [PROFILE_DEFAULT, ...others];   // Predeterminado SIEMPRE primero, sin placeholder
+    sel.innerHTML = ordered.map((n) => `<option>${escHtml(n)}</option>`).join('');
+  }
+  function snapshotFromModal(m) { const cfg = readModalConfig(m); cfg.listDisplay = { ...LIST_DISPLAY }; cfg.listSort = listSort; return cfg; }
+  function snapshotFromGlobals() {
+    return { filters: JSON.parse(JSON.stringify(filters)), display: { ...DISPLAY }, listDisplay: { ...LIST_DISPLAY },
+      listId: LIST_ID, audioLang: AUDIO_LANG, listSort, desktop: DESKTOP_MODE, startRevealed: START_REVEALED };
+  }
+  function ensureDefaultProfile() {
+    const profs = loadProfiles();
+    if (!profs[PROFILE_DEFAULT]) { profs[PROFILE_DEFAULT] = snapshotFromGlobals(); saveProfilesMap(profs); }
+  }
+  function setActiveProfile(name) { activeProfile = name; localStorage.setItem('sm-fc-active', name); updateId(); }
+  function rebuildModal(keepOpen) { const old = document.getElementById('fc-modal'); if (old) old.remove(); buildModal(); if (keepOpen) openModal(); }
+  function promptDialog(title, placeholder, initial) {
+    return new Promise((resolve) => {
+      let m = document.getElementById('fc-prompt');
+      if (!m) {
+        m = document.createElement('div'); m.id = 'fc-prompt';
+        m.innerHTML = `<div class="cbox"><div class="cmsg"></div><input type="text" class="pinput"><div class="cbtns"><button type="button" class="c-cancel">Cancelar</button><button type="button" class="c-ok">Aceptar</button></div></div>`;
+        document.body.appendChild(m);
+      }
+      m.querySelector('.cmsg').textContent = title;
+      const input = m.querySelector('.pinput'); input.placeholder = placeholder || ''; input.value = initial || '';
+      const done = (v) => { m.classList.remove('open'); cleanup(); resolve(v); };
+      const onCancel = () => done(null);
+      const onOk = () => done(input.value.trim() || null);
+      const onBackdrop = (e) => { if (e.target === m) done(null); };
+      const onKey = (e) => { if (e.key === 'Escape') done(null); else if (e.key === 'Enter') onOk(); };
+      function cleanup() {
+        m.querySelector('.c-cancel').removeEventListener('click', onCancel);
+        m.querySelector('.c-ok').removeEventListener('click', onOk);
+        m.removeEventListener('click', onBackdrop); document.removeEventListener('keydown', onKey);
+      }
+      m.querySelector('.c-cancel').addEventListener('click', onCancel);
+      m.querySelector('.c-ok').addEventListener('click', onOk);
+      m.addEventListener('click', onBackdrop); document.addEventListener('keydown', onKey);
+      requestAnimationFrame(() => { m.classList.add('open'); input.focus(); input.select(); });
+    });
+  }
+
   function buildModal() {
     const m = document.createElement('div'); m.id = 'fc-modal';
     const f = filters;
@@ -815,6 +966,17 @@
     const originSel = (id, v) => { const o = (val, t) => `<option value="${val}" ${v === val ? 'selected' : ''}>${t}</option>`;
       return `<select id="${id}">${o('', 'Cualquiera')}${o('original', 'Original')}${o('translation', 'Traducción')}${o('known', 'Conocido')}${o('unknown', 'Desconocido')}</select>`; };
     m.innerHTML = `<div class="box">
+      <div class="fc-profiles">
+        <div class="fc-prof-row">
+          <select id="prof-sel"></select>
+          <button type="button" id="prof-new" title="Nuevo perfil" aria-label="Nuevo perfil"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg></button>
+        </div>
+        <div class="fc-prof-actions">
+          <button type="button" id="prof-save">Guardar</button>
+          <button type="button" id="prof-rename">Renombrar</button>
+          <button type="button" id="prof-del" title="Borrar perfil" aria-label="Borrar perfil"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M4 7h16"/><path d="M10 11v6M14 11v6"/><path d="M6 7l1 13h10l1-13"/><path d="M9 7V4h6v3"/></svg></button>
+        </div>
+      </div>
       <div class="fc-tabs">
         <button type="button" class="active" data-pane="o">Oraciones</button>
         <button type="button" data-pane="t">Traducción</button>
@@ -822,8 +984,9 @@
       </div>
       <div class="box-scroll">
       <div class="fc-pane active" data-pane="o">
-      <label>Palabras:<input type="text" id="f-query" value="${f.query || ''}" placeholder="palabra o frase"></label>
-      <div class="hint">Texto a buscar (sintaxis ManticoreSearch). Vacío = todas.</div>
+      <label>Palabras (Enter agrega cada término):
+        <div class="fc-tagbox" id="f-query-box"><input type="text" id="f-query-input" placeholder="palabra o frase…"></div></label>
+      <div class="hint">Cada chip es un término; con varios se busca CUALQUIERA (OR). Las frases de varias palabras se citan solas. Vacío = todas.</div>
       <label>Idioma:<select id="f-from">${langOpts(f.from)}</select></label>
       <div class="hint">Idioma de las oraciones que se traen.</div>
       <div class="row"><span>Length:</span> mín <input type="number" id="f-wmin" value="${f.word_min}" style="width:60px"> máx <input type="number" id="f-wmax" value="${f.word_max}" style="width:60px"></div>
@@ -877,6 +1040,8 @@
       <div class="hint">Idioma que ves ANTES de revelar.</div>
       <label>Luego (reverso):<select id="d-back">${langOpts(DISPLAY.back)}</select></label>
       <div class="hint">Idioma que se revela (la "respuesta"). El audio siempre es inglés.</div>
+      <div class="row"><input type="checkbox" id="f-startrev" ${START_REVEALED ? 'checked' : ''}><span>Mostrar las cartas ya reveladas al navegar</span></div>
+      <div class="hint">Por defecto aparecen ocultas (tocás para revelar). Activá esto para verlas reveladas de entrada.</div>
       <h4>Interacción</h4>
       <div class="row"><input type="checkbox" id="f-desktop" ${DESKTOP_MODE ? 'checked' : ''}><span>Modo ordenador (paneles laterales)</span></div>
       <div class="hint">En PC: Historial y Mi lista se abren al costado y empujan el contenido en vez de flotar. Atajos: <b>[</b> alterna Mi lista, <b>]</b> alterna Historial.</div>
@@ -885,6 +1050,53 @@
       <div class="actions"><button id="fc-cancel">Cancelar</button><button id="fc-apply">Aplicar</button></div>
     </div>`;
     document.body.appendChild(m);
+    initTagBox(m.querySelector('#f-query-box'), m.querySelector('#f-query-input'), parseQueryChips(f.query));
+    const profSel = m.querySelector('#prof-sel');
+    refreshProfileSelect(profSel);
+    profSel.value = activeProfile;   // reflejá en qué perfil estamos
+    profSel.addEventListener('change', (e) => {
+      const name = e.target.value; if (!name) return;
+      const cfg = loadProfiles()[name]; if (!cfg) return;
+      applyConfig(cfg, true); setActiveProfile(name); closePanels(); listUrls = []; resetDeck();
+      rebuildModal(true);
+      const ns = document.getElementById('fc-modal'); if (ns) ns.querySelector('#prof-sel').value = name;   // mantené el seleccionado tras el rebuild
+      toast(`Perfil "${name}" cargado`, true);
+    });
+    m.querySelector('#prof-new').addEventListener('click', async () => {
+      const name = await promptDialog('Nuevo perfil', 'nombre del perfil…', '');
+      if (!name) return;
+      const profs = loadProfiles();
+      if (profs[name] && !(await confirmDialog(`Ya existe "${name}". ¿Sobrescribir?`, 'Sobrescribir'))) return;
+      profs[name] = snapshotFromModal(m); saveProfilesMap(profs);
+      refreshProfileSelect(profSel); profSel.value = name; setActiveProfile(name);
+      toast(`Perfil "${name}" creado`, true);
+    });
+    m.querySelector('#prof-save').addEventListener('click', () => {
+      const name = profSel.value;
+      const profs = loadProfiles(); profs[name] = snapshotFromModal(m); saveProfilesMap(profs); setActiveProfile(name);
+      toast(`"${name}" guardado`, true);
+    });
+    m.querySelector('#prof-rename').addEventListener('click', async () => {
+      const old = profSel.value;
+      if (old === PROFILE_DEFAULT) { toast('No se puede renombrar el predeterminado', false); return; }
+      const name = await promptDialog('Renombrar perfil', 'nuevo nombre…', old);
+      if (!name || name === old) return;
+      const profs = loadProfiles();
+      if (profs[name]) { toast('Ya existe un perfil con ese nombre', false); return; }
+      profs[name] = profs[old]; delete profs[old]; saveProfilesMap(profs);
+      refreshProfileSelect(profSel); profSel.value = name; setActiveProfile(name);
+      toast(`Renombrado a "${name}"`, true);
+    });
+    m.querySelector('#prof-del').addEventListener('click', async () => {
+      const name = profSel.value;
+      if (name === PROFILE_DEFAULT) { toast('No se puede borrar el perfil predeterminado', false); return; }
+      if (!(await confirmDialog(`¿Borrar el perfil "${name}"?`, 'Borrar'))) return;
+      const profs = loadProfiles(); delete profs[name]; saveProfilesMap(profs);
+      refreshProfileSelect(profSel);
+      profSel.value = activeProfile === name ? PROFILE_DEFAULT : activeProfile;
+      if (activeProfile === name) setActiveProfile(PROFILE_DEFAULT);
+      toast(`Perfil "${name}" borrado`, true);
+    });
     m.querySelectorAll('.fc-tabs button').forEach((b) => b.addEventListener('click', () => {
       m.querySelectorAll('.fc-tabs button').forEach((x) => x.classList.toggle('active', x === b));
       m.querySelectorAll('.fc-pane').forEach((p) => p.classList.toggle('active', p.dataset.pane === b.dataset.pane));
@@ -894,37 +1106,25 @@
     document.addEventListener('keydown', (e) => { if (e.key === 'Escape' && m.classList.contains('open')) closeModal(); });
     m.querySelector('#fc-cancel').addEventListener('click', closeModal);
     m.querySelector('#fc-apply').addEventListener('click', () => {
-      const g = (id) => m.querySelector(id);
-      filters = {
-        query: g('#f-query').value.trim(), from: g('#f-from').value,
-        word_min: g('#f-wmin').value, word_max: g('#f-wmax').value, user: g('#f-user').value.trim(),
-        origin: g('#f-origin').value, orphans: g('#f-orphans').value, unapproved: g('#f-unapproved').value,
-        native: g('#f-native').value, has_audio: g('#f-audio').value, tags: g('#f-tags').value.trim(), list: g('#f-list').value.trim(),
-        trans_to: g('#f-tto').value, trans_link: g('#f-tlink').value, trans_user: g('#f-tuser').value.trim(),
-        trans_orphan: g('#f-torphan').value, trans_unapproved: g('#f-tunap').value, trans_native: g('#f-tnative').value,
-        trans_has_audio: g('#f-thas').value, sort: g('#f-sort').value, sort_reverse: g('#f-reverse').checked,
-      };
-      DISPLAY = { front: g('#d-front').value, back: g('#d-back').value };
-      LIST_ID = g('#f-listid').value.trim() || '174916';
-      AUDIO_LANG = g('#f-audiolang').value;
-      DESKTOP_MODE = g('#f-desktop').checked;
-      document.documentElement.classList.toggle('fc-desktop', DESKTOP_MODE);
-      localStorage.setItem('sm-fc-listid', LIST_ID);
-      localStorage.setItem('sm-fc-audiolang', AUDIO_LANG);
-      localStorage.setItem('sm-fc-desktop', DESKTOP_MODE ? '1' : '0');
+      applyConfig(readModalConfig(m), true);
       closePanels();   // si cambió el modo, dejá los paneles en estado limpio
       listUrls = [];   // cambió la lista objetivo -> invalida los cursores de "Mi lista"
-      saveFilters(); saveDisplay(); closeModal(); resetDeck();
+      closeModal(); resetDeck();
     });
   }
   const openModal = () => { uiBlocked = true; document.getElementById('fc-modal').classList.add('open'); populateListSelect(); };
   const closeModal = () => { uiBlocked = false; document.getElementById('fc-modal').classList.remove('open'); };
 
   async function resetDeck() {
-    cards = []; index = -1; maxSeen = -1; nextUrl = null; seenIds.clear();
+    const gen = ++deckGen;
+    if (currentAbort) currentAbort.abort();   // cortá el fetch anterior (cambio rápido de perfil)
+    currentAbort = new AbortController();
+    fetching = false;   // el viejo quedó abortado -> liberá el guard para que el nuevo arranque
+    cards = []; index = -1; maxSeen = -1; nextUrl = null; totalCount = null; seenIds.clear();
     showLoading(true);
     frontEl.textContent = ''; backEl.textContent = ''; ownersEl.textContent = '';
     await ensureBuffer(true);
+    if (gen !== deckGen) return;   // llegó otra búsqueda más nueva -> no toques UI ni muestres "sin resultados"
     if (cards.length) { index = 0; render(); ensureBuffer(); }
     else { showLoading(false); toast('Sin resultados con esos filtros', false); }
   }
@@ -1004,6 +1204,7 @@
   /* ============ ARRANQUE ============ */
   injectStyles();
   document.documentElement.classList.toggle('fc-desktop', DESKTOP_MODE);
+  ensureDefaultProfile();   // garantiza el perfil base no borrable
   buildUI();
   setOpen(isOpen());
   resetDeck();
