@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Tatoeba - Flashcards (Sentence Mining)
 // @namespace    https://tatoeba.org/
-// @version      4.45
+// @version      4.47
 // @description  Flashcards tipo Anki sobre la búsqueda filtrada de Tatoeba (mobile + teclado)
 // @icon         https://tatoeba.org/img/tatoeba.svg?1781334885
 // @match        https://tatoeba.org/*/sentences/search*
@@ -1831,20 +1831,30 @@
         ))
       )
         return;
-      profs[name] = snapshotFromModal(m);
+      const cfg = snapshotFromModal(m);
+      applyConfig(cfg, true); // aplica el estado actual del modal al crear el perfil
+      profs[name] = cfg;
       saveProfilesMap(profs);
       refreshProfileSelect(profSel);
       profSel.value = name;
       setActiveProfile(name);
+      closePanels();
+      listUrls = [];
+      resetDeck();
       toast(`Perfil "${name}" creado`, true);
     });
     m.querySelector('#prof-save').addEventListener('click', () => {
       const name = profSel.value;
+      const cfg = snapshotFromModal(m);
+      applyConfig(cfg, true); // <- APLICA a la config viva + persiste (antes solo guardaba en el perfil)
       const profs = loadProfiles();
-      profs[name] = snapshotFromModal(m);
+      profs[name] = cfg;
       saveProfilesMap(profs);
       setActiveProfile(name);
-      toast(`"${name}" guardado`, true);
+      closePanels();
+      listUrls = [];
+      resetDeck();
+      toast(`"${name}" guardado y aplicado`, true);
     });
     m.querySelector('#prof-rename').addEventListener('click', async () => {
       const old = profSel.value;
@@ -1932,7 +1942,11 @@
     });
     m.querySelector('#fc-cancel').addEventListener('click', closeModal);
     m.querySelector('#fc-apply').addEventListener('click', () => {
-      applyConfig(readModalConfig(m), true);
+      const cfg = snapshotFromModal(m);
+      applyConfig(cfg, true);
+      const profs = loadProfiles();
+      profs[activeProfile] = cfg; // mantené el perfil activo SIEMPRE en sync con la config viva
+      saveProfilesMap(profs);
       closePanels(); // si cambió el modo, dejá los paneles en estado limpio
       listUrls = []; // cambió la lista objetivo -> invalida los cursores de "Mi lista"
       closeModal();
