@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Tatoeba - Flashcards (Sentence Mining)
 // @namespace    https://tatoeba.org/
-// @version      4.20
+// @version      4.23
 // @description  Flashcards tipo Anki sobre la búsqueda filtrada de Tatoeba (mobile + teclado)
 // @icon         https://tatoeba.org/img/tatoeba.svg?1781334885
 // @match        https://tatoeba.org/*/sentences/search*
@@ -157,7 +157,7 @@
 
   /* ============ MAZO + HISTORIAL ============ */
 
-  let cards = [], index = -1, fetching = false, nextUrl = null;
+  let cards = [], index = -1, fetching = false, nextUrl = null, maxSeen = -1;   // maxSeen = índice más alto visitado (el historial no se recorta al retroceder)
   const seenIds = new Set();
   const currentCard = () => cards[index] || null;
 
@@ -233,24 +233,28 @@
   }
   async function listById(endpoint, id, msg, err) {
     try { const r = await fetch(`/${langSeg()}/sentences_lists/${endpoint}/${id}/${LIST_ID}`, { credentials: 'same-origin', headers: { 'X-Requested-With': 'XMLHttpRequest' } });
-      toast(r.ok ? `✓ Oración ${id} ${msg}` : 'No se pudo (¿logueado?)', r.ok); return r.ok;
+      toast(r.ok ? `✓ Oración ${id} ${msg}` : 'No se pudo (¿logueado?)', r.ok);
+      return r.ok;
     } catch (e) { toast(err, false); return false; }
   }
-  const addCurrent = () => { const c = currentCard(); if (c) listById('add_sentence_to_list', c.id, 'agregada', 'Error al agregar'); };
-  const removeCurrent = () => { const c = currentCard(); if (c) listById('remove_sentence_from_list', c.id, 'quitada', 'Error al quitar'); };
+  const addCurrent = () => { const c = currentCard(); if (c) listById('add_sentence_to_list', c.id, 'agregada', 'Error al agregar').then((ok) => { if (ok) syncListAdd(c); }); };
+  const removeCurrent = () => { const c = currentCard(); if (c) listById('remove_sentence_from_list', c.id, 'quitada', 'Error al quitar').then((ok) => { if (ok) listRemoveRow(c.id); }); };
 
   /* ============ ESTILOS ============ */
 
   function injectStyles() {
     const s = document.createElement('style');
     s.textContent = `
-      #fc-overlay { --bg:#fafafa; --fg:#222; --muted:#999; --card:#fff; --line:#eee;
+      /* Tema scopeado a MIS raíces (overlay/panel/modal viven en <body>, por eso las vars se definen en los 3). */
+      #fc-overlay, .fc-panel, #fc-modal { --bg:#fafafa; --fg:#222; --muted:#8a8a8a; --card:#fff; --line:#e6e6e6;
         --btn:#ececec; --btnfg:#444; --accent:#4b8b3b; --back:#2e7d32;
-        position:fixed; inset:0; z-index:2147483000; background:var(--bg); color:var(--fg);
+        --rm-bg:#fde7e7; --rm-fg:#c62828; --go-bg:#e8f0e6; --go-fg:#2e7d32; --shadow:rgba(0,0,0,.18); }
+      .fc-dark #fc-overlay, .fc-dark .fc-panel, .fc-dark #fc-modal { --bg:#16161a; --fg:#ececf0; --muted:#9a9aa3;
+        --card:#26262b; --line:#34343b; --btn:#34343b; --btnfg:#e2e2e8; --accent:#6bbf59; --back:#7ecb6a;
+        --rm-bg:rgba(229,115,115,.16); --rm-fg:#ef9a9a; --go-bg:rgba(124,203,106,.16); --go-fg:#a5d6a7; --shadow:rgba(0,0,0,.55); }
+      #fc-overlay { position:fixed; inset:0; z-index:2147483000; background:var(--bg); color:var(--fg);
         display:flex; flex-direction:column; font-family:sans-serif; transition:padding-right .25s ease; }
       #fc-overlay.panel-push { padding-right:min(88vw,380px); }
-      #fc-overlay.dark { --bg:#1c1c1e; --fg:#eaeaea; --muted:#888; --card:#2a2a2c; --line:#3a3a3c;
-        --btn:#3a3a3c; --btnfg:#ddd; --back:#6bbf59; }
       #fc-overlay.hidden { display:none; }
       #fc-overlay .material-icons { line-height:1; font-size:inherit; color:inherit; display:block; }
       #fc-top { display:flex; align-items:center; gap:8px; padding:calc(env(safe-area-inset-top,0px) + 8px) 12px 8px; }
@@ -296,7 +300,8 @@
       #fc-toast { position:fixed; left:50%; bottom:calc(env(safe-area-inset-bottom,0px) + 78px);
         transform:translateX(-50%) translateY(16px); z-index:2147483700; padding:10px 18px; border-radius:22px;
         font-size:14px; color:#fff; box-shadow:0 4px 16px rgba(0,0,0,.35); opacity:0; pointer-events:none;
-        max-width:86vw; text-align:center; transition:opacity .25s ease, transform .25s ease; }
+        max-width:86vw; text-align:center; transition:opacity .25s ease, transform .25s ease, left .25s ease; }
+      #fc-overlay.panel-push #fc-toast { left:calc(50% - min(88vw,380px) / 2); }   /* centrado sobre el contenido, no el viewport */
       #fc-toast.show { opacity:1; transform:translateX(-50%) translateY(0); }
       #fc-toast.ok { background:var(--accent,#4b8b3b); }
       #fc-toast.err { background:#c62828; }
@@ -306,7 +311,7 @@
       #fc-launcher.show { display:flex; }
       .fc-panel { position:fixed; top:0; right:0; height:100%; width:min(88vw,380px); z-index:2147483500;
         background:var(--bg,#fff); color:var(--fg,#222); transform:translateX(100%); transition:transform .25s ease;
-        display:flex; flex-direction:column; box-shadow:-2px 0 12px rgba(0,0,0,.2); }
+        display:flex; flex-direction:column; box-shadow:-2px 0 18px var(--shadow); }
       .fc-panel.open { transform:translateX(0); }
       .fc-panel-backdrop { position:fixed; inset:0; z-index:2147483499; background:rgba(0,0,0,.35);
         opacity:0; pointer-events:none; transition:opacity .25s ease; }
@@ -315,15 +320,17 @@
         border-bottom:1px solid var(--line,#eee); font-weight:600; }
       .fc-panel header .spacer { flex:1; }
       .fc-panel .body { flex:1; overflow:auto; padding:8px 12px; }
-      .fc-row { padding:12px 6px; border-bottom:1px solid var(--line,#f0f0f0); font-size:14px; }
-      .fc-row .es { font-weight:600; } .fc-row .en { color:var(--back,#2e7d32); font-size:13px; }
-      .fc-row .meta { color:var(--muted,#999); font-size:12px; margin-top:2px; }
+      .fc-row { padding:12px 8px; border-bottom:1px solid var(--line); font-size:14px; line-height:1.45; border-radius:8px; transition:background .15s ease; }
+      .fc-row:hover { background:var(--btn); }
+      .fc-row.current { border-left:3px solid var(--accent); padding-left:9px; background:var(--btn); }
+      .fc-row .es { font-weight:600; } .fc-row .en { color:var(--back); font-size:13px; }
+      .fc-row .meta { color:var(--muted); font-size:12px; margin-top:2px; }
       .fc-row .acts { display:flex; gap:8px; margin-top:6px; }
       .fc-row .acts button { border:none; border-radius:6px; padding:4px 10px; font-size:12px; cursor:pointer; }
-      .fc-row .acts .rm { background:#fde7e7; color:#c62828; } .fc-row .acts .go { background:#e8f0e6; color:#2e7d32; }
+      .fc-row .acts .rm { background:var(--rm-bg); color:var(--rm-fg); } .fc-row .acts .go { background:var(--go-bg); color:var(--go-fg); }
       .fc-list-ctrls { display:flex; flex-direction:column; gap:8px; padding:4px 4px 12px; border-bottom:1px solid var(--line); margin-bottom:6px; }
       .fc-list-ctrls label { font-size:12px; color:var(--muted); display:flex; flex-direction:column; gap:3px; }
-      .fc-list-ctrls select { padding:7px; border:1px solid #bbb; border-radius:6px; font-size:14px; background:var(--card); color:var(--fg); }
+      .fc-list-ctrls select { padding:7px; border:1px solid var(--line); border-radius:6px; font-size:14px; background:var(--card); color:var(--fg); }
       .fc-list-load { display:flex; flex-direction:column; align-items:center; gap:14px; padding:44px 0; }
       .fc-list-load .lbl { font-size:13px; color:var(--muted); animation:fc-blink 1.4s ease-in-out infinite; }
       .fc-pager { display:flex; align-items:center; justify-content:center; gap:16px; padding:14px; color:var(--muted); font-size:13px; }
@@ -333,13 +340,14 @@
       #fc-modal { position:fixed; inset:0; z-index:2147483600; display:flex; align-items:center; justify-content:center;
         background:rgba(0,0,0,.5); opacity:0; pointer-events:none; transition:opacity .2s ease; }
       #fc-modal.open { opacity:1; pointer-events:auto; }
-      #fc-modal .box { background:var(--bg,#fff); color:var(--fg,#222); border:1px solid var(--line); border-radius:12px; width:min(92vw,400px);
-        height:min(86vh,600px); overflow:hidden; display:flex; flex-direction:column; font-size:14px;
+      #fc-modal .box { background:var(--bg,#fff); color:var(--fg,#222); border:1px solid var(--line); border-radius:14px; width:min(92vw,400px);
+        height:min(86vh,600px); overflow:hidden; display:flex; flex-direction:column; font-size:14px; box-shadow:0 16px 48px var(--shadow);
         transform:scale(.94); transition:transform .2s ease; }
       #fc-modal.open .box { transform:scale(1); }
       #fc-modal .fc-tabs { display:flex; gap:2px; padding:8px 8px 0; border-bottom:1px solid var(--line); }
       #fc-modal .fc-tabs button { flex:1; padding:9px 4px; border:none; background:transparent; color:var(--muted);
         font-size:13px; cursor:pointer; border-bottom:2px solid transparent; border-radius:6px 6px 0 0; }
+      #fc-modal .fc-tabs button:hover { color:var(--fg); }
       #fc-modal .fc-tabs button.active { color:var(--fg); border-bottom-color:var(--accent); font-weight:600; }
       #fc-modal .fc-pane { display:none; flex-direction:column; gap:10px; }
       #fc-modal .fc-pane.active { display:flex; }
@@ -349,11 +357,13 @@
       #fc-modal label { display:flex; flex-direction:column; gap:3px; }
       #fc-modal .hint { font-size:11px; color:var(--muted); margin:-3px 0 4px; line-height:1.35; }
       #fc-modal .row { display:flex; align-items:center; gap:8px; }
-      #fc-modal select, #fc-modal input { padding:8px; border:1px solid rgba(128,128,128,.4); border-radius:6px; font-size:15px;
-        background:var(--card,#fff); color:var(--fg,#222); }
+      #fc-modal select, #fc-modal input { padding:8px; border:1px solid var(--line); border-radius:6px; font-size:15px;
+        background:var(--card,#fff); color:var(--fg,#222); transition:border-color .15s ease; }
+      #fc-modal select:focus, #fc-modal input:focus { outline:none; border-color:var(--accent); }
+      #fc-modal input[type=checkbox] { width:auto; accent-color:var(--accent); }
       #fc-modal .actions { display:flex; gap:8px; padding:10px 18px; border-top:1px solid var(--line); background:var(--bg,#fff); }
       #fc-modal .actions button { flex:1; height:42px; border:none; border-radius:8px; cursor:pointer; font-size:15px; }
-      #fc-apply { background:var(--accent,#4b8b3b); color:#fff; } #fc-cancel { background:#ddd; color:#333; }
+      #fc-apply { background:var(--accent,#4b8b3b); color:#fff; font-weight:600; } #fc-cancel { background:var(--btn); color:var(--btnfg); }
     `;
     document.head.appendChild(s);
   }
@@ -371,7 +381,7 @@
   function buildUI() {
     overlay = document.createElement('div'); overlay.id = 'fc-overlay';
     const darkSaved = localStorage.getItem(K.dark);
-    if (darkSaved === '1' || (darkSaved === null && DARK_DEFAULT)) overlay.classList.add('dark');
+    if (darkSaved === '1' || (darkSaved === null && DARK_DEFAULT)) { overlay.classList.add('dark'); document.documentElement.classList.add('fc-dark'); }
 
     const top = document.createElement('div'); top.id = 'fc-top';
     idEl = document.createElement('div'); idEl.id = 'fc-id'; idEl.textContent = '…';
@@ -460,6 +470,7 @@
     const c = currentCard();
     if (!c) { showLoading(true); frontEl.textContent = ''; backEl.textContent = ''; ownersEl.textContent = ''; return; }
     showLoading(false);
+    if (index > maxSeen) maxSeen = index;   // marca de agua: el historial conserva todas las vistas
     revealed = false; zonesEl.classList.remove('on');
     const f = frontOf(c), b = backOf(c);
     frontEl.textContent = f.text;
@@ -468,7 +479,7 @@
     ownersEl.textContent = '';   // los dueños aparecen recién AL revelar (junto con la traducción)
     ownersEl.style.transition = ''; ownersEl.style.transform = '';   // reset de la animación
     hintEl.style.visibility = 'visible';
-    updateId(); updateBar();
+    updateId(); updateBar(); syncHistory();   // historial sigue en vivo a la oración actual
   }
 
   // FLIP horizontal de la línea de dueños: animar su corrimiento desde 'fromLeft' hasta su lugar actual.
@@ -505,6 +516,7 @@
   function toggleDark() {
     const on = !overlay.classList.contains('dark');
     overlay.classList.toggle('dark', on);
+    document.documentElement.classList.toggle('fc-dark', on);   // habilita el tema oscuro también en paneles/modal (cuelgan de <body>)
     localStorage.setItem(K.dark, on ? '1' : '0');
     const ic = overlay.querySelector('[data-act="dark"] .material-icons');
     if (ic) ic.textContent = on ? 'wb_sunny' : 'brightness_2';
@@ -542,16 +554,34 @@
     else { overlay.classList.remove('panel-push'); panelBackdrop.classList.add('open'); }
   }
 
-  function openHistory() {
+  function renderHistory() {
     const body = historyPanel._body; body.innerHTML = '';
-    for (let i = index; i >= 0; i--) {
+    for (let i = maxSeen; i >= 0; i--) {
       const c = cards[i]; const f = frontOf(c);
       const row = document.createElement('div'); row.className = 'fc-row'; row.style.cursor = 'pointer';
+      if (i === index) row.classList.add('current');
       row.innerHTML = `<div class="es">#${c.id} — ${f.text}</div>`;
       row.addEventListener('click', () => jumpTo(i)); body.appendChild(row);
     }
     if (!body.children.length) body.textContent = 'Todavía no viste ninguna.';
-    showPanelChrome(); historyPanel.classList.add('open');
+  }
+  function openHistory() { renderHistory(); showPanelChrome(); historyPanel.classList.add('open'); }
+  // Sincronización en vivo: refresca el panel abierto sin reabrirlo.
+  function syncHistory() { if (historyPanel.classList.contains('open')) renderHistory(); }
+  function listArea() { return listPanel.classList.contains('open') ? listPanel._body.querySelector('#fc-list-area') : null; }
+  function syncListAdd(c) {   // inserta la oración recién agregada SIN recargar
+    const area = listArea(); if (!area) return;
+    if (area.querySelector(`.fc-row[data-sid="${c.id}"]`)) return;   // ya visible, no duplicar
+    [...area.childNodes].forEach((n) => { if (n.nodeType === 3) n.remove(); });   // saca el cartel "lista vacía"
+    const row = buildListRow(c);
+    area.insertBefore(row, area.querySelector('.fc-row') || area.querySelector('.fc-pager'));
+    row.style.opacity = '0'; void row.offsetWidth; row.style.transition = 'opacity .25s ease'; row.style.opacity = '1';
+  }
+  function listRemoveRow(id) {   // saca la fila puntual SIN recargar
+    const area = listArea(); if (!area) return;
+    const row = area.querySelector(`.fc-row[data-sid="${id}"]`); if (!row) return;
+    row.style.transition = 'opacity .2s ease'; row.style.opacity = '0';
+    setTimeout(() => row.remove(), 200);
   }
 
   function listControls() {
@@ -603,22 +633,23 @@
     } catch (e) { area.textContent = 'Error cargando la lista.'; }
   }
 
+  function buildListRow(c) {
+    const ft = getTextByLang(c, LIST_DISPLAY.front) || { text: c.text, id: c.id, owner: c.owner };
+    const bt = getTextByLang(c, LIST_DISPLAY.back) || { text: '', id: null };
+    const row = document.createElement('div'); row.className = 'fc-row'; row.dataset.sid = String(c.id);
+    row.innerHTML = `<div class="meta">Oración #${ft.id || '—'} · ${ft.owner || '—'}</div>
+      <div class="es">${ft.text}</div>
+      <div class="en">${bt.text}</div>
+      <div class="meta">Traducción #${bt.id || '—'}</div>
+      <div class="acts"><button class="go">Abrir</button><button class="rm">Quitar</button></div>`;
+    row.querySelector('.go').addEventListener('click', () => window.open(`/${langSeg()}/sentences/show/${c.id}`, '_blank'));
+    row.querySelector('.rm').addEventListener('click', async () => { if (await listById('remove_sentence_from_list', c.id, 'quitada', 'Error')) listRemoveRow(c.id); });
+    return row;
+  }
   function renderListPage(area, all, hasNext) {
     area.innerHTML = '';
     if (!all.length) area.textContent = listPage === 1 ? 'La lista está vacía.' : 'No hay más oraciones.';
-    for (const c of all) {
-      const ft = getTextByLang(c, LIST_DISPLAY.front) || { text: c.text, id: c.id, owner: c.owner };
-      const bt = getTextByLang(c, LIST_DISPLAY.back) || { text: '', id: null };
-      const row = document.createElement('div'); row.className = 'fc-row';
-      row.innerHTML = `<div class="meta">Oración #${ft.id || '—'} · ${ft.owner || '—'}</div>
-        <div class="es">${ft.text}</div>
-        <div class="en">${bt.text}</div>
-        <div class="meta">Traducción #${bt.id || '—'}</div>
-        <div class="acts"><button class="go">Abrir</button><button class="rm">Quitar</button></div>`;
-      row.querySelector('.go').addEventListener('click', () => window.open(`/${langSeg()}/sentences/show/${c.id}`, '_blank'));
-      row.querySelector('.rm').addEventListener('click', async () => { if (await listById('remove_sentence_from_list', c.id, 'quitada', 'Error')) row.remove(); });
-      area.appendChild(row);
-    }
+    for (const c of all) area.appendChild(buildListRow(c));
     const pager = document.createElement('div'); pager.className = 'fc-pager';
     const pb = iconBtn('p-prev', 'chevron_left', 'Anterior', 'pg'); pb.disabled = listPage <= 1;
     const nb = iconBtn('p-next', 'chevron_right', 'Siguiente', 'pg'); nb.disabled = !hasNext;
@@ -782,7 +813,7 @@
   const closeModal = () => { uiBlocked = false; document.getElementById('fc-modal').classList.remove('open'); };
 
   async function resetDeck() {
-    cards = []; index = -1; nextUrl = null; seenIds.clear();
+    cards = []; index = -1; maxSeen = -1; nextUrl = null; seenIds.clear();
     showLoading(true);
     frontEl.textContent = ''; backEl.textContent = ''; ownersEl.textContent = '';
     await ensureBuffer(true);
