@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Tatoeba - Flashcards (Sentence Mining)
 // @namespace    https://tatoeba.org/
-// @version      4.23
+// @version      4.25
 // @description  Flashcards tipo Anki sobre la búsqueda filtrada de Tatoeba (mobile + teclado)
 // @icon         https://tatoeba.org/img/tatoeba.svg?1781334885
 // @match        https://tatoeba.org/*/sentences/search*
@@ -557,10 +557,13 @@
   function renderHistory() {
     const body = historyPanel._body; body.innerHTML = '';
     for (let i = maxSeen; i >= 0; i--) {
-      const c = cards[i]; const f = frontOf(c);
+      const c = cards[i]; const f = frontOf(c), b = backOf(c);
       const row = document.createElement('div'); row.className = 'fc-row'; row.style.cursor = 'pointer';
       if (i === index) row.classList.add('current');
-      row.innerHTML = `<div class="es">#${c.id} — ${f.text}</div>`;
+      row.innerHTML = `<div class="meta">Oración #${f.id || c.id} · ${f.owner || '—'}</div>
+        <div class="es">${f.text}</div>
+        <div class="en">${b.text}</div>
+        <div class="meta">Traducción #${b.id || '—'} · ${b.owner || '—'}</div>`;
       row.addEventListener('click', () => jumpTo(i)); body.appendChild(row);
     }
     if (!body.children.length) body.textContent = 'Todavía no viste ninguna.';
@@ -640,7 +643,7 @@
     row.innerHTML = `<div class="meta">Oración #${ft.id || '—'} · ${ft.owner || '—'}</div>
       <div class="es">${ft.text}</div>
       <div class="en">${bt.text}</div>
-      <div class="meta">Traducción #${bt.id || '—'}</div>
+      <div class="meta">Traducción #${bt.id || '—'} · ${bt.owner || '—'}</div>
       <div class="acts"><button class="go">Abrir</button><button class="rm">Quitar</button></div>`;
     row.querySelector('.go').addEventListener('click', () => window.open(`/${langSeg()}/sentences/show/${c.id}`, '_blank'));
     row.querySelector('.rm').addEventListener('click', async () => { if (await listById('remove_sentence_from_list', c.id, 'quitada', 'Error')) listRemoveRow(c.id); });
