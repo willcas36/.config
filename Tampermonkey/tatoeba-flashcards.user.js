@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Tatoeba - Flashcards (Sentence Mining)
 // @namespace    https://tatoeba.org/
-// @version      4.1
+// @version      4.13
 // @description  Flashcards tipo Anki sobre la búsqueda filtrada de Tatoeba (mobile + teclado)
 // @icon         https://tatoeba.org/img/tatoeba.svg?1781334885
 // @match        https://tatoeba.org/*/sentences/search*
@@ -12,11 +12,11 @@
   'use strict';
 
   /* ============ CONFIGURACIÓN ============ */
-  const LIST_ID = 174916;
+  let LIST_ID = localStorage.getItem('sm-fc-listid') || '174916';   // lista objetivo (editable en el modal)
 
   const FETCH_DEFAULTS = {
     query: '', from: 'eng', word_min: '2', word_max: '',
-    user: '', original: true, orphans: 'no', unapproved: 'no', native: 'yes', has_audio: 'yes', tags: '', list: '',
+    user: '', origin: 'original', orphans: 'no', unapproved: 'no', native: 'yes', has_audio: 'yes', tags: '', list: '',
     trans_to: 'spa', trans_link: 'direct', trans_user: '',
     trans_orphan: '', trans_unapproved: 'no', trans_native: '', trans_has_audio: '',
     sort: 'random', sort_reverse: false,
@@ -42,7 +42,7 @@
 
   const PREFETCH_AT = 4;
   const DARK_DEFAULT = false;
-  const AUDIO_LANG = 'eng';   // el audio SIEMPRE se reproduce en este idioma, sin importar la config de display
+  let AUDIO_LANG = localStorage.getItem('sm-fc-audiolang') || 'eng';   // idioma del audio (editable en el modal)
   const API_BASE = 'https://api.tatoeba.org/v1';   // API oficial ESTABLE y versionada (no /unstable, que cambia)
 
   const LANGUAGES = [
@@ -52,6 +52,9 @@
     { code: 'jpn', name: 'Japonés' }, { code: 'rus', name: 'Ruso' },
     { code: 'cmn', name: 'Chino mandarín' }, { code: 'kor', name: 'Coreano' },
   ];
+
+  // Idiomas para "Mi lista" (amplio: la lista puede tener oraciones de cualquier idioma). Agregá códigos si te falta alguno.
+  const LIST_LANGS = 'spa,eng,fra,ita,deu,por,jpn,rus,cmn,kor,epo,nld,tur,pol,ukr,heb,ara,fin,hun,ces,swe,ell,ron,lat,cat,ind,vie,dan,nob,lit';
 
   const LIST_DISPLAY_DEFAULT = { front: 'spa', back: 'eng' };
 
@@ -75,6 +78,7 @@
     catch (e) { return Object.assign({}, LIST_DISPLAY_DEFAULT); }
   })();
   const saveListDisplay = () => localStorage.setItem(K.listDisplay, JSON.stringify(LIST_DISPLAY));
+  let listSort = localStorage.getItem('sm-fc-listsort') || '-created';   // orden de "Mi lista" (sort de la API)
 
   const langSeg = () => (location.pathname.match(/^\/([a-z]{2,3})\//) || [, 'es'])[1];
 
@@ -121,7 +125,7 @@
     p.set('limit', '20');
     if (f.query) p.set('q', f.query);                        // query -> q
     if (f.user) p.set('owner', f.user);                      // user -> owner
-    if (f.original) p.set('origin', 'original');             // original -> origin=original
+    if (f.origin) p.set('origin', f.origin);                 // original/translation/known/unknown
     if (f.orphans) p.set('is_orphan', f.orphans);
     if (f.unapproved) p.set('is_unapproved', f.unapproved);
     if (f.native) p.set('is_native', f.native);
@@ -202,7 +206,7 @@
       toast(`No hay audio en ${name.toLowerCase()}`, false);
       return;
     }
-    const url = en.audios[0].download_url;
+    const url = `${API_BASE}/audios/${en.audios[0].id}/file`;   // el download_url de la API viene roto (/audio/ singular -> 404); uso /audios/ (plural)
 
     // Mismo audio ya cargado -> sólo reiniciar (sin re-fetch ni superponer).
     if (currentAudio && currentAudioUrl === url) {
@@ -262,7 +266,7 @@
         justify-content:center; text-align:center; padding:22px; gap:16px; }
       #fc-front { font-size:26px; line-height:1.35; font-weight:600; }
       #fc-back { font-size:21px; line-height:1.35; color:var(--back); border-top:1px solid rgba(128,128,128,.35); padding-top:16px; }
-      #fc-owners { font-size:12px; color:var(--muted); }
+      #fc-owners { font-size:12px; color:var(--muted); min-height:1.3em; }
       #fc-hint { font-size:13px; color:var(--muted); opacity:.7; }
       .fc-dots::after { content:'•••'; letter-spacing:2px; animation:fc-blink 1.1s ease-in-out infinite; }
       @keyframes fc-blink { 0%,100%{opacity:.25} 50%{opacity:1} }
@@ -319,16 +323,22 @@
       .fc-pager .pg { width:40px; height:40px; border:none; border-radius:50%; background:var(--btn); color:var(--btnfg);
         cursor:pointer; display:flex; align-items:center; justify-content:center; }
       .fc-pager .pg:disabled { opacity:.3; }
-      #fc-modal { position:fixed; inset:0; z-index:2147483600; display:none; background:rgba(0,0,0,.5); align-items:center; justify-content:center; }
-      #fc-modal.open { display:flex; }
-      #fc-modal .box { background:var(--bg,#fff); color:var(--fg,#222); border-radius:12px; padding:18px; width:min(92vw,400px);
-        max-height:88vh; overflow:auto; display:flex; flex-direction:column; gap:10px; font-size:14px; }
+      #fc-modal { position:fixed; inset:0; z-index:2147483600; display:flex; align-items:center; justify-content:center;
+        background:rgba(0,0,0,.5); opacity:0; pointer-events:none; transition:opacity .2s ease; }
+      #fc-modal.open { opacity:1; pointer-events:auto; }
+      #fc-modal .box { background:var(--bg,#fff); color:var(--fg,#222); border:1px solid var(--line); border-radius:12px; width:min(92vw,400px);
+        max-height:88vh; overflow:hidden; display:flex; flex-direction:column; font-size:14px;
+        transform:scale(.94); transition:transform .2s ease; }
+      #fc-modal.open .box { transform:scale(1); }
+      #fc-modal .box-scroll { overflow:auto; flex:1 1 auto; min-height:0; padding:18px; display:flex; flex-direction:column; gap:10px; scrollbar-width:none; -ms-overflow-style:none; }
+      #fc-modal .box-scroll::-webkit-scrollbar { width:0; height:0; display:none; }
       #fc-modal h4 { margin:6px 0 0; border-bottom:1px solid var(--line,#eee); padding-bottom:4px; }
       #fc-modal label { display:flex; flex-direction:column; gap:3px; }
+      #fc-modal .hint { font-size:11px; color:var(--muted); margin:-3px 0 4px; line-height:1.35; }
       #fc-modal .row { display:flex; align-items:center; gap:8px; }
-      #fc-modal select, #fc-modal input { padding:8px; border:1px solid #bbb; border-radius:6px; font-size:15px;
+      #fc-modal select, #fc-modal input { padding:8px; border:1px solid rgba(128,128,128,.4); border-radius:6px; font-size:15px;
         background:var(--card,#fff); color:var(--fg,#222); }
-      #fc-modal .actions { display:flex; gap:8px; margin-top:8px; position:sticky; bottom:0; background:var(--bg,#fff); padding-top:8px; }
+      #fc-modal .actions { display:flex; gap:8px; padding:10px 18px; border-top:1px solid var(--line); background:var(--bg,#fff); }
       #fc-modal .actions button { flex:1; height:42px; border:none; border-radius:8px; cursor:pointer; font-size:15px; }
       #fc-apply { background:var(--accent,#4b8b3b); color:#fff; } #fc-cancel { background:#ddd; color:#333; }
     `;
@@ -442,7 +452,7 @@
     frontEl.textContent = f.text;
     backEl.textContent = b.text;
     backEl.style.visibility = 'hidden';            // reservado: el reverso no mueve nada al revelar
-    ownersEl.innerHTML = `Oración: ${f.owner || '—'}<span id="fc-tw"></span>`;   // dueño del frente (ya viene en el dato)
+    ownersEl.textContent = '';   // los dueños aparecen recién AL revelar (junto con la traducción)
     ownersEl.style.transition = ''; ownersEl.style.transform = '';   // reset de la animación
     hintEl.style.visibility = 'visible';
     updateId(); updateBar();
@@ -468,9 +478,8 @@
     zonesEl.classList.add('on');
     updateBar();
 
-    const tw = ownersEl.querySelector('#fc-tw'); if (!tw) return;
-    tw.textContent = ` · Traducción: ${backOf(c).owner || '—'}`;   // dueño ya viene en el dato -> instantáneo
-    flipOwners(oldLeft);   // anima el corrimiento horizontal de la línea
+    ownersEl.textContent = `Oración: ${frontOf(c).owner || '—'} · Traducción: ${backOf(c).owner || '—'}`;
+    flipOwners(oldLeft);   // anima el corrimiento horizontal de la línea (aparece junto con la traducción)
   }
 
   function updateBar() {
@@ -518,10 +527,17 @@
 
   function listControls() {
     const wrap = document.createElement('div'); wrap.className = 'fc-list-ctrls';
+    const so = (v, t) => `<option value="${v}" ${listSort === v ? 'selected' : ''}>${t}</option>`;
+    const sortOpts = so('-created', 'Creación: nuevas primero') + so('created', 'Creación: viejas primero')
+      + so('-modified', 'Modificación: recientes primero') + so('modified', 'Modificación: antiguas primero')
+      + so('-words', 'Palabras: más largas primero') + so('words', 'Palabras: más cortas primero')
+      + so('random', 'Al azar');
     wrap.innerHTML = `<label>Oraciones en:<select id="ld-front">${langOpts(LIST_DISPLAY.front)}</select></label>` +
-                     `<label>Mostrar traducciones en:<select id="ld-back">${langOpts(LIST_DISPLAY.back)}</select></label>`;
+                     `<label>Mostrar traducciones en:<select id="ld-back">${langOpts(LIST_DISPLAY.back)}</select></label>` +
+                     `<label>Ordenar por:<select id="ld-sort">${sortOpts}</select></label>`;
     wrap.querySelector('#ld-front').addEventListener('change', (e) => { LIST_DISPLAY.front = e.target.value; saveListDisplay(); listPage = 1; listUrls = []; loadListPage(); });
     wrap.querySelector('#ld-back').addEventListener('change', (e) => { LIST_DISPLAY.back = e.target.value; saveListDisplay(); listPage = 1; listUrls = []; loadListPage(); });
+    wrap.querySelector('#ld-sort').addEventListener('change', (e) => { listSort = e.target.value; localStorage.setItem('sm-fc-listsort', listSort); listPage = 1; listUrls = []; loadListPage(); });
     return wrap;
   }
 
@@ -529,9 +545,9 @@
 
   function buildListQuery() {
     const p = new URLSearchParams();
-    p.set('lang', filters.from);               // idioma de las oraciones agregadas a la lista (la "principal")
+    p.set('lang', LIST_LANGS);   // amplio -> la lista trae miembros de cualquier idioma (mixta)
     p.set('list', String(LIST_ID));
-    p.set('sort', '-created');                 // más recientes primero (la API nueva no ordena por id)
+    p.set('sort', listSort);                   // orden de la API (selector en "Mi lista")
     p.set('showtrans', 'all');                 // todas las traducciones -> el display (LIST_DISPLAY) elige front/back
     p.set('include', 'audios');
     p.set('limit', '30');
@@ -587,43 +603,94 @@
   const tri = (id, val) => { const o = (v, t) => `<option value="${v}" ${val === v ? 'selected' : ''}>${t}</option>`;
     return `<select id="${id}">${o('', 'Es indistinto')}${o('yes', 'Sí')}${o('no', 'No')}</select>`; };
 
+  const escHtml = (s) => String(s == null ? '' : s).replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
+
+  // Trae las listas a las que el usuario puede agregar (propias + colaborativas), vía el sitio (con sesión).
+  async function fetchMyLists() {
+    try {
+      const r = await fetch(`/${langSeg()}/sentences_lists/choices`, { credentials: 'same-origin', headers: { 'X-Requested-With': 'XMLHttpRequest' } });
+      if (!r.ok) return null;
+      const d = await r.json();
+      return (d && d.lists) || null;
+    } catch (e) { return null; }
+  }
+
+  async function populateListSelect() {
+    const sel = document.getElementById('f-listid'); if (!sel) return;
+    const lists = (await fetchMyLists() || []).filter((l) => l.is_mine);   // SOLO las mías
+    if (!lists.length) return;   // si falla, queda el fallback (lista actual)
+    lists.sort((a, b) => String(a.name).localeCompare(String(b.name)));
+    const cur = String(LIST_ID);
+    let html = lists.map((l) => `<option value="${l.id}" ${String(l.id) === cur ? 'selected' : ''}>${escHtml(l.name)}</option>`).join('');
+    if (!lists.some((l) => String(l.id) === cur)) html = `<option value="${cur}" selected>(actual #${cur})</option>` + html;   // no perder la actual si no está
+    sel.innerHTML = html;
+  }
+
   function buildModal() {
     const m = document.createElement('div'); m.id = 'fc-modal';
     const f = filters;
     const linkSel = (id, v) => { const o = (val, t) => `<option value="${val}" ${v === val ? 'selected' : ''}>${t}</option>`;
       return `<select id="${id}">${o('', 'Es indistinto')}${o('direct', 'Directo')}${o('indirect', 'Indirecto')}</select>`; };
+    const originSel = (id, v) => { const o = (val, t) => `<option value="${val}" ${v === val ? 'selected' : ''}>${t}</option>`;
+      return `<select id="${id}">${o('', 'Cualquiera')}${o('original', 'Original')}${o('translation', 'Traducción')}${o('known', 'Conocido')}${o('unknown', 'Desconocido')}</select>`; };
     m.innerHTML = `<div class="box">
+      <div class="box-scroll">
       <strong>Filtros</strong>
       <h4>Oraciones</h4>
-      <label>Palabras:<input type="text" id="f-query" value="${f.query || ''}" placeholder="Escriba una palabra o una frase"></label>
+      <label>Palabras:<input type="text" id="f-query" value="${f.query || ''}" placeholder="palabra o frase"></label>
+      <div class="hint">Texto a buscar (sintaxis ManticoreSearch). Vacío = todas.</div>
       <label>Idioma:<select id="f-from">${langOpts(f.from)}</select></label>
-      <div class="row"><span>Length:</span> At least <input type="number" id="f-wmin" value="${f.word_min}" style="width:60px"> At most <input type="number" id="f-wmax" value="${f.word_max}" style="width:60px"></div>
+      <div class="hint">Idioma de las oraciones que se traen.</div>
+      <div class="row"><span>Length:</span> mín <input type="number" id="f-wmin" value="${f.word_min}" style="width:60px"> máx <input type="number" id="f-wmax" value="${f.word_max}" style="width:60px"></div>
+      <div class="hint">Cantidad de palabras (o de caracteres en idiomas sin espacios: japonés, chino…).</div>
       <label>Dueño:<input type="text" id="f-user" value="${f.user || ''}" placeholder="nombre de usuario"></label>
-      <div class="row"><input type="checkbox" id="f-original" ${f.original ? 'checked' : ''}><span>Is original</span></div>
+      <div class="hint">Usuario que creó la oración.</div>
+      <label>Origen:${originSel('f-origin', f.origin)}</label>
+      <div class="hint">Original: no es traducción de otra · Traducción: agregada como traducción · Conocido: original o traducción · Desconocido: no se sabe.</div>
       <label>Es huérfana: ${tri('f-orphans', f.orphans)}</label>
+      <div class="hint">Sí: sin dueño (más prob. de errores) · No: con dueño.</div>
       <label>Está reprobada: ${tri('f-unapproved', f.unapproved)}</label>
+      <div class="hint">Sí: reprobadas (más prob. de errores) · No: las excluye.</div>
       <label>Is owned by a native: ${tri('f-native', f.native)}</label>
+      <div class="hint">Sí: dueño es hablante nativo autoidentificado.</div>
       <label>Tiene voz: ${tri('f-audio', f.has_audio)}</label>
+      <div class="hint">Sí: tiene al menos una grabación de audio.</div>
       <label>Etiquetas:<input type="text" id="f-tags" value="${f.tags || ''}" placeholder="separadas por comas"></label>
+      <div class="hint">Tags EXACTOS, separados por coma. Deben existir o la búsqueda da error.</div>
       <label>Pertenece a la lista (ID, opcional):<input type="text" id="f-list" value="${f.list || ''}" placeholder="Sin especificar"></label>
+      <div class="hint">ID numérico de una lista de Tatoeba.</div>
       <h4>Traducciones</h4>
       <label>Idioma:<select id="f-tto">${langOpts(f.trans_to, 'Cualquier idioma')}</select></label>
+      <div class="hint">Solo trae oraciones que TIENEN traducción en este idioma (será el reverso).</div>
       <label>Enlace: ${linkSel('f-tlink', f.trans_link)}</label>
+      <div class="hint">Directo: traducción directa · Indirecto: vía otra oración puente.</div>
       <label>Dueño:<input type="text" id="f-tuser" value="${f.trans_user || ''}" placeholder="nombre de usuario"></label>
+      <div class="hint">Usuario que creó la traducción.</div>
       <label>Es huérfana: ${tri('f-torphan', f.trans_orphan)}</label>
       <label>Está reprobada: ${tri('f-tunap', f.trans_unapproved)}</label>
       <label>Is owned by a native: ${tri('f-tnative', f.trans_native)}</label>
       <label>Tiene voz: ${tri('f-thas', f.trans_has_audio)}</label>
+      <div class="hint">Mismos criterios (Sí/No/Indistinto), aplicados a la traducción.</div>
       <h4>Ordenación</h4>
       <label>Orden:<select id="f-sort">
         <option value="random" ${f.sort === 'random' ? 'selected' : ''}>Al azar</option>
-        <option value="relevance" ${f.sort === 'relevance' ? 'selected' : ''}>Relevancia</option>
-        <option value="words" ${f.sort === 'words' ? 'selected' : ''}>Palabras</option>
-        <option value="created" ${f.sort === 'created' ? 'selected' : ''}>Fecha de creación</option></select></label>
+        <option value="relevance" ${f.sort === 'relevance' ? 'selected' : ''}>Relevancia (coincidencias exactas primero)</option>
+        <option value="words" ${f.sort === 'words' ? 'selected' : ''}>Palabras (más cortas primero)</option>
+        <option value="created" ${f.sort === 'created' ? 'selected' : ''}>Fecha de creación (más nuevas primero)</option>
+        <option value="modified" ${f.sort === 'modified' ? 'selected' : ''}>Última modificación (modificadas primero)</option></select></label>
+      <div class="hint">‘En orden inverso’ da vuelta el elegido (ej. más viejas / más largas primero).</div>
       <div class="row"><input type="checkbox" id="f-reverse" ${f.sort_reverse ? 'checked' : ''}><span>En orden inverso</span></div>
+      <h4>Estudio</h4>
+      <label>Lista objetivo:<select id="f-listid"><option value="${LIST_ID}" selected>Cargando tus listas…</option></select></label>
+      <div class="hint">Elegí entre tus listas. Define dónde agregás/quitás y qué ves en "Mi lista".</div>
+      <label>Idioma del audio:<select id="f-audiolang">${langOpts(AUDIO_LANG)}</select></label>
+      <div class="hint">Qué idioma suena al tocar audio. Debe ser uno de los dos que se traen (frente o reverso); si no, no habrá audio.</div>
       <h4>Visualización (app y lista)</h4>
       <label>Mostrar primero (frente):<select id="d-front">${langOpts(DISPLAY.front)}</select></label>
+      <div class="hint">Idioma que ves ANTES de revelar.</div>
       <label>Luego (reverso):<select id="d-back">${langOpts(DISPLAY.back)}</select></label>
+      <div class="hint">Idioma que se revela (la "respuesta"). El audio siempre es inglés.</div>
+      </div>
       <div class="actions"><button id="fc-cancel">Cancelar</button><button id="fc-apply">Aplicar</button></div>
     </div>`;
     document.body.appendChild(m);
@@ -634,17 +701,22 @@
       filters = {
         query: g('#f-query').value.trim(), from: g('#f-from').value,
         word_min: g('#f-wmin').value, word_max: g('#f-wmax').value, user: g('#f-user').value.trim(),
-        original: g('#f-original').checked, orphans: g('#f-orphans').value, unapproved: g('#f-unapproved').value,
+        origin: g('#f-origin').value, orphans: g('#f-orphans').value, unapproved: g('#f-unapproved').value,
         native: g('#f-native').value, has_audio: g('#f-audio').value, tags: g('#f-tags').value.trim(), list: g('#f-list').value.trim(),
         trans_to: g('#f-tto').value, trans_link: g('#f-tlink').value, trans_user: g('#f-tuser').value.trim(),
         trans_orphan: g('#f-torphan').value, trans_unapproved: g('#f-tunap').value, trans_native: g('#f-tnative').value,
         trans_has_audio: g('#f-thas').value, sort: g('#f-sort').value, sort_reverse: g('#f-reverse').checked,
       };
       DISPLAY = { front: g('#d-front').value, back: g('#d-back').value };
+      LIST_ID = g('#f-listid').value.trim() || '174916';
+      AUDIO_LANG = g('#f-audiolang').value;
+      localStorage.setItem('sm-fc-listid', LIST_ID);
+      localStorage.setItem('sm-fc-audiolang', AUDIO_LANG);
+      listUrls = [];   // cambió la lista objetivo -> invalida los cursores de "Mi lista"
       saveFilters(); saveDisplay(); closeModal(); resetDeck();
     });
   }
-  const openModal = () => { uiBlocked = true; document.getElementById('fc-modal').classList.add('open'); };
+  const openModal = () => { uiBlocked = true; document.getElementById('fc-modal').classList.add('open'); populateListSelect(); };
   const closeModal = () => { uiBlocked = false; document.getElementById('fc-modal').classList.remove('open'); };
 
   async function resetDeck() {
