@@ -1,40 +1,205 @@
 // ==UserScript==
 // @name         Tatoeba - Flashcards (Sentence Mining)
 // @namespace    https://tatoeba.org/
-// @version      4.36
+// @version      4.45
 // @description  Flashcards tipo Anki sobre la búsqueda filtrada de Tatoeba (mobile + teclado)
 // @icon         https://tatoeba.org/img/tatoeba.svg?1781334885
 // @match        https://tatoeba.org/*/sentences/search*
-// @grant        none
+// @grant        GM_setValue
+// @grant        GM_getValue
+// @grant        GM_deleteValue
+// @grant        GM_xmlhttpRequest
+// @connect      api.github.com
 // ==/UserScript==
 
 (function () {
   'use strict';
+  const GH_TOKEN = '';
+
+  /* ============ STORAGE (backend local: GM_setValue, con fallback a localStorage) ============ */
+  // Acá NO hay sync entre dispositivos: esto es solo el guardado LOCAL. El sync cruzado lo hace el Gist (más abajo).
+  const GMget = typeof GM_getValue === 'function' ? GM_getValue : null;
+  const GMset = typeof GM_setValue === 'function' ? GM_setValue : null;
+  const GMdel = typeof GM_deleteValue === 'function' ? GM_deleteValue : null;
+  const LS = {
+    get: (k) => {
+      if (GMget) {
+        const v = GMget(k);
+        return v === undefined ? null : v;
+      }
+      return localStorage.getItem(k);
+    },
+    set: (k, v) => {
+      if (GMset) GMset(k, v);
+      else localStorage.setItem(k, v);
+      if (SYNC_KEYS.includes(k) && k !== 'sm-fc-open') gistPushDebounced(); // cambió config -> empujá al gist (sm-fc-open es efímero)
+    },
+    del: (k) => {
+      if (GMdel) GMdel(k);
+      else localStorage.removeItem(k);
+    },
+  };
+  const SYNC_KEYS = [
+    'sm-fc-listid',
+    'sm-fc-audiolang',
+    'sm-fc-desktop',
+    'sm-fc-startrevealed',
+    'sm-fc-listsort',
+    'sm-fc-active',
+    'sm-fc-profiles',
+    'sm-fc-filters',
+    'sm-fc-display',
+    'sm-fc-list-display',
+    'sm-fc-dark',
+    'sm-fc-open',
+  ];
+  // Migración única: pasa la config que estaba en localStorage al storage GM (el backend local del script).
+  (function migrateStorage() {
+    try {
+      if (!GMget || GMget('sm-fc-migrated') === '1') return;
+      for (const k of SYNC_KEYS) {
+        const v = localStorage.getItem(k);
+        if (v != null && GMget(k) === undefined) GMset(k, v);
+      }
+      GMset('sm-fc-migrated', '1');
+    } catch (e) {
+      /* sin localStorage o sin GM: seguimos */
+    }
+  })();
+  /* ============ AUTO-SYNC (GitHub Gist privado) ============ */
+  const SYNC_FILE = 'tatoeba-flashcards-config.json';
+  const ghToken = () => GH_TOKEN || LS.get('sm-fc-gh-token') || ''; // prioridad: token del script -> token guardado por UI
+  let suppressPush = false,
+    pushTimer = null;
+  function ghReq(method, path, body) {
+    return new Promise((resolve, reject) => {
+      if (typeof GM_xmlhttpRequest !== 'function')
+        return reject(new Error('sin GM_xmlhttpRequest'));
+      GM_xmlhttpRequest({
+        method,
+        url: 'https://api.github.com' + path,
+        timeout: 15000,
+        headers: {
+          Authorization: 'token ' + ghToken(),
+          Accept: 'application/vnd.github+json',
+          'Content-Type': 'application/json',
+        },
+        data: body ? JSON.stringify(body) : undefined,
+        onload: (r) => {
+          try {
+            const j = r.responseText ? JSON.parse(r.responseText) : {};
+            r.status >= 200 && r.status < 300
+              ? resolve(j)
+              : reject(new Error('GitHub ' + r.status));
+          } catch (e) {
+            reject(e);
+          }
+        },
+        onerror: () => reject(new Error('error de red')),
+        ontimeout: () => reject(new Error('timeout')),
+      });
+    });
+  }
+  async function gistFindId() {
+    const cached = LS.get('sm-fc-gist-id');
+    if (cached) return cached;
+    const gists = await ghReq('GET', '/gists?per_page=100');
+    const found = (gists || []).find((g) => g.files && g.files[SYNC_FILE]);
+    if (found) {
+      LS.set('sm-fc-gist-id', found.id);
+      return found.id;
+    }
+    return null;
+  }
+  async function gistPush() {
+    if (!ghToken()) return;
+    const payload = { updated: Date.now(), data: {} };
+    SYNC_KEYS.forEach((k) => {
+      const v = LS.get(k);
+      if (v != null) payload.data[k] = v;
+    });
+    const files = { [SYNC_FILE]: { content: JSON.stringify(payload) } };
+    const id = await gistFindId();
+    const res = id
+      ? await ghReq('PATCH', '/gists/' + id, { files })
+      : await ghReq('POST', '/gists', {
+          description: 'Tatoeba Flashcards config',
+          public: false,
+          files,
+        });
+    if (res && res.id) LS.set('sm-fc-gist-id', res.id);
+    LS.set('sm-fc-sync-ts', String(payload.updated)); // no está en SYNC_KEYS -> no re-dispara push
+  }
+  async function gistPull() {
+    if (!ghToken()) return false;
+    const id = await gistFindId();
+    if (!id) return false;
+    const g = await ghReq('GET', '/gists/' + id);
+    const file = g.files && g.files[SYNC_FILE];
+    if (!file || !file.content) return false;
+    const payload = JSON.parse(file.content);
+    const localTs = parseInt(LS.get('sm-fc-sync-ts') || '0', 10);
+    if (!(payload.updated > localTs)) return false; // nada más nuevo
+    suppressPush = true;
+    try {
+      Object.keys(payload.data || {}).forEach((k) =>
+        LS.set(k, String(payload.data[k])),
+      );
+    } finally {
+      suppressPush = false;
+    }
+    LS.set('sm-fc-sync-ts', String(payload.updated));
+    return true;
+  }
+  function gistPushDebounced() {
+    if (!ghToken() || suppressPush) return;
+    clearTimeout(pushTimer);
+    pushTimer = setTimeout(() => {
+      gistPush()
+        .then(() => toast('Config sincronizada ☁︎', true))
+        .catch((e) => toast('Sync falló: ' + e.message, false));
+    }, 1500);
+  }
 
   /* ============ CONFIGURACIÓN ============ */
-  let LIST_ID = localStorage.getItem('sm-fc-listid') || '174916';   // lista objetivo (editable en el modal)
+  let LIST_ID = LS.get('sm-fc-listid') || '174916'; // lista objetivo (editable en el modal)
 
   const FETCH_DEFAULTS = {
-    query: '', from: 'eng', word_min: '2', word_max: '',
-    user: '', origin: 'original', orphans: 'no', unapproved: 'no', native: 'yes', has_audio: 'yes', tags: '', list: '',
-    trans_to: 'spa', trans_link: 'direct', trans_user: '',
-    trans_orphan: '', trans_unapproved: 'no', trans_native: '', trans_has_audio: '',
-    sort: 'random', sort_reverse: false,
+    query: '',
+    from: 'eng',
+    word_min: '2',
+    word_max: '',
+    user: '',
+    origin: 'original',
+    orphans: 'no',
+    unapproved: 'no',
+    native: 'yes',
+    has_audio: 'yes',
+    tags: '',
+    list: '',
+    trans_to: 'spa',
+    trans_link: 'direct',
+    trans_user: '',
+    trans_orphan: '',
+    trans_unapproved: 'no',
+    trans_native: '',
+    trans_has_audio: '',
+    sort: 'random',
+    sort_reverse: false,
   };
   const DISPLAY_DEFAULT = { front: 'spa', back: 'eng' };
 
   // Teclado (valor de event.key): Enter, ' ' (espacio), ';', '/', '.', ',', etc.
   const KEYS = {
-    reveal: 'Enter',   // Enter: revela; y si ya está revelada, va a la siguiente
-    next: "'",         // Siguiente oración
-    prev: ';',         // Anterior oración
-    audio: '/',        // Reproducir audio
-    addList: '.',      // Agregar a la lista
-    removeList: ',',   // Quitar de la lista
-    list: '[',         // (modo ordenador) alterna abrir/cerrar Mi lista
-    history: ']',      // (modo ordenador) alterna abrir/cerrar Historial
+    reveal: 'Enter', // Enter: revela; y si ya está revelada, va a la siguiente
+    next: "'", // Siguiente oración
+    prev: ';', // Anterior oración
+    audio: '/', // Reproducir audio
+    addList: '.', // Agregar a la lista
+    removeList: ',', // Quitar de la lista
+    list: '[', // (modo ordenador) alterna abrir/cerrar Mi lista
+    history: ']', // (modo ordenador) alterna abrir/cerrar Historial
   };
-  
 
   const TOP_ZONE_PERCENT = 45;
   const SIDE_ZONE_PERCENT = 30;
@@ -44,53 +209,91 @@
 
   const PREFETCH_AT = 4;
   const DARK_DEFAULT = false;
-  let AUDIO_LANG = localStorage.getItem('sm-fc-audiolang') || 'eng';   // idioma del audio (editable en el modal)
-  let DESKTOP_MODE = localStorage.getItem('sm-fc-desktop') === '1';   // PC: paneles laterales que empujan + atajos [ ]
-  let START_REVEALED = localStorage.getItem('sm-fc-startrevealed') === '1';   // al navegar, mostrar la carta ya revelada (default: oculta)
-  const PROFILE_DEFAULT = 'Predeterminado';   // perfil base, no se puede borrar
-  let activeProfile = localStorage.getItem('sm-fc-active') || PROFILE_DEFAULT;
-  const API_BASE = 'https://api.tatoeba.org/v1';   // API oficial ESTABLE y versionada (no /unstable, que cambia)
+  let AUDIO_LANG = LS.get('sm-fc-audiolang') || 'eng'; // idioma del audio (editable en el modal)
+  let DESKTOP_MODE = LS.get('sm-fc-desktop') === '1'; // PC: paneles laterales que empujan + atajos [ ]
+  let START_REVEALED = LS.get('sm-fc-startrevealed') === '1'; // al navegar, mostrar la carta ya revelada (default: oculta)
+  const PROFILE_DEFAULT = 'Predeterminado'; // perfil base, no se puede borrar
+  let activeProfile = LS.get('sm-fc-active') || PROFILE_DEFAULT;
+  const API_BASE = 'https://api.tatoeba.org/v1'; // API oficial ESTABLE y versionada (no /unstable, que cambia)
 
   const LANGUAGES = [
-    { code: 'spa', name: 'Español' }, { code: 'eng', name: 'Inglés' },
-    { code: 'fra', name: 'Francés' }, { code: 'ita', name: 'Italiano' },
-    { code: 'deu', name: 'Alemán' }, { code: 'por', name: 'Portugués' },
-    { code: 'jpn', name: 'Japonés' }, { code: 'rus', name: 'Ruso' },
-    { code: 'cmn', name: 'Chino mandarín' }, { code: 'kor', name: 'Coreano' },
+    { code: 'spa', name: 'Español' },
+    { code: 'eng', name: 'Inglés' },
+    { code: 'fra', name: 'Francés' },
+    { code: 'ita', name: 'Italiano' },
+    { code: 'deu', name: 'Alemán' },
+    { code: 'por', name: 'Portugués' },
+    { code: 'jpn', name: 'Japonés' },
+    { code: 'rus', name: 'Ruso' },
+    { code: 'cmn', name: 'Chino mandarín' },
+    { code: 'kor', name: 'Coreano' },
   ];
 
   // Idiomas para "Mi lista" (amplio: la lista puede tener oraciones de cualquier idioma). Agregá códigos si te falta alguno.
-  const LIST_LANGS = 'spa,eng,fra,ita,deu,por,jpn,rus,cmn,kor,epo,nld,tur,pol,ukr,heb,ara,fin,hun,ces,swe,ell,ron,lat,cat,ind,vie,dan,nob,lit';
+  const LIST_LANGS =
+    'spa,eng,fra,ita,deu,por,jpn,rus,cmn,kor,epo,nld,tur,pol,ukr,heb,ara,fin,hun,ces,swe,ell,ron,lat,cat,ind,vie,dan,nob,lit';
 
   const LIST_DISPLAY_DEFAULT = { front: 'spa', back: 'eng' };
 
-  const K = { filters: 'sm-fc-filters', display: 'sm-fc-display', listDisplay: 'sm-fc-list-display', open: 'sm-fc-open', dark: 'sm-fc-dark' };
+  const K = {
+    filters: 'sm-fc-filters',
+    display: 'sm-fc-display',
+    listDisplay: 'sm-fc-list-display',
+    open: 'sm-fc-open',
+    dark: 'sm-fc-dark',
+  };
   /* ====================================== */
 
   let filters = (() => {
-    try { return Object.assign({}, FETCH_DEFAULTS, JSON.parse(localStorage.getItem(K.filters) || '{}')); }
-    catch (e) { return Object.assign({}, FETCH_DEFAULTS); }
+    try {
+      return Object.assign(
+        {},
+        FETCH_DEFAULTS,
+        JSON.parse(LS.get(K.filters) || '{}'),
+      );
+    } catch (e) {
+      return Object.assign({}, FETCH_DEFAULTS);
+    }
   })();
-  const saveFilters = () => localStorage.setItem(K.filters, JSON.stringify(filters));
+  const saveFilters = () => LS.set(K.filters, JSON.stringify(filters));
 
   let DISPLAY = (() => {
-    try { return Object.assign({}, DISPLAY_DEFAULT, JSON.parse(localStorage.getItem(K.display) || '{}')); }
-    catch (e) { return Object.assign({}, DISPLAY_DEFAULT); }
+    try {
+      return Object.assign(
+        {},
+        DISPLAY_DEFAULT,
+        JSON.parse(LS.get(K.display) || '{}'),
+      );
+    } catch (e) {
+      return Object.assign({}, DISPLAY_DEFAULT);
+    }
   })();
-  const saveDisplay = () => localStorage.setItem(K.display, JSON.stringify(DISPLAY));
+  const saveDisplay = () => LS.set(K.display, JSON.stringify(DISPLAY));
 
   let LIST_DISPLAY = (() => {
-    try { return Object.assign({}, LIST_DISPLAY_DEFAULT, JSON.parse(localStorage.getItem(K.listDisplay) || '{}')); }
-    catch (e) { return Object.assign({}, LIST_DISPLAY_DEFAULT); }
+    try {
+      return Object.assign(
+        {},
+        LIST_DISPLAY_DEFAULT,
+        JSON.parse(LS.get(K.listDisplay) || '{}'),
+      );
+    } catch (e) {
+      return Object.assign({}, LIST_DISPLAY_DEFAULT);
+    }
   })();
-  const saveListDisplay = () => localStorage.setItem(K.listDisplay, JSON.stringify(LIST_DISPLAY));
-  let listSort = localStorage.getItem('sm-fc-listsort') || '-created';   // orden de "Mi lista" (sort de la API)
+  const saveListDisplay = () =>
+    LS.set(K.listDisplay, JSON.stringify(LIST_DISPLAY));
+  let listSort = LS.get('sm-fc-listsort') || '-created'; // orden de "Mi lista" (sort de la API)
 
-  const langSeg = () => (location.pathname.match(/^\/([a-z]{2,3})\//) || [, 'es'])[1];
+  const langSeg = () =>
+    (location.pathname.match(/^\/([a-z]{2,3})\//) || [, 'es'])[1];
 
   function makeIcon(name) {
     const i = document.createElement('span');
-    i.className = 'material-icons'; i.textContent = name; i.setAttribute('aria-hidden', 'true'); return i;
+    i.className = 'material-icons';
+    i.textContent = name;
+    i.setAttribute('aria-hidden', 'true');
+    return i;
   }
 
   // Toast INTEGRADO (no depende del script de notificaciones), animado y con tema.
@@ -105,42 +308,67 @@
 
   // En la API nueva el dueño viene como string `owner` (no `user.username`) y las traducciones son un array PLANO.
   function getTextByLang(card, lang) {
-    if (card.lang === lang) return { text: card.text, audios: card.audios || [], id: card.id, owner: card.owner };
+    if (card.lang === lang)
+      return {
+        text: card.text,
+        audios: card.audios || [],
+        id: card.id,
+        owner: card.owner,
+      };
     const t = (card.translations || []).find((x) => x.lang === lang);
-    if (t) return { text: t.text, audios: t.audios || [], id: t.id, owner: t.owner };
+    if (t)
+      return { text: t.text, audios: t.audios || [], id: t.id, owner: t.owner };
     return null;
   }
-  const frontOf = (c) => getTextByLang(c, DISPLAY.front) || { text: c.text, audios: c.audios || [], id: c.id, owner: c.owner };
-  const backOf = (c) => getTextByLang(c, DISPLAY.back) || { text: '(sin traducción)', audios: [], id: null, owner: null };
+  const frontOf = (c) =>
+    getTextByLang(c, DISPLAY.front) || {
+      text: c.text,
+      audios: c.audios || [],
+      id: c.id,
+      owner: c.owner,
+    };
+  const backOf = (c) =>
+    getTextByLang(c, DISPLAY.back) || {
+      text: '(sin traducción)',
+      audios: [],
+      id: null,
+      owner: null,
+    };
 
   /* ============ API (api.tatoeba.org) ============ */
 
   function wordRange(min, max) {
     min = (min == null ? '' : String(min)).trim();
     max = (max == null ? '' : String(max)).trim();
-    return (min || max) ? `${min}-${max}` : '';   // "2-15", "2-", "-15"
+    return min || max ? `${min}-${max}` : ''; // "2-15", "2-", "-15"
   }
 
   function buildQuery() {
     const f = filters;
     const p = new URLSearchParams();
-    p.set('lang', f.from);                                   // from -> lang
-    p.set('sort', (f.sort_reverse ? '-' : '') + (f.sort || 'random'));   // sort_reverse -> prefijo '-'
-    p.set('showtrans', 'matching');                          // mostrar solo las traducciones que matchean trans:lang
-    p.set('include', 'audios');                              // trae el audio en el mismo payload
+    p.set('lang', f.from); // from -> lang
+    p.set('sort', (f.sort_reverse ? '-' : '') + (f.sort || 'random')); // sort_reverse -> prefijo '-'
+    p.set('showtrans', 'matching'); // mostrar solo las traducciones que matchean trans:lang
+    p.set('include', 'audios'); // trae el audio en el mismo payload
     p.set('limit', '20');
-    if (f.query) p.set('q', f.query);                        // query -> q
-    if (f.user) p.set('owner', f.user);                      // user -> owner
-    if (f.origin) p.set('origin', f.origin);                 // original/translation/known/unknown
+    if (f.query) p.set('q', f.query); // query -> q
+    if (f.user) p.set('owner', f.user); // user -> owner
+    if (f.origin) p.set('origin', f.origin); // original/translation/known/unknown
     if (f.orphans) p.set('is_orphan', f.orphans);
     if (f.unapproved) p.set('is_unapproved', f.unapproved);
     if (f.native) p.set('is_native', f.native);
     if (f.has_audio) p.set('has_audio', f.has_audio);
     if (f.list) p.set('list', f.list);
-    if (f.tags) f.tags.split(',').map((s) => s.trim()).filter(Boolean).forEach((t) => p.append('tag', t));
-    const wc = wordRange(f.word_min, f.word_max); if (wc) p.set('word_count', wc);
+    if (f.tags)
+      f.tags
+        .split(',')
+        .map((s) => s.trim())
+        .filter(Boolean)
+        .forEach((t) => p.append('tag', t));
+    const wc = wordRange(f.word_min, f.word_max);
+    if (wc) p.set('word_count', wc);
     // --- Traducciones ---
-    if (f.trans_to) p.set('trans:lang', f.trans_to);   // restringe a oraciones CON traducción en ese idioma
+    if (f.trans_to) p.set('trans:lang', f.trans_to); // restringe a oraciones CON traducción en ese idioma
     if (f.trans_link === 'direct') p.set('trans:is_direct', 'yes');
     else if (f.trans_link === 'indirect') p.set('trans:is_direct', 'no');
     if (f.trans_user) p.set('trans:owner', f.trans_user);
@@ -153,16 +381,26 @@
 
   // Acepta un query string (lo arma sobre API_BASE) o una URL completa (cursor `paging.next`).
   async function apiSearch(qsOrUrl) {
-    const url = /^https?:/.test(qsOrUrl) ? qsOrUrl : `${API_BASE}/sentences?${qsOrUrl}`;
-    const res = await fetch(url, { credentials: 'omit', signal: currentAbort ? currentAbort.signal : undefined });   // API pública -> sin cookies (evita líos de CORS)
+    const url = /^https?:/.test(qsOrUrl)
+      ? qsOrUrl
+      : `${API_BASE}/sentences?${qsOrUrl}`;
+    const res = await fetch(url, {
+      credentials: 'omit',
+      signal: currentAbort ? currentAbort.signal : undefined,
+    }); // API pública -> sin cookies (evita líos de CORS)
     return res.json();
   }
 
   /* ============ MAZO + HISTORIAL ============ */
 
-  let cards = [], index = -1, fetching = false, nextUrl = null, maxSeen = -1;   // maxSeen = índice más alto visitado (el historial no se recorta al retroceder)
-  let totalCount = null;   // paging.total -> cuántas oraciones matchean los filtros en TODO Tatoeba
-  let deckGen = 0, currentAbort = null;   // anti-race: cada búsqueda nueva incrementa gen y aborta la anterior
+  let cards = [],
+    index = -1,
+    fetching = false,
+    nextUrl = null,
+    maxSeen = -1; // maxSeen = índice más alto visitado (el historial no se recorta al retroceder)
+  let totalCount = null; // paging.total -> cuántas oraciones matchean los filtros en TODO Tatoeba
+  let deckGen = 0,
+    currentAbort = null; // anti-race: cada búsqueda nueva incrementa gen y aborta la anterior
   const seenIds = new Set();
   const currentCard = () => cards[index] || null;
 
@@ -170,12 +408,17 @@
     // Primera vez: arma el query (nueva búsqueda random). Después: sigue el cursor `paging.next`.
     const myGen = deckGen;
     const data = await apiSearch(nextUrl || buildQuery());
-    if (myGen !== deckGen) return 0;   // otra búsqueda más nueva tomó el control -> no contamines el mazo
-    if (data.paging && typeof data.paging.total === 'number') totalCount = data.paging.total;
-    nextUrl = (data.paging && data.paging.has_next) ? data.paging.next : null;
+    if (myGen !== deckGen) return 0; // otra búsqueda más nueva tomó el control -> no contamines el mazo
+    if (data.paging && typeof data.paging.total === 'number')
+      totalCount = data.paging.total;
+    nextUrl = data.paging && data.paging.has_next ? data.paging.next : null;
     let added = 0;
-    for (const r of (data.data || [])) {
-      if (!seenIds.has(r.id)) { seenIds.add(r.id); cards.push(r); added++; }
+    for (const r of data.data || []) {
+      if (!seenIds.has(r.id)) {
+        seenIds.add(r.id);
+        cards.push(r);
+        added++;
+      }
     }
     return added;
   }
@@ -183,41 +426,69 @@
     if (!force && cards.length - 1 - index > PREFETCH_AT) return;
     if (fetching) return;
     fetching = true;
-    try { let n = 0; while (await fetchBatch() === 0 && n++ < 3) {} }
-    catch (e) { if (e.name !== 'AbortError') toast('Error trayendo oraciones', false); }
-    finally { fetching = false; updateId(); }
+    try {
+      let n = 0;
+      while ((await fetchBatch()) === 0 && n++ < 3) {}
+    } catch (e) {
+      if (e.name !== 'AbortError') toast('Error trayendo oraciones', false);
+    } finally {
+      fetching = false;
+      updateId();
+    }
   }
   async function next() {
     if (index >= cards.length - 1) await ensureBuffer(true);
-    if (index < cards.length - 1) { index++; render(); ensureBuffer(); } else toast('Sin más oraciones', false);
+    if (index < cards.length - 1) {
+      index++;
+      render();
+      ensureBuffer();
+    } else toast('Sin más oraciones', false);
   }
-  const prev = () => { if (index > 0) { index--; render(); } else toast('Estás en la primera', false); };
-  const jumpTo = (i) => { if (i >= 0 && i < cards.length) { index = i; render(); closePanels(); } };
+  const prev = () => {
+    if (index > 0) {
+      index--;
+      render();
+    } else toast('Estás en la primera', false);
+  };
+  const jumpTo = (i) => {
+    if (i >= 0 && i < cards.length) {
+      index = i;
+      render();
+      closePanels();
+    }
+  };
 
   /* ============ ACCIONES ============ */
 
   // El audio (inglés) es spoiler si NO está en el frente -> se gatea hasta revelar.
   const audioGated = () => DISPLAY.front !== AUDIO_LANG && !revealed;
 
-  let currentAudio = null, currentAudioUrl = null;   // reusa el audio para no re-bajarlo ni superponer
+  let currentAudio = null,
+    currentAudioUrl = null; // reusa el audio para no re-bajarlo ni superponer
 
   function setAudioLoading(on) {
     const btn = barEl && barEl.querySelector('[data-act="audio"]');
     if (!btn) return;
-    if (on) { btn.innerHTML = '<span class="fc-spin"></span>'; }
-    else { btn.innerHTML = ''; btn.appendChild(makeIcon('volume_up')); }
+    if (on) {
+      btn.innerHTML = '<span class="fc-spin"></span>';
+    } else {
+      btn.innerHTML = '';
+      btn.appendChild(makeIcon('volume_up'));
+    }
   }
 
   function playAudio() {
-    if (audioGated()) return;   // inglés en el dorso y sin revelar -> bloqueado (click, teclado y zona)
-    const c = currentCard(); if (!c) return;
-    const en = getTextByLang(c, AUDIO_LANG);   // SIEMPRE el audio en inglés, sin importar el display
+    if (audioGated()) return; // inglés en el dorso y sin revelar -> bloqueado (click, teclado y zona)
+    const c = currentCard();
+    if (!c) return;
+    const en = getTextByLang(c, AUDIO_LANG); // SIEMPRE el audio en inglés, sin importar el display
     if (!en || !en.audios || !en.audios.length) {
-      const name = (LANGUAGES.find((l) => l.code === AUDIO_LANG) || {}).name || AUDIO_LANG;
+      const name =
+        (LANGUAGES.find((l) => l.code === AUDIO_LANG) || {}).name || AUDIO_LANG;
       toast(`No hay audio en ${name.toLowerCase()}`, false);
       return;
     }
-    const url = `${API_BASE}/audios/${en.audios[0].id}/file`;   // el download_url de la API viene roto (/audio/ singular -> 404); uso /audios/ (plural)
+    const url = `${API_BASE}/audios/${en.audios[0].id}/file`; // el download_url de la API viene roto (/audio/ singular -> 404); uso /audios/ (plural)
 
     // Mismo audio ya cargado -> sólo reiniciar (sin re-fetch ni superponer).
     if (currentAudio && currentAudioUrl === url) {
@@ -229,28 +500,68 @@
     // Audio distinto -> cortamos el anterior y cargamos el nuevo.
     if (currentAudio) currentAudio.pause();
     const a = new Audio(url);
-    currentAudio = a; currentAudioUrl = url;
+    currentAudio = a;
+    currentAudioUrl = url;
 
     setAudioLoading(true);
     let done = false;
-    const stop = (err) => { if (done) return; done = true; clearTimeout(timer); setAudioLoading(false); if (err) toast('No se pudo reproducir', false); };
-    const timer = setTimeout(() => stop(false), 8000);   // red colgada -> liberamos el loader igual
+    const stop = (err) => {
+      if (done) return;
+      done = true;
+      clearTimeout(timer);
+      setAudioLoading(false);
+      if (err) toast('No se pudo reproducir', false);
+    };
+    const timer = setTimeout(() => stop(false), 8000); // red colgada -> liberamos el loader igual
     a.addEventListener('playing', () => stop(false), { once: true });
     a.addEventListener('error', () => stop(true), { once: true });
     a.play().catch(() => stop(true));
   }
-  async function listAction(endpoint, id) {   // fetch crudo, sin notificar (lo usa el borrado masivo)
-    try { const r = await fetch(`/${langSeg()}/sentences_lists/${endpoint}/${id}/${LIST_ID}`, { credentials: 'same-origin', headers: { 'X-Requested-With': 'XMLHttpRequest' } });
+  async function listAction(endpoint, id) {
+    // fetch crudo, sin notificar (lo usa el borrado masivo)
+    try {
+      const r = await fetch(
+        `/${langSeg()}/sentences_lists/${endpoint}/${id}/${LIST_ID}`,
+        {
+          credentials: 'same-origin',
+          headers: { 'X-Requested-With': 'XMLHttpRequest' },
+        },
+      );
       return r.ok;
-    } catch (e) { return false; }
+    } catch (e) {
+      return false;
+    }
   }
-  async function listById(endpoint, id, msg) {   // alta/baja individual con toast
+  async function listById(endpoint, id, msg) {
+    // alta/baja individual con toast
     const ok = await listAction(endpoint, id);
     toast(ok ? `✓ Oración ${id} ${msg}` : 'No se pudo (¿logueado?)', ok);
     return ok;
   }
-  const addCurrent = () => { const c = currentCard(); if (c) listById('add_sentence_to_list', c.id, 'agregada', 'Error al agregar').then((ok) => { if (ok) syncListAdd(c); }); };
-  const removeCurrent = () => { const c = currentCard(); if (c) listById('remove_sentence_from_list', c.id, 'quitada', 'Error al quitar').then((ok) => { if (ok) listRemoveRow(c.id); }); };
+  const addCurrent = () => {
+    const c = currentCard();
+    if (c)
+      listById(
+        'add_sentence_to_list',
+        c.id,
+        'agregada',
+        'Error al agregar',
+      ).then((ok) => {
+        if (ok) syncListAdd(c);
+      });
+  };
+  const removeCurrent = () => {
+    const c = currentCard();
+    if (c)
+      listById(
+        'remove_sentence_from_list',
+        c.id,
+        'quitada',
+        'Error al quitar',
+      ).then((ok) => {
+        if (ok) listRemoveRow(c.id);
+      });
+  };
 
   /* ============ ESTILOS ============ */
 
@@ -258,10 +569,10 @@
     const s = document.createElement('style');
     s.textContent = `
       /* Tema scopeado a MIS raíces (overlay/panel/modal viven en <body>, por eso las vars se definen en los 3). */
-      #fc-overlay, .fc-panel, #fc-modal, #fc-confirm, #fc-prompt { --bg:#fafafa; --fg:#222; --muted:#8a8a8a; --card:#fff; --line:#e6e6e6;
+      #fc-overlay, .fc-panel, #fc-modal, #fc-confirm, #fc-prompt, #fc-toast { --bg:#fafafa; --fg:#222; --muted:#8a8a8a; --card:#fff; --line:#e6e6e6;
         --btn:#ececec; --btnfg:#444; --accent:#4b8b3b; --back:#2e7d32;
         --rm-bg:#fde7e7; --rm-fg:#c62828; --go-bg:#e8f0e6; --go-fg:#2e7d32; --shadow:rgba(0,0,0,.18); }
-      .fc-dark #fc-overlay, .fc-dark .fc-panel, .fc-dark #fc-modal, .fc-dark #fc-confirm, .fc-dark #fc-prompt { --bg:#16161a; --fg:#ececf0; --muted:#9a9aa3;
+      .fc-dark #fc-overlay, .fc-dark .fc-panel, .fc-dark #fc-modal, .fc-dark #fc-confirm, .fc-dark #fc-prompt, .fc-dark #fc-toast { --bg:#16161a; --fg:#ececf0; --muted:#9a9aa3;
         --card:#26262b; --line:#34343b; --btn:#34343b; --btnfg:#e2e2e8; --accent:#6bbf59; --back:#7ecb6a;
         --rm-bg:rgba(229,115,115,.16); --rm-fg:#ef9a9a; --go-bg:rgba(124,203,106,.16); --go-fg:#a5d6a7; --shadow:rgba(0,0,0,.55); }
       #fc-overlay { position:fixed; inset:0; z-index:2147483000; background:var(--bg); color:var(--fg);
@@ -315,7 +626,7 @@
         transform:translateX(-50%) translateY(16px); z-index:2147483700; padding:10px 18px; border-radius:22px;
         font-size:14px; color:#fff; box-shadow:0 4px 16px rgba(0,0,0,.35); opacity:0; pointer-events:none;
         max-width:86vw; text-align:center; transition:opacity .25s ease, transform .25s ease, left .25s ease; }
-      #fc-overlay.panel-push #fc-toast { left:calc(50% - min(88vw,380px) / 2); }   /* centrado sobre el contenido, no el viewport */
+      .fc-push #fc-toast { left:calc(50% - min(88vw,380px) / 2); }   /* centrado sobre el contenido (el toast vive en body) */
       #fc-toast.show { opacity:1; transform:translateX(-50%) translateY(0); }
       #fc-toast.ok { background:var(--accent,#4b8b3b); }
       #fc-toast.err { background:#c62828; }
@@ -373,7 +684,7 @@
         background:rgba(0,0,0,.5); opacity:0; pointer-events:none; transition:opacity .2s ease; }
       #fc-modal.open { opacity:1; pointer-events:auto; }
       #fc-modal .box { background:var(--bg,#fff); color:var(--fg,#222); border:1px solid var(--line); border-radius:14px; width:min(92vw,400px);
-        height:min(86vh,600px); overflow:hidden; display:flex; flex-direction:column; font-size:14px; box-shadow:0 16px 48px var(--shadow);
+        height:min(90vh,780px); overflow:hidden; display:flex; flex-direction:column; font-size:14px; box-shadow:0 16px 48px var(--shadow);
         transform:scale(.94); transition:transform .2s ease; }
       #fc-modal.open .box { transform:scale(1); }
       #fc-modal .fc-profiles { display:flex; flex-direction:column; gap:8px; padding:10px; border-bottom:1px solid var(--line); }
@@ -386,6 +697,9 @@
       #fc-modal #prof-rename { background:var(--btn); color:var(--btnfg); }
       #fc-modal #prof-del { background:transparent; color:var(--muted); border:none; border-radius:6px; width:36px; height:36px; cursor:pointer; flex:0 0 auto; display:flex; align-items:center; justify-content:center; transition:color .15s, background .15s; }
       #fc-modal #prof-del:hover { color:#d33; background:var(--btn); }
+      #fc-modal .fc-prof-cloud { display:flex; gap:6px; align-items:center; }
+      #fc-modal .fc-prof-cloud input { flex:1; min-width:0; min-height:32px; font-size:12px; }
+      #fc-modal #gh-sync { flex:0 0 auto; height:32px; min-height:0; padding:0 14px; border:none; border-radius:6px; cursor:pointer; font-size:12px; font-weight:600; background:var(--accent); color:#fff; }
       #fc-modal .fc-tabs { display:flex; gap:2px; padding:8px 8px 0; border-bottom:1px solid var(--line); }
       #fc-modal .fc-tabs button { flex:1; padding:9px 4px; border:none; background:transparent; color:var(--muted);
         font-size:13px; cursor:pointer; border-bottom:2px solid transparent; border-radius:6px 6px 0 0; }
@@ -399,13 +713,13 @@
       #fc-modal label { display:flex; flex-direction:column; gap:3px; }
       #fc-modal .hint { font-size:11px; color:var(--muted); margin:-3px 0 4px; line-height:1.35; }
       #fc-modal .row { display:flex; align-items:center; gap:8px; }
-      #fc-modal select, #fc-modal input { padding:8px; border:1px solid var(--line); border-radius:6px; font-size:15px;
+      #fc-modal select, #fc-modal input { padding:9px 10px; min-height:40px; box-sizing:border-box; border:1px solid var(--line); border-radius:6px; font-size:15px;
         background:var(--card,#fff); color:var(--fg,#222); transition:border-color .15s ease; }
       #fc-modal select:focus, #fc-modal input:focus { outline:none; border-color:var(--accent); }
-      #fc-modal input[type=checkbox] { width:auto; accent-color:var(--accent); }
+      #fc-modal input[type=checkbox] { width:auto; min-height:0; accent-color:var(--accent); }
       #fc-modal .fc-tagbox { display:flex; flex-wrap:wrap; gap:6px; padding:7px; border:1px solid var(--line); border-radius:6px; background:var(--card); min-height:40px; align-items:center; cursor:text; }
       #fc-modal .fc-tagbox:focus-within { border-color:var(--accent); }
-      #fc-modal .fc-tagbox input { border:none; outline:none; background:transparent; flex:1; min-width:90px; padding:2px; color:var(--fg); font-size:15px; }
+      #fc-modal .fc-tagbox input { border:none; outline:none; min-height:0; background:transparent; flex:1; min-width:90px; padding:2px; color:var(--fg); font-size:15px; }
       .fc-tag { display:inline-flex; align-items:center; gap:5px; background:var(--accent); color:#fff; border-radius:6px; padding:3px 5px 3px 9px; font-size:13px; }
       .fc-tag button { border:none; background:transparent; color:#fff; cursor:pointer; font-size:16px; line-height:1; padding:0 2px; opacity:.85; }
       .fc-tag button:hover { opacity:1; }
@@ -443,97 +757,190 @@
 
   /* ============ UI PRINCIPAL ============ */
 
-  let overlay, frontEl, backEl, ownersEl, hintEl, idEl, barEl, zonesEl, launcher;
-  let revealed = false, lastTouch = 0, uiBlocked = false;
+  let overlay,
+    frontEl,
+    backEl,
+    ownersEl,
+    hintEl,
+    idEl,
+    barEl,
+    zonesEl,
+    launcher;
+  let revealed = false,
+    lastTouch = 0,
+    uiBlocked = false;
 
   function iconBtn(act, icon, title, cls) {
-    const b = document.createElement('button'); b.className = cls || 'fc-btn';
-    b.dataset.act = act; b.title = title; b.setAttribute('aria-label', title); b.appendChild(makeIcon(icon)); return b;
+    const b = document.createElement('button');
+    b.className = cls || 'fc-btn';
+    b.dataset.act = act;
+    b.title = title;
+    b.setAttribute('aria-label', title);
+    b.appendChild(makeIcon(icon));
+    return b;
   }
 
   function buildUI() {
-    overlay = document.createElement('div'); overlay.id = 'fc-overlay';
-    const darkSaved = localStorage.getItem(K.dark);
-    if (darkSaved === '1' || (darkSaved === null && DARK_DEFAULT)) { overlay.classList.add('dark'); document.documentElement.classList.add('fc-dark'); }
+    overlay = document.createElement('div');
+    overlay.id = 'fc-overlay';
+    const darkSaved = LS.get(K.dark);
+    if (darkSaved === '1' || (darkSaved === null && DARK_DEFAULT)) {
+      overlay.classList.add('dark');
+      document.documentElement.classList.add('fc-dark');
+    }
 
-    const top = document.createElement('div'); top.id = 'fc-top';
-    idEl = document.createElement('div'); idEl.id = 'fc-id'; idEl.textContent = '…';
-    const sp = document.createElement('div'); sp.className = 'spacer';
-    top.append(idEl, sp,
+    const top = document.createElement('div');
+    top.id = 'fc-top';
+    idEl = document.createElement('div');
+    idEl.id = 'fc-id';
+    idEl.textContent = '…';
+    const sp = document.createElement('div');
+    sp.className = 'spacer';
+    top.append(
+      idEl,
+      sp,
       iconBtn('dark', 'brightness_2', 'Modo oscuro', 'fc-icon'),
       iconBtn('history', 'history', 'Historial', 'fc-icon'),
       iconBtn('list', 'list', 'Mi lista', 'fc-icon'),
       iconBtn('filters', 'tune', 'Filtros', 'fc-icon'),
-      iconBtn('exit', 'close', 'Salir', 'fc-icon'));
+      iconBtn('exit', 'close', 'Salir', 'fc-icon'),
+    );
 
-    const stage = document.createElement('div'); stage.id = 'fc-stage';
-    const card = document.createElement('div'); card.id = 'fc-card';
-    frontEl = document.createElement('div'); frontEl.id = 'fc-front'; frontEl.textContent = '';
-    backEl = document.createElement('div'); backEl.id = 'fc-back';
-    ownersEl = document.createElement('div'); ownersEl.id = 'fc-owners';
-    hintEl = document.createElement('div'); hintEl.id = 'fc-hint'; hintEl.textContent = 'Tocá para revelar';
+    const stage = document.createElement('div');
+    stage.id = 'fc-stage';
+    const card = document.createElement('div');
+    card.id = 'fc-card';
+    frontEl = document.createElement('div');
+    frontEl.id = 'fc-front';
+    frontEl.textContent = '';
+    backEl = document.createElement('div');
+    backEl.id = 'fc-back';
+    ownersEl = document.createElement('div');
+    ownersEl.id = 'fc-owners';
+    hintEl = document.createElement('div');
+    hintEl.id = 'fc-hint';
+    hintEl.textContent = 'Tocá para revelar';
     card.append(frontEl, backEl, ownersEl, hintEl);
 
-    zonesEl = document.createElement('div'); zonesEl.id = 'fc-zones';
-    const ztop = document.createElement('button'); ztop.className = 'fc-zone'; ztop.dataset.act = 'audio';
-    ztop.style.height = TOP_ZONE_PERCENT + '%'; ztop.title = 'Audio';
-    const zrow = document.createElement('div'); zrow.className = 'fc-zrow';
-    const zl = document.createElement('button'); zl.className = 'fc-zone'; zl.dataset.act = 'next'; zl.style.flex = `0 0 ${SIDE_ZONE_PERCENT}%`;
-    const zm = document.createElement('button'); zm.className = 'fc-zone'; zm.dataset.act = 'add'; zm.style.flex = '1';
-    const zr = document.createElement('button'); zr.className = 'fc-zone'; zr.dataset.act = 'next'; zr.style.flex = `0 0 ${SIDE_ZONE_PERCENT}%`;
-    zrow.append(zl, zm, zr); zonesEl.append(ztop, zrow);
+    zonesEl = document.createElement('div');
+    zonesEl.id = 'fc-zones';
+    const ztop = document.createElement('button');
+    ztop.className = 'fc-zone';
+    ztop.dataset.act = 'audio';
+    ztop.style.height = TOP_ZONE_PERCENT + '%';
+    ztop.title = 'Audio';
+    const zrow = document.createElement('div');
+    zrow.className = 'fc-zrow';
+    const zl = document.createElement('button');
+    zl.className = 'fc-zone';
+    zl.dataset.act = 'next';
+    zl.style.flex = `0 0 ${SIDE_ZONE_PERCENT}%`;
+    const zm = document.createElement('button');
+    zm.className = 'fc-zone';
+    zm.dataset.act = 'add';
+    zm.style.flex = '1';
+    const zr = document.createElement('button');
+    zr.className = 'fc-zone';
+    zr.dataset.act = 'next';
+    zr.style.flex = `0 0 ${SIDE_ZONE_PERCENT}%`;
+    zrow.append(zl, zm, zr);
+    zonesEl.append(ztop, zrow);
 
-    const loading = document.createElement('div'); loading.id = 'fc-loading';
-    loading.innerHTML = '<div class="fc-load-dots"><span></span><span></span><span></span></div><div class="lbl">Cargando oraciones…</div>';
+    const loading = document.createElement('div');
+    loading.id = 'fc-loading';
+    loading.innerHTML =
+      '<div class="fc-load-dots"><span></span><span></span><span></span></div><div class="lbl">Cargando oraciones…</div>';
     stage.append(card, zonesEl, loading);
 
-    barEl = document.createElement('div'); barEl.id = 'fc-bar';
-    barEl.append(iconBtn('prev', 'chevron_left', 'Anterior'), iconBtn('audio', 'volume_up', 'Audio'),
-      iconBtn('add', 'playlist_add', 'Agregar'), iconBtn('remove', 'remove_circle_outline', 'Quitar'),
-      iconBtn('next', 'chevron_right', 'Siguiente', 'fc-btn fc-primary'));
+    barEl = document.createElement('div');
+    barEl.id = 'fc-bar';
+    barEl.append(
+      iconBtn('prev', 'chevron_left', 'Anterior'),
+      iconBtn('audio', 'volume_up', 'Audio'),
+      iconBtn('add', 'playlist_add', 'Agregar'),
+      iconBtn('remove', 'remove_circle_outline', 'Quitar'),
+      iconBtn('next', 'chevron_right', 'Siguiente', 'fc-btn fc-primary'),
+    );
 
-    toastEl = document.createElement('div'); toastEl.id = 'fc-toast';
+    toastEl = document.createElement('div');
+    toastEl.id = 'fc-toast';
 
-    overlay.append(top, stage, barEl, toastEl);
+    overlay.append(top, stage, barEl);
     document.body.appendChild(overlay);
+    document.body.appendChild(toastEl); // el toast va al body (no a la overlay) para no quedar atrapado bajo el modal
 
-    if (overlay.classList.contains('dark')) overlay.querySelector('[data-act="dark"] .material-icons').textContent = 'wb_sunny';
+    if (overlay.classList.contains('dark'))
+      overlay.querySelector('[data-act="dark"] .material-icons').textContent =
+        'wb_sunny';
 
-    launcher = document.createElement('button'); launcher.id = 'fc-launcher'; launcher.title = 'Estudiar';
-    launcher.appendChild(makeIcon('style')); launcher.addEventListener('click', () => setOpen(true));
+    launcher = document.createElement('button');
+    launcher.id = 'fc-launcher';
+    launcher.title = 'Estudiar';
+    launcher.appendChild(makeIcon('style'));
+    launcher.addEventListener('click', () => setOpen(true));
     document.body.appendChild(launcher);
 
     overlay.addEventListener('click', (e) => {
       // Si fue un toque reciente sobre la carta/zonas, ya lo resolvió touchend -> no duplicar.
       if (e.target.closest('#fc-stage') && Date.now() - lastTouch < 600) return;
       const b = e.target.closest('button[data-act]');
-      if (b) { handleAction(b.dataset.act); return; }
+      if (b) {
+        handleAction(b.dataset.act);
+        return;
+      }
       if (e.target.closest('#fc-card') && !revealed) reveal();
     });
 
-    buildModal(); buildPanels(); setupGestures(); setupKeyboard();
+    buildModal();
+    buildPanels();
+    setupGestures();
+    setupKeyboard();
   }
 
   function handleAction(act) {
-    ({ prev, next, audio: playAudio, add: addCurrent, remove: removeCurrent,
-       filters: openModal, history: openHistory, list: openList, exit: () => setOpen(false),
-       dark: toggleDark }[act] || (() => {}))();
+    (
+      ({
+        prev,
+        next,
+        audio: playAudio,
+        add: addCurrent,
+        remove: removeCurrent,
+        filters: openModal,
+        history: openHistory,
+        list: openList,
+        exit: () => setOpen(false),
+        dark: toggleDark,
+      })[act] || (() => {})
+    )();
   }
 
   // Resuelve un tap (zona transparente o carta) sin depender del click sintético, que iOS cancela.
   function handleTap(target) {
     const b = target.closest && target.closest('button[data-act]');
-    if (b) { handleAction(b.dataset.act); return; }
+    if (b) {
+      handleAction(b.dataset.act);
+      return;
+    }
     if (target.closest && target.closest('#fc-card') && !revealed) reveal();
   }
 
   function updateId() {
-    const c = currentCard(); if (!idEl) return;
-    const head = `<div class="fc-prof">${escHtml(activeProfile)}</div>`
-      + (totalCount != null ? `<div class="fc-total">${totalCount.toLocaleString('es')} en Tatoeba</div>` : '');   // perfil, y total debajo
-    if (!c) { idEl.innerHTML = head; return; }
-    const f = frontOf(c), b = backOf(c);
-    idEl.innerHTML = head + `<div>Oración #${f.id || '—'}</div><div>Traducción #${b.id || '—'}${fetching ? ' …' : ''}</div>`;
+    const c = currentCard();
+    if (!idEl) return;
+    const head =
+      `<div class="fc-prof">${escHtml(activeProfile)}</div>` +
+      (totalCount != null
+        ? `<div class="fc-total">${totalCount.toLocaleString('es')} en Tatoeba</div>`
+        : ''); // perfil, y total debajo
+    if (!c) {
+      idEl.innerHTML = head;
+      return;
+    }
+    const f = frontOf(c),
+      b = backOf(c);
+    idEl.innerHTML =
+      head +
+      `<div>Oración #${f.id || '—'}</div><div>Traducción #${b.id || '—'}${fetching ? ' …' : ''}</div>`;
   }
 
   function showLoading(on) {
@@ -543,19 +950,30 @@
 
   function render() {
     const c = currentCard();
-    if (!c) { showLoading(true); frontEl.textContent = ''; backEl.textContent = ''; ownersEl.textContent = ''; return; }
+    if (!c) {
+      showLoading(true);
+      frontEl.textContent = '';
+      backEl.textContent = '';
+      ownersEl.textContent = '';
+      return;
+    }
     showLoading(false);
-    if (index > maxSeen) maxSeen = index;   // marca de agua: el historial conserva todas las vistas
-    revealed = false; zonesEl.classList.remove('on');
-    const f = frontOf(c), b = backOf(c);
+    if (index > maxSeen) maxSeen = index; // marca de agua: el historial conserva todas las vistas
+    revealed = false;
+    zonesEl.classList.remove('on');
+    const f = frontOf(c),
+      b = backOf(c);
     frontEl.textContent = f.text;
     backEl.textContent = b.text;
-    backEl.style.visibility = 'hidden';            // reservado: el reverso no mueve nada al revelar
-    ownersEl.textContent = '';   // los dueños aparecen recién AL revelar (junto con la traducción)
-    ownersEl.style.transition = ''; ownersEl.style.transform = '';   // reset de la animación
+    backEl.style.visibility = 'hidden'; // reservado: el reverso no mueve nada al revelar
+    ownersEl.textContent = ''; // los dueños aparecen recién AL revelar (junto con la traducción)
+    ownersEl.style.transition = '';
+    ownersEl.style.transform = ''; // reset de la animación
     hintEl.style.visibility = 'visible';
-    updateId(); updateBar(); syncHistory();   // historial sigue en vivo a la oración actual
-    if (START_REVEALED) reveal();   // modo "ya revelada": mostrá el reverso de entrada
+    updateId();
+    updateBar();
+    syncHistory(); // historial sigue en vivo a la oración actual
+    if (START_REVEALED) reveal(); // modo "ya revelada": mostrá el reverso de entrada
   }
 
   // FLIP horizontal de la línea de dueños: animar su corrimiento desde 'fromLeft' hasta su lugar actual.
@@ -564,13 +982,14 @@
     if (!dx) return;
     ownersEl.style.transition = 'none';
     ownersEl.style.transform = `translateX(${dx}px)`;
-    void ownersEl.offsetWidth;   // reflow forzado: fija el estado inicial antes de animar
+    void ownersEl.offsetWidth; // reflow forzado: fija el estado inicial antes de animar
     ownersEl.style.transition = 'transform .28s ease';
     ownersEl.style.transform = 'translateX(0)';
   }
 
   function reveal() {
-    const c = currentCard(); if (!c || revealed) return;
+    const c = currentCard();
+    if (!c || revealed) return;
     const oldLeft = ownersEl.getBoundingClientRect().left;
     revealed = true;
     backEl.style.visibility = 'visible';
@@ -579,7 +998,7 @@
     updateBar();
 
     ownersEl.textContent = `Oración: ${frontOf(c).owner || '—'} · Traducción: ${backOf(c).owner || '—'}`;
-    flipOwners(oldLeft);   // anima el corrimiento horizontal de la línea (aparece junto con la traducción)
+    flipOwners(oldLeft); // anima el corrimiento horizontal de la línea (aparece junto con la traducción)
   }
 
   function updateBar() {
@@ -592,92 +1011,172 @@
   function toggleDark() {
     const on = !overlay.classList.contains('dark');
     overlay.classList.toggle('dark', on);
-    document.documentElement.classList.toggle('fc-dark', on);   // habilita el tema oscuro también en paneles/modal (cuelgan de <body>)
-    localStorage.setItem(K.dark, on ? '1' : '0');
+    document.documentElement.classList.toggle('fc-dark', on); // habilita el tema oscuro también en paneles/modal (cuelgan de <body>)
+    LS.set(K.dark, on ? '1' : '0');
     const ic = overlay.querySelector('[data-act="dark"] .material-icons');
     if (ic) ic.textContent = on ? 'wb_sunny' : 'brightness_2';
   }
 
   /* ============ PANELES ============ */
 
-  let historyPanel, listPanel, panelBackdrop, listPage = 1, listUrls = [];   // listUrls[page] = URL (cursor) de cada página
-  let listName = '', listTotal = null;   // nombre + total de miembros de "Mi lista" (para el título)
+  let historyPanel,
+    listPanel,
+    panelBackdrop,
+    listPage = 1,
+    listUrls = []; // listUrls[page] = URL (cursor) de cada página
+  let listName = '',
+    listTotal = null; // nombre + total de miembros de "Mi lista" (para el título)
   function applyListTitle() {
-    if (listPanel && listPanel._title) listPanel._title.textContent = (listName || 'Mi lista') + (listTotal != null ? `  ·  ${listTotal.toLocaleString('es')}` : '');
+    if (listPanel && listPanel._title)
+      listPanel._title.textContent =
+        (listName || 'Mi lista') +
+        (listTotal != null ? `  ·  ${listTotal.toLocaleString('es')}` : '');
   }
   function buildPanels() {
-    historyPanel = makePanel('Historial'); listPanel = makePanel('Mi lista');
-    panelBackdrop = document.createElement('div'); panelBackdrop.className = 'fc-panel-backdrop';
+    historyPanel = makePanel('Historial');
+    listPanel = makePanel('Mi lista');
+    panelBackdrop = document.createElement('div');
+    panelBackdrop.className = 'fc-panel-backdrop';
     panelBackdrop.addEventListener('click', closePanels);
     document.body.appendChild(panelBackdrop);
     document.addEventListener('keydown', (e) => {
-      if (e.key === 'Escape' && (historyPanel.classList.contains('open') || listPanel.classList.contains('open'))) closePanels();
+      if (
+        e.key === 'Escape' &&
+        (historyPanel.classList.contains('open') ||
+          listPanel.classList.contains('open'))
+      )
+        closePanels();
     });
   }
   function makePanel(title) {
-    const p = document.createElement('div'); p.className = 'fc-panel';
+    const p = document.createElement('div');
+    p.className = 'fc-panel';
     const h = document.createElement('header');
-    const t = document.createElement('div'); t.textContent = title;
-    const s = document.createElement('div'); s.className = 'spacer';
-    const c = iconBtn('x', 'close', 'Cerrar', 'fc-icon fc-panel-close'); c.addEventListener('click', closePanels);
+    const t = document.createElement('div');
+    t.textContent = title;
+    const s = document.createElement('div');
+    s.className = 'spacer';
+    const c = iconBtn('x', 'close', 'Cerrar', 'fc-icon fc-panel-close');
+    c.addEventListener('click', closePanels);
     h.append(t, s, c);
-    const body = document.createElement('div'); body.className = 'body';
-    p.append(h, body); document.body.appendChild(p); p._body = body; p._title = t; return p;
+    const body = document.createElement('div');
+    body.className = 'body';
+    p.append(h, body);
+    document.body.appendChild(p);
+    p._body = body;
+    p._title = t;
+    return p;
   }
-  function closePanels() { historyPanel.classList.remove('open'); listPanel.classList.remove('open'); if (panelBackdrop) panelBackdrop.classList.remove('open'); overlay.classList.remove('panel-push'); uiBlocked = false; }
-  function toggleList() { if (listPanel.classList.contains('open')) closePanels(); else openList(); }
-  function toggleHistory() { if (historyPanel.classList.contains('open')) closePanels(); else openHistory(); }
-  function showPanelChrome() {   // muestra backdrop (flotante) o empuje (PC), cierra el otro panel
-    historyPanel.classList.remove('open'); listPanel.classList.remove('open');
+  function closePanels() {
+    historyPanel.classList.remove('open');
+    listPanel.classList.remove('open');
+    if (panelBackdrop) panelBackdrop.classList.remove('open');
+    overlay.classList.remove('panel-push');
+    document.documentElement.classList.remove('fc-push');
+    uiBlocked = false;
+  }
+  function toggleList() {
+    if (listPanel.classList.contains('open')) closePanels();
+    else openList();
+  }
+  function toggleHistory() {
+    if (historyPanel.classList.contains('open')) closePanels();
+    else openHistory();
+  }
+  function showPanelChrome() {
+    // muestra backdrop (flotante) o empuje (PC), cierra el otro panel
+    historyPanel.classList.remove('open');
+    listPanel.classList.remove('open');
     uiBlocked = !DESKTOP_MODE;
-    if (DESKTOP_MODE) { panelBackdrop.classList.remove('open'); overlay.classList.add('panel-push'); }
-    else { overlay.classList.remove('panel-push'); panelBackdrop.classList.add('open'); }
+    document.documentElement.classList.toggle('fc-push', DESKTOP_MODE); // alinea el toast (en body) con el contenido empujado
+    if (DESKTOP_MODE) {
+      panelBackdrop.classList.remove('open');
+      overlay.classList.add('panel-push');
+    } else {
+      overlay.classList.remove('panel-push');
+      panelBackdrop.classList.add('open');
+    }
   }
 
   function renderHistory() {
-    const body = historyPanel._body; body.innerHTML = '';
+    const body = historyPanel._body;
+    body.innerHTML = '';
     for (let i = maxSeen; i >= 0; i--) {
-      const c = cards[i]; const f = frontOf(c), b = backOf(c);
-      const row = document.createElement('div'); row.className = 'fc-row'; row.style.cursor = 'pointer';
+      const c = cards[i];
+      const f = frontOf(c),
+        b = backOf(c);
+      const row = document.createElement('div');
+      row.className = 'fc-row';
+      row.style.cursor = 'pointer';
       if (i === index) row.classList.add('current');
       row.innerHTML = `<div class="meta">Oración #${f.id || c.id} · ${f.owner || '—'}</div>
         <div class="es">${f.text}</div>
         <div class="en">${b.text}</div>
         <div class="meta">Traducción #${b.id || '—'} · ${b.owner || '—'}</div>`;
-      row.addEventListener('click', () => jumpTo(i)); body.appendChild(row);
+      row.addEventListener('click', () => jumpTo(i));
+      body.appendChild(row);
     }
     if (!body.children.length) body.textContent = 'Todavía no viste ninguna.';
   }
-  function openHistory() { renderHistory(); showPanelChrome(); historyPanel.classList.add('open'); }
-  // Sincronización en vivo: refresca el panel abierto sin reabrirlo.
-  function syncHistory() { if (historyPanel.classList.contains('open')) renderHistory(); }
-  function listArea() { return listPanel.classList.contains('open') ? listPanel._body.querySelector('#fc-list-area') : null; }
-  function syncListAdd(c) {   // inserta la oración recién agregada SIN recargar
-    const area = listArea(); if (!area) return;
-    if (area.querySelector(`.fc-row[data-sid="${c.id}"]`)) return;   // ya visible, no duplicar
-    [...area.childNodes].forEach((n) => { if (n.nodeType === 3) n.remove(); });   // saca el cartel "lista vacía"
-    const row = buildListRow(c);
-    area.insertBefore(row, area.querySelector('.fc-row') || area.querySelector('.fc-pager'));
-    row.style.opacity = '0'; void row.offsetWidth; row.style.transition = 'opacity .25s ease'; row.style.opacity = '1';
+  function openHistory() {
+    renderHistory();
+    showPanelChrome();
+    historyPanel.classList.add('open');
   }
-  function listRemoveRow(id) {   // saca la fila puntual SIN recargar
-    const area = listArea(); if (!area) return;
-    const row = area.querySelector(`.fc-row[data-sid="${id}"]`); if (!row) return;
-    row.style.transition = 'opacity .2s ease'; row.style.opacity = '0';
+  // Sincronización en vivo: refresca el panel abierto sin reabrirlo.
+  function syncHistory() {
+    if (historyPanel.classList.contains('open')) renderHistory();
+  }
+  function listArea() {
+    return listPanel.classList.contains('open')
+      ? listPanel._body.querySelector('#fc-list-area')
+      : null;
+  }
+  function syncListAdd(c) {
+    // inserta la oración recién agregada SIN recargar
+    const area = listArea();
+    if (!area) return;
+    if (area.querySelector(`.fc-row[data-sid="${c.id}"]`)) return; // ya visible, no duplicar
+    [...area.childNodes].forEach((n) => {
+      if (n.nodeType === 3) n.remove();
+    }); // saca el cartel "lista vacía"
+    const row = buildListRow(c);
+    area.insertBefore(
+      row,
+      area.querySelector('.fc-row') || area.querySelector('.fc-pager'),
+    );
+    row.style.opacity = '0';
+    void row.offsetWidth;
+    row.style.transition = 'opacity .25s ease';
+    row.style.opacity = '1';
+  }
+  function listRemoveRow(id) {
+    // saca la fila puntual SIN recargar
+    const area = listArea();
+    if (!area) return;
+    const row = area.querySelector(`.fc-row[data-sid="${id}"]`);
+    if (!row) return;
+    row.style.transition = 'opacity .2s ease';
+    row.style.opacity = '0';
     setTimeout(() => row.remove(), 200);
   }
 
   // ===== Selección múltiple + borrado en lote (uno por uno: la API no tiene endpoint bulk) =====
   function makeBulkBar(area) {
-    const bar = document.createElement('div'); bar.className = 'fc-bulk';
+    const bar = document.createElement('div');
+    bar.className = 'fc-bulk';
     bar.innerHTML = `<label><input type="checkbox" class="lb-all"><span>Seleccionar todo</span></label>
       <span class="spacer"></span>
       <button type="button" class="lb-del bulk-del" disabled>Eliminar</button>`;
     bar.querySelector('.lb-all').addEventListener('change', (e) => {
-      area.querySelectorAll('.sel').forEach((cb) => { cb.checked = e.target.checked; });
+      area.querySelectorAll('.sel').forEach((cb) => {
+        cb.checked = e.target.checked;
+      });
       refreshBulk(area, bar);
     });
-    bar.querySelector('.lb-del').addEventListener('click', () => bulkDelete(area, bar));
+    bar
+      .querySelector('.lb-del')
+      .addEventListener('click', () => bulkDelete(area, bar));
     return bar;
   }
   function refreshBulk(area, bar) {
@@ -685,24 +1184,34 @@
     const checked = sels.filter((cb) => cb.checked);
     const del = bar.querySelector('.lb-del');
     del.disabled = !checked.length;
-    del.textContent = checked.length ? `Eliminar (${checked.length})` : 'Eliminar';
+    del.textContent = checked.length
+      ? `Eliminar (${checked.length})`
+      : 'Eliminar';
     const all = bar.querySelector('.lb-all');
     all.checked = sels.length > 0 && checked.length === sels.length;
     all.indeterminate = checked.length > 0 && checked.length < sels.length;
   }
-  function confirmDialog(msg, okLabel) {   // confirmación temática (reemplaza al confirm() nativo)
+  function confirmDialog(msg, okLabel) {
+    // confirmación temática (reemplaza al confirm() nativo)
     return new Promise((resolve) => {
       let m = document.getElementById('fc-confirm');
       if (!m) {
-        m = document.createElement('div'); m.id = 'fc-confirm';
+        m = document.createElement('div');
+        m.id = 'fc-confirm';
         m.innerHTML = `<div class="cbox"><div class="cmsg"></div><div class="cbtns"><button class="c-cancel">Cancelar</button><button class="c-ok"></button></div></div>`;
         document.body.appendChild(m);
       }
       m.querySelector('.cmsg').textContent = msg;
       m.querySelector('.c-ok').textContent = okLabel || 'Eliminar';
-      const onCancel = () => close(false), onOk = () => close(true);
-      const onBackdrop = (e) => { if (e.target === m) close(false); };
-      const onKey = (e) => { if (e.key === 'Escape') close(false); else if (e.key === 'Enter') close(true); };
+      const onCancel = () => close(false),
+        onOk = () => close(true);
+      const onBackdrop = (e) => {
+        if (e.target === m) close(false);
+      };
+      const onKey = (e) => {
+        if (e.key === 'Escape') close(false);
+        else if (e.key === 'Enter') close(true);
+      };
       function close(val) {
         m.classList.remove('open');
         m.querySelector('.c-cancel').removeEventListener('click', onCancel);
@@ -719,75 +1228,138 @@
     });
   }
   async function bulkDelete(area, bar) {
-    const rows = [...area.querySelectorAll('.fc-row')].filter((r) => r.querySelector('.sel') && r.querySelector('.sel').checked);
+    const rows = [...area.querySelectorAll('.fc-row')].filter(
+      (r) => r.querySelector('.sel') && r.querySelector('.sel').checked,
+    );
     if (!rows.length) return;
-    if (!(await confirmDialog(`¿Quitar ${rows.length} oración(es) de la lista?`, 'Eliminar'))) return;
-    const del = bar.querySelector('.lb-del'); del.disabled = true; del.textContent = 'Quitando…';
+    if (
+      !(await confirmDialog(
+        `¿Quitar ${rows.length} oración(es) de la lista?`,
+        'Eliminar',
+      ))
+    )
+      return;
+    const del = bar.querySelector('.lb-del');
+    del.disabled = true;
+    del.textContent = 'Quitando…';
     let ok = 0;
-    for (const row of rows) {   // secuencial: más suave con el servidor que disparar N a la vez
-      if (await listAction('remove_sentence_from_list', row.dataset.sid)) { ok++; row.remove(); }
+    for (const row of rows) {
+      // secuencial: más suave con el servidor que disparar N a la vez
+      if (await listAction('remove_sentence_from_list', row.dataset.sid)) {
+        ok++;
+        row.remove();
+      }
     }
     toast(`✓ ${ok} quitada(s)`, ok > 0);
-    bar.querySelector('.lb-all').checked = false; bar.querySelector('.lb-all').indeterminate = false;
+    bar.querySelector('.lb-all').checked = false;
+    bar.querySelector('.lb-all').indeterminate = false;
     refreshBulk(area, bar);
   }
 
   function listControls() {
-    const wrap = document.createElement('div'); wrap.className = 'fc-list-ctrls';
-    const so = (v, t) => `<option value="${v}" ${listSort === v ? 'selected' : ''}>${t}</option>`;
-    const sortOpts = so('-created', 'Creación: nuevas primero') + so('created', 'Creación: viejas primero')
-      + so('-modified', 'Modificación: recientes primero') + so('modified', 'Modificación: antiguas primero')
-      + so('-words', 'Palabras: más largas primero') + so('words', 'Palabras: más cortas primero')
-      + so('random', 'Al azar');
-    wrap.innerHTML = `<label>Oraciones en:<select id="ld-front">${langOpts(LIST_DISPLAY.front)}</select></label>` +
-                     `<label>Mostrar traducciones en:<select id="ld-back">${langOpts(LIST_DISPLAY.back)}</select></label>` +
-                     `<label>Ordenar por:<select id="ld-sort">${sortOpts}</select></label>`;
-    wrap.querySelector('#ld-front').addEventListener('change', (e) => { LIST_DISPLAY.front = e.target.value; saveListDisplay(); listPage = 1; listUrls = []; loadListPage(); });
-    wrap.querySelector('#ld-back').addEventListener('change', (e) => { LIST_DISPLAY.back = e.target.value; saveListDisplay(); listPage = 1; listUrls = []; loadListPage(); });
-    wrap.querySelector('#ld-sort').addEventListener('change', (e) => { listSort = e.target.value; localStorage.setItem('sm-fc-listsort', listSort); listPage = 1; listUrls = []; loadListPage(); });
+    const wrap = document.createElement('div');
+    wrap.className = 'fc-list-ctrls';
+    const so = (v, t) =>
+      `<option value="${v}" ${listSort === v ? 'selected' : ''}>${t}</option>`;
+    const sortOpts =
+      so('-created', 'Creación: nuevas primero') +
+      so('created', 'Creación: viejas primero') +
+      so('-modified', 'Modificación: recientes primero') +
+      so('modified', 'Modificación: antiguas primero') +
+      so('-words', 'Palabras: más largas primero') +
+      so('words', 'Palabras: más cortas primero') +
+      so('random', 'Al azar');
+    wrap.innerHTML =
+      `<label>Oraciones en:<select id="ld-front">${langOpts(LIST_DISPLAY.front)}</select></label>` +
+      `<label>Mostrar traducciones en:<select id="ld-back">${langOpts(LIST_DISPLAY.back)}</select></label>` +
+      `<label>Ordenar por:<select id="ld-sort">${sortOpts}</select></label>`;
+    wrap.querySelector('#ld-front').addEventListener('change', (e) => {
+      LIST_DISPLAY.front = e.target.value;
+      saveListDisplay();
+      listPage = 1;
+      listUrls = [];
+      loadListPage();
+    });
+    wrap.querySelector('#ld-back').addEventListener('change', (e) => {
+      LIST_DISPLAY.back = e.target.value;
+      saveListDisplay();
+      listPage = 1;
+      listUrls = [];
+      loadListPage();
+    });
+    wrap.querySelector('#ld-sort').addEventListener('change', (e) => {
+      listSort = e.target.value;
+      LS.set('sm-fc-listsort', listSort);
+      listPage = 1;
+      listUrls = [];
+      loadListPage();
+    });
     return wrap;
   }
 
   function openList() {
-    listPage = 1; listUrls = []; listName = ''; listTotal = null; showPanelChrome(); listPanel.classList.add('open');
+    listPage = 1;
+    listUrls = [];
+    listName = '';
+    listTotal = null;
+    showPanelChrome();
+    listPanel.classList.add('open');
     applyListTitle();
-    currentListName().then((n) => { listName = n; applyListTitle(); });
+    currentListName().then((n) => {
+      listName = n;
+      applyListTitle();
+    });
     loadListPage();
   }
 
   function buildListQuery() {
     const p = new URLSearchParams();
-    p.set('lang', LIST_LANGS);   // amplio -> la lista trae miembros de cualquier idioma (mixta)
+    p.set('lang', LIST_LANGS); // amplio -> la lista trae miembros de cualquier idioma (mixta)
     p.set('list', String(LIST_ID));
-    p.set('sort', listSort);                   // orden de la API (selector en "Mi lista")
-    p.set('showtrans', 'all');                 // todas las traducciones -> el display (LIST_DISPLAY) elige front/back
+    p.set('sort', listSort); // orden de la API (selector en "Mi lista")
+    p.set('showtrans', 'all'); // todas las traducciones -> el display (LIST_DISPLAY) elige front/back
     p.set('include', 'audios');
     p.set('limit', '30');
     return p.toString();
   }
 
   async function loadListPage() {
-    const body = listPanel._body; body.innerHTML = '';
+    const body = listPanel._body;
+    body.innerHTML = '';
     body.appendChild(listControls());
-    const area = document.createElement('div'); area.id = 'fc-list-area';
+    const area = document.createElement('div');
+    area.id = 'fc-list-area';
     body.appendChild(makeBulkBar(area));
-    area.innerHTML = '<div class="fc-list-load"><div class="fc-load-dots"><span></span><span></span><span></span></div><div class="lbl">Cargando lista…</div></div>';
+    area.innerHTML =
+      '<div class="fc-list-load"><div class="fc-load-dots"><span></span><span></span><span></span></div><div class="lbl">Cargando lista…</div></div>';
     body.appendChild(area);
     try {
-      const url = listUrls[listPage] || `${API_BASE}/sentences?${buildListQuery()}`;
+      const url =
+        listUrls[listPage] || `${API_BASE}/sentences?${buildListQuery()}`;
       const data = await apiSearch(url);
-      if (data.paging && typeof data.paging.total === 'number') { listTotal = data.paging.total; applyListTitle(); }
+      if (data.paging && typeof data.paging.total === 'number') {
+        listTotal = data.paging.total;
+        applyListTitle();
+      }
       listUrls[listPage] = url;
       const hasNext = !!(data.paging && data.paging.has_next);
-      if (hasNext) listUrls[listPage + 1] = data.paging.next;   // cursor de la próxima página
+      if (hasNext) listUrls[listPage + 1] = data.paging.next; // cursor de la próxima página
       renderListPage(area, data.data || [], hasNext);
-    } catch (e) { area.textContent = 'Error cargando la lista.'; }
+    } catch (e) {
+      area.textContent = 'Error cargando la lista.';
+    }
   }
 
   function buildListRow(c) {
-    const ft = getTextByLang(c, LIST_DISPLAY.front) || { text: c.text, id: c.id, owner: c.owner };
+    const ft = getTextByLang(c, LIST_DISPLAY.front) || {
+      text: c.text,
+      id: c.id,
+      owner: c.owner,
+    };
     const bt = getTextByLang(c, LIST_DISPLAY.back) || { text: '', id: null };
-    const row = document.createElement('div'); row.className = 'fc-row'; row.dataset.sid = String(c.id);
+    const row = document.createElement('div');
+    row.className = 'fc-row';
+    row.dataset.sid = String(c.id);
     row.innerHTML = `<input type="checkbox" class="sel" title="Seleccionar">
       <div class="fc-row-main">
       <div class="meta">Oración #${ft.id || '—'} · ${ft.owner || '—'}</div>
@@ -796,45 +1368,91 @@
       <div class="meta">Traducción #${bt.id || '—'} · ${bt.owner || '—'}</div>
       <div class="acts"><button class="go">Abrir</button><button class="rm">Quitar</button></div>
       </div>`;
-    row.querySelector('.go').addEventListener('click', () => window.open(`/${langSeg()}/sentences/show/${c.id}`, '_blank'));
-    row.querySelector('.rm').addEventListener('click', async () => { if (await listById('remove_sentence_from_list', c.id, 'quitada')) listRemoveRow(c.id); });
-    row.querySelector('.sel').addEventListener('change', () => { const a = listArea(), b = listPanel._body.querySelector('.fc-bulk'); if (a && b) refreshBulk(a, b); });
+    row
+      .querySelector('.go')
+      .addEventListener('click', () =>
+        window.open(`/${langSeg()}/sentences/show/${c.id}`, '_blank'),
+      );
+    row.querySelector('.rm').addEventListener('click', async () => {
+      if (await listById('remove_sentence_from_list', c.id, 'quitada'))
+        listRemoveRow(c.id);
+    });
+    row.querySelector('.sel').addEventListener('change', () => {
+      const a = listArea(),
+        b = listPanel._body.querySelector('.fc-bulk');
+      if (a && b) refreshBulk(a, b);
+    });
     return row;
   }
   function renderListPage(area, all, hasNext) {
     area.innerHTML = '';
-    if (!all.length) area.textContent = listPage === 1 ? 'La lista está vacía.' : 'No hay más oraciones.';
+    if (!all.length)
+      area.textContent =
+        listPage === 1 ? 'La lista está vacía.' : 'No hay más oraciones.';
     for (const c of all) area.appendChild(buildListRow(c));
-    const pager = document.createElement('div'); pager.className = 'fc-pager';
-    const pb = iconBtn('p-prev', 'chevron_left', 'Anterior', 'pg'); pb.disabled = listPage <= 1;
-    const nb = iconBtn('p-next', 'chevron_right', 'Siguiente', 'pg'); nb.disabled = !hasNext;
-    const from = (listPage - 1) * 30 + 1, to = (listPage - 1) * 30 + all.length;
-    const info = document.createElement('span'); info.textContent = all.length ? `${from}–${to}` : `Pág. ${listPage}`;
-    pb.addEventListener('click', () => { if (listPage > 1) { listPage--; loadListPage(); } });
-    nb.addEventListener('click', () => { if (hasNext) { listPage++; loadListPage(); } });
-    pager.append(pb, info, nb); area.appendChild(pager); listPanel._body.scrollTop = 0;
+    const pager = document.createElement('div');
+    pager.className = 'fc-pager';
+    const pb = iconBtn('p-prev', 'chevron_left', 'Anterior', 'pg');
+    pb.disabled = listPage <= 1;
+    const nb = iconBtn('p-next', 'chevron_right', 'Siguiente', 'pg');
+    nb.disabled = !hasNext;
+    const from = (listPage - 1) * 30 + 1,
+      to = (listPage - 1) * 30 + all.length;
+    const info = document.createElement('span');
+    info.textContent = all.length ? `${from}–${to}` : `Pág. ${listPage}`;
+    pb.addEventListener('click', () => {
+      if (listPage > 1) {
+        listPage--;
+        loadListPage();
+      }
+    });
+    nb.addEventListener('click', () => {
+      if (hasNext) {
+        listPage++;
+        loadListPage();
+      }
+    });
+    pager.append(pb, info, nb);
+    area.appendChild(pager);
+    listPanel._body.scrollTop = 0;
   }
 
   /* ============ MODAL DE FILTROS ============ */
 
-  const langOpts = (sel, anyLabel) => (anyLabel ? `<option value="">${anyLabel}</option>` : '') +
-    LANGUAGES.map((l) => `<option value="${l.code}" ${l.code === sel ? 'selected' : ''}>${l.name}</option>`).join('');
-  const tri = (id, val) => { const o = (v, t) => `<option value="${v}" ${val === v ? 'selected' : ''}>${t}</option>`;
-    return `<select id="${id}">${o('', 'Es indistinto')}${o('yes', 'Sí')}${o('no', 'No')}</select>`; };
+  const langOpts = (sel, anyLabel) =>
+    (anyLabel ? `<option value="">${anyLabel}</option>` : '') +
+    LANGUAGES.map(
+      (l) =>
+        `<option value="${l.code}" ${l.code === sel ? 'selected' : ''}>${l.name}</option>`,
+    ).join('');
+  const tri = (id, val) => {
+    const o = (v, t) =>
+      `<option value="${v}" ${val === v ? 'selected' : ''}>${t}</option>`;
+    return `<select id="${id}">${o('', 'Es indistinto')}${o('yes', 'Sí')}${o('no', 'No')}</select>`;
+  };
 
-  const escHtml = (s) => String(s == null ? '' : s).replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
+  const escHtml = (s) =>
+    String(s == null ? '' : s).replace(
+      /[&<>"]/g,
+      (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' })[c],
+    );
 
   // Trae las listas a las que el usuario puede agregar (propias + colaborativas), vía el sitio (con sesión).
   let myListsCache = null;
   async function fetchMyLists() {
     try {
-      const r = await fetch(`/${langSeg()}/sentences_lists/choices`, { credentials: 'same-origin', headers: { 'X-Requested-With': 'XMLHttpRequest' } });
+      const r = await fetch(`/${langSeg()}/sentences_lists/choices`, {
+        credentials: 'same-origin',
+        headers: { 'X-Requested-With': 'XMLHttpRequest' },
+      });
       if (!r.ok) return null;
       const d = await r.json();
       const lists = (d && d.lists) || null;
       if (lists) myListsCache = lists;
       return lists;
-    } catch (e) { return null; }
+    } catch (e) {
+      return null;
+    }
   }
   async function currentListName() {
     const cur = String(LIST_ID);
@@ -845,36 +1463,74 @@
   }
 
   async function populateListSelect() {
-    const sel = document.getElementById('f-listid'); if (!sel) return;
-    const lists = (await fetchMyLists() || []).filter((l) => l.is_mine);   // SOLO las mías
-    if (!lists.length) return;   // si falla, queda el fallback (lista actual)
+    const sel = document.getElementById('f-listid');
+    if (!sel) return;
+    const lists = ((await fetchMyLists()) || []).filter((l) => l.is_mine); // SOLO las mías
+    if (!lists.length) return; // si falla, queda el fallback (lista actual)
     lists.sort((a, b) => String(a.name).localeCompare(String(b.name)));
     const cur = String(LIST_ID);
-    let html = lists.map((l) => `<option value="${l.id}" ${String(l.id) === cur ? 'selected' : ''}>${escHtml(l.name)}</option>`).join('');
-    if (!lists.some((l) => String(l.id) === cur)) html = `<option value="${cur}" selected>(actual #${cur})</option>` + html;   // no perder la actual si no está
+    let html = lists
+      .map(
+        (l) =>
+          `<option value="${l.id}" ${String(l.id) === cur ? 'selected' : ''}>${escHtml(l.name)}</option>`,
+      )
+      .join('');
+    if (!lists.some((l) => String(l.id) === cur))
+      html = `<option value="${cur}" selected>(actual #${cur})</option>` + html; // no perder la actual si no está
     sel.innerHTML = html;
   }
 
   /* ----- Chips de "Palabras" (query con OR via pipe) ----- */
-  function parseQueryChips(q) { return (q || '').split('|').map((s) => s.trim().replace(/^"(.*)"$/, '$1')).filter(Boolean); }
-  function tagsToQuery(tags) { return tags.map((t) => (/\s/.test(t) ? `"${t}"` : t)).join('|'); }
-  function readTags(box) { return [...box.querySelectorAll('.fc-tag')].map((t) => t.dataset.val); }
+  function parseQueryChips(q) {
+    return (q || '')
+      .split('|')
+      .map((s) => s.trim().replace(/^"(.*)"$/, '$1'))
+      .filter(Boolean);
+  }
+  function tagsToQuery(tags) {
+    return tags.map((t) => (/\s/.test(t) ? `"${t}"` : t)).join('|');
+  }
+  function readTags(box) {
+    return [...box.querySelectorAll('.fc-tag')].map((t) => t.dataset.val);
+  }
   function addTag(box, input, val) {
     val = (val || '').trim().replace(/^["']+|["']+$/g, '');
-    if (!val || readTags(box).some((t) => t.toLowerCase() === val.toLowerCase())) return;
-    const tag = document.createElement('span'); tag.className = 'fc-tag'; tag.dataset.val = val;
-    const lbl = document.createElement('span'); lbl.textContent = val;
-    const x = document.createElement('button'); x.type = 'button'; x.textContent = '×'; x.setAttribute('aria-label', 'Quitar');
+    if (
+      !val ||
+      readTags(box).some((t) => t.toLowerCase() === val.toLowerCase())
+    )
+      return;
+    const tag = document.createElement('span');
+    tag.className = 'fc-tag';
+    tag.dataset.val = val;
+    const lbl = document.createElement('span');
+    lbl.textContent = val;
+    const x = document.createElement('button');
+    x.type = 'button';
+    x.textContent = '×';
+    x.setAttribute('aria-label', 'Quitar');
     x.addEventListener('click', () => tag.remove());
-    tag.append(lbl, x); box.insertBefore(tag, input);
+    tag.append(lbl, x);
+    box.insertBefore(tag, input);
   }
   function initTagBox(box, input, chips) {
     chips.forEach((c) => addTag(box, input, c));
     input.addEventListener('keydown', (e) => {
-      if (e.key === 'Enter' || e.key === ',' || e.key === '|') { e.preventDefault(); addTag(box, input, input.value); input.value = ''; }
-      else if (e.key === 'Backspace' && !input.value) { const t = box.querySelectorAll('.fc-tag'); if (t.length) t[t.length - 1].remove(); }
+      if (e.key === 'Enter' || e.key === ',' || e.key === '|') {
+        e.preventDefault();
+        addTag(box, input, input.value);
+        input.value = '';
+      } else if (e.key === 'Backspace' && !input.value) {
+        const t = box.querySelectorAll('.fc-tag');
+        if (t.length) t[t.length - 1].remove();
+      }
     });
-    input.addEventListener('blur', () => { if (input.value.trim()) { addTag(box, input, input.value); input.value = ''; } });
+    input.addEventListener('blur', () => {
+      if (input.value.trim()) {
+        addTag(box, input, input.value);
+        input.value = '';
+      }
+    });
     box.addEventListener('click', () => input.focus());
   }
 
@@ -883,13 +1539,27 @@
     const g = (id) => m.querySelector(id);
     return {
       filters: {
-        query: tagsToQuery(readTags(g('#f-query-box'))), from: g('#f-from').value,
-        word_min: g('#f-wmin').value, word_max: g('#f-wmax').value, user: g('#f-user').value.trim(),
-        origin: g('#f-origin').value, orphans: g('#f-orphans').value, unapproved: g('#f-unapproved').value,
-        native: g('#f-native').value, has_audio: g('#f-audio').value, tags: g('#f-tags').value.trim(), list: g('#f-list').value.trim(),
-        trans_to: g('#f-tto').value, trans_link: g('#f-tlink').value, trans_user: g('#f-tuser').value.trim(),
-        trans_orphan: g('#f-torphan').value, trans_unapproved: g('#f-tunap').value, trans_native: g('#f-tnative').value,
-        trans_has_audio: g('#f-thas').value, sort: g('#f-sort').value, sort_reverse: g('#f-reverse').checked,
+        query: tagsToQuery(readTags(g('#f-query-box'))),
+        from: g('#f-from').value,
+        word_min: g('#f-wmin').value,
+        word_max: g('#f-wmax').value,
+        user: g('#f-user').value.trim(),
+        origin: g('#f-origin').value,
+        orphans: g('#f-orphans').value,
+        unapproved: g('#f-unapproved').value,
+        native: g('#f-native').value,
+        has_audio: g('#f-audio').value,
+        tags: g('#f-tags').value.trim(),
+        list: g('#f-list').value.trim(),
+        trans_to: g('#f-tto').value,
+        trans_link: g('#f-tlink').value,
+        trans_user: g('#f-tuser').value.trim(),
+        trans_orphan: g('#f-torphan').value,
+        trans_unapproved: g('#f-tunap').value,
+        trans_native: g('#f-tnative').value,
+        trans_has_audio: g('#f-thas').value,
+        sort: g('#f-sort').value,
+        sort_reverse: g('#f-reverse').checked,
       },
       display: { front: g('#d-front').value, back: g('#d-back').value },
       listId: g('#f-listid').value.trim() || '174916',
@@ -900,77 +1570,152 @@
   }
   function applyConfig(cfg, persist) {
     // Booleanos SIEMPRE coercionados (perfiles viejos sin el campo -> default false, no se "pegan" del anterior).
-    filters = cfg.filters; DISPLAY = cfg.display; LIST_ID = cfg.listId; AUDIO_LANG = cfg.audioLang;
-    DESKTOP_MODE = !!cfg.desktop; START_REVEALED = !!cfg.startRevealed;
+    filters = cfg.filters;
+    DISPLAY = cfg.display;
+    LIST_ID = cfg.listId;
+    AUDIO_LANG = cfg.audioLang;
+    DESKTOP_MODE = !!cfg.desktop;
+    START_REVEALED = !!cfg.startRevealed;
     if (cfg.listDisplay) LIST_DISPLAY = cfg.listDisplay;
     if (cfg.listSort) listSort = cfg.listSort;
     document.documentElement.classList.toggle('fc-desktop', DESKTOP_MODE);
     if (persist) {
-      localStorage.setItem('sm-fc-listid', LIST_ID); localStorage.setItem('sm-fc-audiolang', AUDIO_LANG);
-      localStorage.setItem('sm-fc-desktop', DESKTOP_MODE ? '1' : '0'); localStorage.setItem('sm-fc-listsort', listSort);
-      localStorage.setItem('sm-fc-startrevealed', START_REVEALED ? '1' : '0');
-      saveFilters(); saveDisplay(); saveListDisplay();
+      LS.set('sm-fc-listid', LIST_ID);
+      LS.set('sm-fc-audiolang', AUDIO_LANG);
+      LS.set('sm-fc-desktop', DESKTOP_MODE ? '1' : '0');
+      LS.set('sm-fc-listsort', listSort);
+      LS.set('sm-fc-startrevealed', START_REVEALED ? '1' : '0');
+      saveFilters();
+      saveDisplay();
+      saveListDisplay();
     }
   }
   const PROF_KEY = 'sm-fc-profiles';
-  function loadProfiles() { try { return JSON.parse(localStorage.getItem(PROF_KEY) || '{}'); } catch (e) { return {}; } }
-  function saveProfilesMap(p) { localStorage.setItem(PROF_KEY, JSON.stringify(p)); }
-  function refreshProfileSelect(sel) {
-    const others = Object.keys(loadProfiles()).filter((n) => n !== PROFILE_DEFAULT).sort((a, b) => a.localeCompare(b));
-    const ordered = [PROFILE_DEFAULT, ...others];   // Predeterminado SIEMPRE primero, sin placeholder
-    sel.innerHTML = ordered.map((n) => `<option>${escHtml(n)}</option>`).join('');
+  function loadProfiles() {
+    try {
+      return JSON.parse(LS.get(PROF_KEY) || '{}');
+    } catch (e) {
+      return {};
+    }
   }
-  function snapshotFromModal(m) { const cfg = readModalConfig(m); cfg.listDisplay = { ...LIST_DISPLAY }; cfg.listSort = listSort; return cfg; }
+  function saveProfilesMap(p) {
+    LS.set(PROF_KEY, JSON.stringify(p));
+  }
+  function refreshProfileSelect(sel) {
+    const others = Object.keys(loadProfiles())
+      .filter((n) => n !== PROFILE_DEFAULT)
+      .sort((a, b) => a.localeCompare(b));
+    const ordered = [PROFILE_DEFAULT, ...others]; // Predeterminado SIEMPRE primero, sin placeholder
+    sel.innerHTML = ordered
+      .map((n) => `<option>${escHtml(n)}</option>`)
+      .join('');
+  }
+  function snapshotFromModal(m) {
+    const cfg = readModalConfig(m);
+    cfg.listDisplay = { ...LIST_DISPLAY };
+    cfg.listSort = listSort;
+    return cfg;
+  }
   function snapshotFromGlobals() {
-    return { filters: JSON.parse(JSON.stringify(filters)), display: { ...DISPLAY }, listDisplay: { ...LIST_DISPLAY },
-      listId: LIST_ID, audioLang: AUDIO_LANG, listSort, desktop: DESKTOP_MODE, startRevealed: START_REVEALED };
+    return {
+      filters: JSON.parse(JSON.stringify(filters)),
+      display: { ...DISPLAY },
+      listDisplay: { ...LIST_DISPLAY },
+      listId: LIST_ID,
+      audioLang: AUDIO_LANG,
+      listSort,
+      desktop: DESKTOP_MODE,
+      startRevealed: START_REVEALED,
+    };
   }
   function ensureDefaultProfile() {
     const profs = loadProfiles();
-    if (!profs[PROFILE_DEFAULT]) { profs[PROFILE_DEFAULT] = snapshotFromGlobals(); saveProfilesMap(profs); }
+    if (!profs[PROFILE_DEFAULT]) {
+      profs[PROFILE_DEFAULT] = snapshotFromGlobals();
+      saveProfilesMap(profs);
+    }
   }
-  function setActiveProfile(name) { activeProfile = name; localStorage.setItem('sm-fc-active', name); updateId(); }
-  function rebuildModal(keepOpen) { const old = document.getElementById('fc-modal'); if (old) old.remove(); buildModal(); if (keepOpen) openModal(); }
+  function setActiveProfile(name) {
+    activeProfile = name;
+    LS.set('sm-fc-active', name);
+    updateId();
+  }
+  function rebuildModal(keepOpen) {
+    const old = document.getElementById('fc-modal');
+    if (old) old.remove();
+    buildModal();
+    if (keepOpen) openModal();
+  }
   function promptDialog(title, placeholder, initial) {
     return new Promise((resolve) => {
       let m = document.getElementById('fc-prompt');
       if (!m) {
-        m = document.createElement('div'); m.id = 'fc-prompt';
+        m = document.createElement('div');
+        m.id = 'fc-prompt';
         m.innerHTML = `<div class="cbox"><div class="cmsg"></div><input type="text" class="pinput"><div class="cbtns"><button type="button" class="c-cancel">Cancelar</button><button type="button" class="c-ok">Aceptar</button></div></div>`;
         document.body.appendChild(m);
       }
       m.querySelector('.cmsg').textContent = title;
-      const input = m.querySelector('.pinput'); input.placeholder = placeholder || ''; input.value = initial || '';
-      const done = (v) => { m.classList.remove('open'); cleanup(); resolve(v); };
+      const input = m.querySelector('.pinput');
+      input.placeholder = placeholder || '';
+      input.value = initial || '';
+      const done = (v) => {
+        m.classList.remove('open');
+        cleanup();
+        resolve(v);
+      };
       const onCancel = () => done(null);
       const onOk = () => done(input.value.trim() || null);
-      const onBackdrop = (e) => { if (e.target === m) done(null); };
-      const onKey = (e) => { if (e.key === 'Escape') done(null); else if (e.key === 'Enter') onOk(); };
+      const onBackdrop = (e) => {
+        if (e.target === m) done(null);
+      };
+      const onKey = (e) => {
+        if (e.key === 'Escape') done(null);
+        else if (e.key === 'Enter') onOk();
+      };
       function cleanup() {
         m.querySelector('.c-cancel').removeEventListener('click', onCancel);
         m.querySelector('.c-ok').removeEventListener('click', onOk);
-        m.removeEventListener('click', onBackdrop); document.removeEventListener('keydown', onKey);
+        m.removeEventListener('click', onBackdrop);
+        document.removeEventListener('keydown', onKey);
       }
       m.querySelector('.c-cancel').addEventListener('click', onCancel);
       m.querySelector('.c-ok').addEventListener('click', onOk);
-      m.addEventListener('click', onBackdrop); document.addEventListener('keydown', onKey);
-      requestAnimationFrame(() => { m.classList.add('open'); input.focus(); input.select(); });
+      m.addEventListener('click', onBackdrop);
+      document.addEventListener('keydown', onKey);
+      requestAnimationFrame(() => {
+        m.classList.add('open');
+        input.focus();
+        input.select();
+      });
     });
   }
 
   function buildModal() {
-    const ex = document.getElementById('fc-modal'); if (ex) ex.remove();   // nunca dejes dos modales (abriría el vacío)
-    const m = document.createElement('div'); m.id = 'fc-modal';
+    const ex = document.getElementById('fc-modal');
+    if (ex) ex.remove(); // nunca dejes dos modales (abriría el vacío)
+    const m = document.createElement('div');
+    m.id = 'fc-modal';
     const f = filters;
-    const linkSel = (id, v) => { const o = (val, t) => `<option value="${val}" ${v === val ? 'selected' : ''}>${t}</option>`;
-      return `<select id="${id}">${o('', 'Es indistinto')}${o('direct', 'Directo')}${o('indirect', 'Indirecto')}</select>`; };
-    const originSel = (id, v) => { const o = (val, t) => `<option value="${val}" ${v === val ? 'selected' : ''}>${t}</option>`;
-      return `<select id="${id}">${o('', 'Cualquiera')}${o('original', 'Original')}${o('translation', 'Traducción')}${o('known', 'Conocido')}${o('unknown', 'Desconocido')}</select>`; };
+    const linkSel = (id, v) => {
+      const o = (val, t) =>
+        `<option value="${val}" ${v === val ? 'selected' : ''}>${t}</option>`;
+      return `<select id="${id}">${o('', 'Es indistinto')}${o('direct', 'Directo')}${o('indirect', 'Indirecto')}</select>`;
+    };
+    const originSel = (id, v) => {
+      const o = (val, t) =>
+        `<option value="${val}" ${v === val ? 'selected' : ''}>${t}</option>`;
+      return `<select id="${id}">${o('', 'Cualquiera')}${o('original', 'Original')}${o('translation', 'Traducción')}${o('known', 'Conocido')}${o('unknown', 'Desconocido')}</select>`;
+    };
     m.innerHTML = `<div class="box">
       <div class="fc-profiles">
         <div class="fc-prof-row">
           <select id="prof-sel"></select>
           <button type="button" id="prof-new" title="Nuevo perfil" aria-label="Nuevo perfil"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg></button>
+        </div>
+        <div class="fc-prof-cloud">
+          <input type="password" id="gh-token" placeholder="GitHub token (auto-sync)…" autocomplete="off">
+          <button type="button" id="gh-sync" title="Sincronizar ahora">Sync</button>
         </div>
         <div class="fc-prof-actions">
           <button type="button" id="prof-save">Guardar</button>
@@ -1051,135 +1796,286 @@
       <div class="actions"><button id="fc-cancel">Cancelar</button><button id="fc-apply">Aplicar</button></div>
     </div>`;
     document.body.appendChild(m);
-    initTagBox(m.querySelector('#f-query-box'), m.querySelector('#f-query-input'), parseQueryChips(f.query));
+    initTagBox(
+      m.querySelector('#f-query-box'),
+      m.querySelector('#f-query-input'),
+      parseQueryChips(f.query),
+    );
     const profSel = m.querySelector('#prof-sel');
     refreshProfileSelect(profSel);
-    profSel.value = activeProfile;   // reflejá en qué perfil estamos
+    profSel.value = activeProfile; // reflejá en qué perfil estamos
     profSel.addEventListener('change', (e) => {
-      const name = e.target.value; if (!name) return;
-      const cfg = loadProfiles()[name]; if (!cfg) return;
-      applyConfig(cfg, true); setActiveProfile(name); closePanels(); listUrls = []; resetDeck();
+      const name = e.target.value;
+      if (!name) return;
+      const cfg = loadProfiles()[name];
+      if (!cfg) return;
+      applyConfig(cfg, true);
+      setActiveProfile(name);
+      closePanels();
+      listUrls = [];
+      resetDeck();
       rebuildModal(true);
-      const ns = document.getElementById('fc-modal'); if (ns) ns.querySelector('#prof-sel').value = name;   // mantené el seleccionado tras el rebuild
+      const ns = document.getElementById('fc-modal');
+      if (ns) ns.querySelector('#prof-sel').value = name; // mantené el seleccionado tras el rebuild
       toast(`Perfil "${name}" cargado`, true);
     });
     m.querySelector('#prof-new').addEventListener('click', async () => {
       const name = await promptDialog('Nuevo perfil', 'nombre del perfil…', '');
       if (!name) return;
       const profs = loadProfiles();
-      if (profs[name] && !(await confirmDialog(`Ya existe "${name}". ¿Sobrescribir?`, 'Sobrescribir'))) return;
-      profs[name] = snapshotFromModal(m); saveProfilesMap(profs);
-      refreshProfileSelect(profSel); profSel.value = name; setActiveProfile(name);
+      if (
+        profs[name] &&
+        !(await confirmDialog(
+          `Ya existe "${name}". ¿Sobrescribir?`,
+          'Sobrescribir',
+        ))
+      )
+        return;
+      profs[name] = snapshotFromModal(m);
+      saveProfilesMap(profs);
+      refreshProfileSelect(profSel);
+      profSel.value = name;
+      setActiveProfile(name);
       toast(`Perfil "${name}" creado`, true);
     });
     m.querySelector('#prof-save').addEventListener('click', () => {
       const name = profSel.value;
-      const profs = loadProfiles(); profs[name] = snapshotFromModal(m); saveProfilesMap(profs); setActiveProfile(name);
+      const profs = loadProfiles();
+      profs[name] = snapshotFromModal(m);
+      saveProfilesMap(profs);
+      setActiveProfile(name);
       toast(`"${name}" guardado`, true);
     });
     m.querySelector('#prof-rename').addEventListener('click', async () => {
       const old = profSel.value;
-      if (old === PROFILE_DEFAULT) { toast('No se puede renombrar el predeterminado', false); return; }
+      if (old === PROFILE_DEFAULT) {
+        toast('No se puede renombrar el predeterminado', false);
+        return;
+      }
       const name = await promptDialog('Renombrar perfil', 'nuevo nombre…', old);
       if (!name || name === old) return;
       const profs = loadProfiles();
-      if (profs[name]) { toast('Ya existe un perfil con ese nombre', false); return; }
-      profs[name] = profs[old]; delete profs[old]; saveProfilesMap(profs);
-      refreshProfileSelect(profSel); profSel.value = name; setActiveProfile(name);
+      if (profs[name]) {
+        toast('Ya existe un perfil con ese nombre', false);
+        return;
+      }
+      profs[name] = profs[old];
+      delete profs[old];
+      saveProfilesMap(profs);
+      refreshProfileSelect(profSel);
+      profSel.value = name;
+      setActiveProfile(name);
       toast(`Renombrado a "${name}"`, true);
     });
     m.querySelector('#prof-del').addEventListener('click', async () => {
       const name = profSel.value;
-      if (name === PROFILE_DEFAULT) { toast('No se puede borrar el perfil predeterminado', false); return; }
-      if (!(await confirmDialog(`¿Borrar el perfil "${name}"?`, 'Borrar'))) return;
-      const profs = loadProfiles(); delete profs[name]; saveProfilesMap(profs);
+      if (name === PROFILE_DEFAULT) {
+        toast('No se puede borrar el perfil predeterminado', false);
+        return;
+      }
+      if (!(await confirmDialog(`¿Borrar el perfil "${name}"?`, 'Borrar')))
+        return;
+      const profs = loadProfiles();
+      delete profs[name];
+      saveProfilesMap(profs);
       refreshProfileSelect(profSel);
       profSel.value = activeProfile === name ? PROFILE_DEFAULT : activeProfile;
       if (activeProfile === name) setActiveProfile(PROFILE_DEFAULT);
       toast(`Perfil "${name}" borrado`, true);
     });
-    m.querySelectorAll('.fc-tabs button').forEach((b) => b.addEventListener('click', () => {
-      m.querySelectorAll('.fc-tabs button').forEach((x) => x.classList.toggle('active', x === b));
-      m.querySelectorAll('.fc-pane').forEach((p) => p.classList.toggle('active', p.dataset.pane === b.dataset.pane));
-      m.querySelector('.box-scroll').scrollTop = 0;
-    }));
-    m.addEventListener('click', (e) => { if (e.target === m) closeModal(); });
-    document.addEventListener('keydown', (e) => { if (e.key === 'Escape' && m.classList.contains('open')) closeModal(); });
+    const tkEl = m.querySelector('#gh-token');
+    if (GH_TOKEN) {
+      tkEl.value = '';
+      tkEl.disabled = true;
+      tkEl.placeholder = 'usando el token del script (variable GH_TOKEN)';
+    } else {
+      tkEl.value = LS.get('sm-fc-gh-token') || '';
+    }
+    m.querySelector('#gh-sync').addEventListener('click', async () => {
+      // Solo guardamos lo del campo si NO hay token hardcodeado (la variable manda).
+      if (!GH_TOKEN)
+        LS.set('sm-fc-gh-token', m.querySelector('#gh-token').value.trim());
+      if (!ghToken()) {
+        // efectivo: GH_TOKEN || el guardado por UI
+        toast('Pegá tu token de GitHub (scope gist)', false);
+        return;
+      }
+      toast('Sincronizando…', true);
+      try {
+        if (await gistPull()) {
+          toast('Bajé config remota — recargando…', true);
+          setTimeout(() => location.reload(), 800);
+          return;
+        }
+        await gistPush();
+        toast('Sincronizado ✓', true);
+      } catch (e) {
+        toast('Error de sync: ' + e.message, false);
+      }
+    });
+    m.querySelectorAll('.fc-tabs button').forEach((b) =>
+      b.addEventListener('click', () => {
+        m.querySelectorAll('.fc-tabs button').forEach((x) =>
+          x.classList.toggle('active', x === b),
+        );
+        m.querySelectorAll('.fc-pane').forEach((p) =>
+          p.classList.toggle('active', p.dataset.pane === b.dataset.pane),
+        );
+        m.querySelector('.box-scroll').scrollTop = 0;
+      }),
+    );
+    m.addEventListener('click', (e) => {
+      if (e.target === m) closeModal();
+    });
+    document.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape' && m.classList.contains('open')) closeModal();
+    });
     m.querySelector('#fc-cancel').addEventListener('click', closeModal);
     m.querySelector('#fc-apply').addEventListener('click', () => {
       applyConfig(readModalConfig(m), true);
-      closePanels();   // si cambió el modo, dejá los paneles en estado limpio
-      listUrls = [];   // cambió la lista objetivo -> invalida los cursores de "Mi lista"
-      closeModal(); resetDeck();
+      closePanels(); // si cambió el modo, dejá los paneles en estado limpio
+      listUrls = []; // cambió la lista objetivo -> invalida los cursores de "Mi lista"
+      closeModal();
+      resetDeck();
     });
   }
   const openModal = () => {
     uiBlocked = true;
-    const m = document.getElementById('fc-modal'); if (!m) return;
+    const m = document.getElementById('fc-modal');
+    if (!m) return;
     m.classList.add('open');
     populateListSelect();
     // Re-sincronizar los chips de Palabras con el query realmente guardado (evita que se vacíen/desincronicen).
-    const box = m.querySelector('#f-query-box'), input = m.querySelector('#f-query-input');
-    if (box && input) { box.querySelectorAll('.fc-tag').forEach((t) => t.remove()); input.value = ''; parseQueryChips(filters.query).forEach((c) => addTag(box, input, c)); }
+    const box = m.querySelector('#f-query-box'),
+      input = m.querySelector('#f-query-input');
+    if (box && input) {
+      box.querySelectorAll('.fc-tag').forEach((t) => t.remove());
+      input.value = '';
+      parseQueryChips(filters.query).forEach((c) => addTag(box, input, c));
+    }
   };
-  const closeModal = () => { uiBlocked = false; document.getElementById('fc-modal').classList.remove('open'); };
+  const closeModal = () => {
+    uiBlocked = false;
+    document.getElementById('fc-modal').classList.remove('open');
+  };
 
   async function resetDeck() {
     const gen = ++deckGen;
-    if (currentAbort) currentAbort.abort();   // cortá el fetch anterior (cambio rápido de perfil)
+    if (currentAbort) currentAbort.abort(); // cortá el fetch anterior (cambio rápido de perfil)
     currentAbort = new AbortController();
-    fetching = false;   // el viejo quedó abortado -> liberá el guard para que el nuevo arranque
-    cards = []; index = -1; maxSeen = -1; nextUrl = null; totalCount = null; seenIds.clear();
+    fetching = false; // el viejo quedó abortado -> liberá el guard para que el nuevo arranque
+    cards = [];
+    index = -1;
+    maxSeen = -1;
+    nextUrl = null;
+    totalCount = null;
+    seenIds.clear();
     showLoading(true);
-    frontEl.textContent = ''; backEl.textContent = ''; ownersEl.textContent = '';
+    frontEl.textContent = '';
+    backEl.textContent = '';
+    ownersEl.textContent = '';
     await ensureBuffer(true);
-    if (gen !== deckGen) return;   // llegó otra búsqueda más nueva -> no toques UI ni muestres "sin resultados"
-    if (cards.length) { index = 0; render(); ensureBuffer(); }
-    else { showLoading(false); toast('Sin resultados con esos filtros', false); }
+    if (gen !== deckGen) return; // llegó otra búsqueda más nueva -> no toques UI ni muestres "sin resultados"
+    if (cards.length) {
+      index = 0;
+      render();
+      ensureBuffer();
+    } else {
+      showLoading(false);
+      toast('Sin resultados con esos filtros', false);
+    }
   }
 
   /* ============ SALIR / ENTRAR ============ */
-  const isOpen = () => localStorage.getItem(K.open) !== '0';
-  function setOpen(v) { localStorage.setItem(K.open, v ? '1' : '0'); overlay.classList.toggle('hidden', !v); launcher.classList.toggle('show', !v); }
+  const isOpen = () => LS.get(K.open) !== '0';
+  function setOpen(v) {
+    LS.set(K.open, v ? '1' : '0');
+    overlay.classList.toggle('hidden', !v);
+    launcher.classList.toggle('show', !v);
+  }
 
   /* ============ GESTOS ============ */
   function setupGestures() {
-    let sx = 0, sy = 0, st = 0, tracking = false;
-    window.addEventListener('touchstart', (e) => {
-      if (uiBlocked || !isOpen() || e.touches.length !== 1) { tracking = false; return; }
-      if (!e.target.closest('#fc-stage')) { tracking = false; return; }
-      const t = e.touches[0];
-      if (t.clientX <= EDGE_GUARD || t.clientX >= window.innerWidth - EDGE_GUARD) { tracking = false; return; }
-      sx = t.clientX; sy = t.clientY; st = Date.now(); tracking = true;
-    }, { passive: true });
+    let sx = 0,
+      sy = 0,
+      st = 0,
+      tracking = false;
+    window.addEventListener(
+      'touchstart',
+      (e) => {
+        if (uiBlocked || !isOpen() || e.touches.length !== 1) {
+          tracking = false;
+          return;
+        }
+        if (!e.target.closest('#fc-stage')) {
+          tracking = false;
+          return;
+        }
+        const t = e.touches[0];
+        if (
+          t.clientX <= EDGE_GUARD ||
+          t.clientX >= window.innerWidth - EDGE_GUARD
+        ) {
+          tracking = false;
+          return;
+        }
+        sx = t.clientX;
+        sy = t.clientY;
+        st = Date.now();
+        tracking = true;
+      },
+      { passive: true },
+    );
 
-    window.addEventListener('touchmove', (e) => {
-      if (!tracking) return;
-      const t = e.touches[0];
-      const dx = t.clientX - sx, dy = t.clientY - sy;
-      const adx = Math.abs(dx), ady = Math.abs(dy);
-      if (adx < 10 && ady < 10) return;          // todavía no es gesto
-      if (ady > adx && dy > 0) return;           // deslizá hacia ABAJO -> lo deja para el pull-to-refresh nativo de iOS
-      if (e.cancelable) e.preventDefault();       // bloquea horizontal y hacia ARRIBA -> página fija
-    }, { passive: false });
+    window.addEventListener(
+      'touchmove',
+      (e) => {
+        if (!tracking) return;
+        const t = e.touches[0];
+        const dx = t.clientX - sx,
+          dy = t.clientY - sy;
+        const adx = Math.abs(dx),
+          ady = Math.abs(dy);
+        if (adx < 10 && ady < 10) return; // todavía no es gesto
+        if (ady > adx && dy > 0) return; // deslizá hacia ABAJO -> lo deja para el pull-to-refresh nativo de iOS
+        if (e.cancelable) e.preventDefault(); // bloquea horizontal y hacia ARRIBA -> página fija
+      },
+      { passive: false },
+    );
 
-    window.addEventListener('touchend', (e) => {
-      lastTouch = Date.now();
-      if (!tracking) return; tracking = false;
-      const t = e.changedTouches[0];
-      const dx = t.clientX - sx, dy = t.clientY - sy;
-      if (Date.now() - st > SWIPE_MAX_TIME) return;
-      const adx = Math.abs(dx), ady = Math.abs(dy);
-      if (adx < SWIPE_MIN && ady < SWIPE_MIN) { handleTap(e.target); return; } // tap -> resuelto acá (iOS)
-      if (adx > ady) { if (dx < 0) next(); else prev(); }                      // ← siguiente · → anterior
-      else if (dy < 0) removeCurrent();                                         // ↑ quitar  (↓ = recarga nativa, no la tocamos)
-    }, { passive: true });
+    window.addEventListener(
+      'touchend',
+      (e) => {
+        lastTouch = Date.now();
+        if (!tracking) return;
+        tracking = false;
+        const t = e.changedTouches[0];
+        const dx = t.clientX - sx,
+          dy = t.clientY - sy;
+        if (Date.now() - st > SWIPE_MAX_TIME) return;
+        const adx = Math.abs(dx),
+          ady = Math.abs(dy);
+        if (adx < SWIPE_MIN && ady < SWIPE_MIN) {
+          handleTap(e.target);
+          return;
+        } // tap -> resuelto acá (iOS)
+        if (adx > ady) {
+          if (dx < 0) next();
+          else prev();
+        } // ← siguiente · → anterior
+        else if (dy < 0) removeCurrent(); // ↑ quitar  (↓ = recarga nativa, no la tocamos)
+      },
+      { passive: true },
+    );
   }
 
   /* ============ TECLADO ============ */
   function setupKeyboard() {
     const actions = {
-      [KEYS.reveal]: () => { if (!revealed) reveal(); else next(); },
+      [KEYS.reveal]: () => {
+        if (!revealed) reveal();
+        else next();
+      },
       [KEYS.next]: next,
       [KEYS.prev]: prev,
       [KEYS.audio]: playAudio,
@@ -1189,7 +2085,11 @@
     document.addEventListener('keydown', (e) => {
       if (!isOpen() || uiBlocked) return;
       const el = document.activeElement;
-      if (el && (/^(INPUT|TEXTAREA|SELECT)$/.test(el.tagName) || el.isContentEditable)) return;
+      if (
+        el &&
+        (/^(INPUT|TEXTAREA|SELECT)$/.test(el.tagName) || el.isContentEditable)
+      )
+        return;
       if (e.ctrlKey || e.metaKey || e.altKey) return;
       const a = actions[e.key];
       if (!a) return;
@@ -1203,18 +2103,37 @@
       const modal = document.getElementById('fc-modal');
       if (modal && modal.classList.contains('open')) return;
       const el = document.activeElement;
-      if (el && (/^(INPUT|TEXTAREA|SELECT)$/.test(el.tagName) || el.isContentEditable)) return;
+      if (
+        el &&
+        (/^(INPUT|TEXTAREA|SELECT)$/.test(el.tagName) || el.isContentEditable)
+      )
+        return;
       if (e.ctrlKey || e.metaKey || e.altKey) return;
-      if (e.key === KEYS.list) { e.preventDefault(); toggleList(); }
-      else if (e.key === KEYS.history) { e.preventDefault(); toggleHistory(); }
+      if (e.key === KEYS.list) {
+        e.preventDefault();
+        toggleList();
+      } else if (e.key === KEYS.history) {
+        e.preventDefault();
+        toggleHistory();
+      }
     });
   }
 
   /* ============ ARRANQUE ============ */
   injectStyles();
   document.documentElement.classList.toggle('fc-desktop', DESKTOP_MODE);
-  ensureDefaultProfile();   // garantiza el perfil base no borrable
+  ensureDefaultProfile(); // garantiza el perfil base no borrable
   buildUI();
   setOpen(isOpen());
   resetDeck();
-}());
+  // Auto-sync: al arrancar, bajá del gist y si hay algo más nuevo, recargá con la config remota.
+  if (ghToken())
+    gistPull()
+      .then((changed) => {
+        if (changed) {
+          toast('Config remota más nueva — recargando…', true);
+          setTimeout(() => location.reload(), 700);
+        }
+      })
+      .catch(() => {});
+})();
