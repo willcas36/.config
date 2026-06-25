@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Tatoeba - Flashcards (Sentence Mining)
 // @namespace    https://tatoeba.org/
-// @version      4.35
+// @version      4.36
 // @description  Flashcards tipo Anki sobre la búsqueda filtrada de Tatoeba (mobile + teclado)
 // @icon         https://tatoeba.org/img/tatoeba.svg?1781334885
 // @match        https://tatoeba.org/*/sentences/search*
@@ -959,6 +959,7 @@
   }
 
   function buildModal() {
+    const ex = document.getElementById('fc-modal'); if (ex) ex.remove();   // nunca dejes dos modales (abriría el vacío)
     const m = document.createElement('div'); m.id = 'fc-modal';
     const f = filters;
     const linkSel = (id, v) => { const o = (val, t) => `<option value="${val}" ${v === val ? 'selected' : ''}>${t}</option>`;
@@ -1112,7 +1113,15 @@
       closeModal(); resetDeck();
     });
   }
-  const openModal = () => { uiBlocked = true; document.getElementById('fc-modal').classList.add('open'); populateListSelect(); };
+  const openModal = () => {
+    uiBlocked = true;
+    const m = document.getElementById('fc-modal'); if (!m) return;
+    m.classList.add('open');
+    populateListSelect();
+    // Re-sincronizar los chips de Palabras con el query realmente guardado (evita que se vacíen/desincronicen).
+    const box = m.querySelector('#f-query-box'), input = m.querySelector('#f-query-input');
+    if (box && input) { box.querySelectorAll('.fc-tag').forEach((t) => t.remove()); input.value = ''; parseQueryChips(filters.query).forEach((c) => addTag(box, input, c)); }
+  };
   const closeModal = () => { uiBlocked = false; document.getElementById('fc-modal').classList.remove('open'); };
 
   async function resetDeck() {
