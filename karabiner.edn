@@ -328,6 +328,8 @@
         {:des "Anki controls" :rules [:anki
                                       [[:right_control :right_command] ["anki-layer" 1] :!anki-layer]
                                       [[:right_control :right_command] ["anki-layer" 0] :anki-layer]
+                                      [:!REQa ["anki-layer" 1] :!anki-layer]
+                                      [:!REQa ["anki-layer" 0] :anki-layer]
                                       [[{:pkey :button1} {:pkey :button2}] [{:pkey :button1} {:pkey :button1} {:pkey :button1} :!CTOt]]
                                       [:hyphen [{:pkey :button1} {:pkey :button1} {:pkey :button1} :!CTOt]]
                                       [[:right_command {:pkey :button1}] :rewind]
@@ -337,14 +339,16 @@
                                       [:right_control :!Cz :anki-layer]
                                       [:right_command :volume_decrement]
                                       [:right_control :volume_increment]
+
                                       [{:pkey :button1} :return_or_enter :anki-layer]
                                       [{:pkey :button2} :semicolon :anki-layer]
-                                      [:#Pquote :i]
-                                      [:open_bracket :t]
-                                      [:close_bracket :o]
-                                      [:backslash :escape]
-                                      [:comma :!C#Pz]
-                                      [:period :!SC#Pz]]}
+                                      [:#Pquote :i :anki-layer]
+                                      [:#Pslash :r :anki-layer]
+                                      [:open_bracket :t :anki-layer]
+                                      [:close_bracket :o :anki-layer]
+                                      [:backslash :escape :anki-layer]
+                                      [:comma :!C#Pz :anki-layer]
+                                      [:period :!SC#Pz :anki-layer]]}
 
         {:des "Next, Prev Cursor intellij" :rules [[:!F#Pu :!Thyphen :intellij]
                                                    [:!F#Pp :!SThyphen :intellij]]}

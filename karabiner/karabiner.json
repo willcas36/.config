@@ -2438,6 +2438,50 @@
           "type" : "basic"
         }, {
           "from" : {
+            "key_code" : "a",
+            "modifiers" : {
+              "mandatory" : [ "right_command", "right_option", "right_shift" ]
+            }
+          },
+          "to" : [ {
+            "set_variable" : {
+              "name" : "anki-layer",
+              "value" : 1
+            }
+          } ],
+          "conditions" : [ {
+            "type" : "frontmost_application_if",
+            "bundle_identifiers" : [ "^net\\.ankiweb\\.launcher" ]
+          }, {
+            "name" : "anki-layer",
+            "value" : 1,
+            "type" : "variable_unless"
+          } ],
+          "type" : "basic"
+        }, {
+          "from" : {
+            "key_code" : "a",
+            "modifiers" : {
+              "mandatory" : [ "right_command", "right_option", "right_shift" ]
+            }
+          },
+          "to" : [ {
+            "set_variable" : {
+              "name" : "anki-layer",
+              "value" : 0
+            }
+          } ],
+          "conditions" : [ {
+            "type" : "frontmost_application_if",
+            "bundle_identifiers" : [ "^net\\.ankiweb\\.launcher" ]
+          }, {
+            "name" : "anki-layer",
+            "value" : 1,
+            "type" : "variable_if"
+          } ],
+          "type" : "basic"
+        }, {
+          "from" : {
             "simultaneous" : [ {
               "pointing_button" : "button1"
             }, {
@@ -2653,6 +2697,29 @@
           "conditions" : [ {
             "type" : "frontmost_application_if",
             "bundle_identifiers" : [ "^net\\.ankiweb\\.launcher" ]
+          }, {
+            "name" : "anki-layer",
+            "value" : 1,
+            "type" : "variable_if"
+          } ],
+          "type" : "basic"
+        }, {
+          "from" : {
+            "key_code" : "slash",
+            "modifiers" : {
+              "optional" : [ "caps_lock" ]
+            }
+          },
+          "to" : [ {
+            "key_code" : "r"
+          } ],
+          "conditions" : [ {
+            "type" : "frontmost_application_if",
+            "bundle_identifiers" : [ "^net\\.ankiweb\\.launcher" ]
+          }, {
+            "name" : "anki-layer",
+            "value" : 1,
+            "type" : "variable_if"
           } ],
           "type" : "basic"
         }, {
@@ -2665,6 +2732,10 @@
           "conditions" : [ {
             "type" : "frontmost_application_if",
             "bundle_identifiers" : [ "^net\\.ankiweb\\.launcher" ]
+          }, {
+            "name" : "anki-layer",
+            "value" : 1,
+            "type" : "variable_if"
           } ],
           "type" : "basic"
         }, {
@@ -2677,6 +2748,10 @@
           "conditions" : [ {
             "type" : "frontmost_application_if",
             "bundle_identifiers" : [ "^net\\.ankiweb\\.launcher" ]
+          }, {
+            "name" : "anki-layer",
+            "value" : 1,
+            "type" : "variable_if"
           } ],
           "type" : "basic"
         }, {
@@ -2689,6 +2764,10 @@
           "conditions" : [ {
             "type" : "frontmost_application_if",
             "bundle_identifiers" : [ "^net\\.ankiweb\\.launcher" ]
+          }, {
+            "name" : "anki-layer",
+            "value" : 1,
+            "type" : "variable_if"
           } ],
           "type" : "basic"
         }, {
@@ -2702,6 +2781,10 @@
           "conditions" : [ {
             "type" : "frontmost_application_if",
             "bundle_identifiers" : [ "^net\\.ankiweb\\.launcher" ]
+          }, {
+            "name" : "anki-layer",
+            "value" : 1,
+            "type" : "variable_if"
           } ],
           "type" : "basic"
         }, {
@@ -2715,6 +2798,10 @@
           "conditions" : [ {
             "type" : "frontmost_application_if",
             "bundle_identifiers" : [ "^net\\.ankiweb\\.launcher" ]
+          }, {
+            "name" : "anki-layer",
+            "value" : 1,
+            "type" : "variable_if"
           } ],
           "type" : "basic"
         } ]

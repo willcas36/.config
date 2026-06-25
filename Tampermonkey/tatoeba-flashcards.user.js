@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Tatoeba - Flashcards (Sentence Mining)
 // @namespace    https://tatoeba.org/
-// @version      4.29
+// @version      4.30
 // @description  Flashcards tipo Anki sobre la búsqueda filtrada de Tatoeba (mobile + teclado)
 // @icon         https://tatoeba.org/img/tatoeba.svg?1781334885
 // @match        https://tatoeba.org/*/sentences/search*
@@ -323,6 +323,7 @@
       .fc-panel header { display:flex; align-items:center; gap:8px; padding:calc(env(safe-area-inset-top,0px) + 14px) 14px 14px;
         border-bottom:1px solid var(--line,#eee); font-weight:600; }
       .fc-panel header .spacer { flex:1; }
+      .fc-desktop .fc-panel-close { display:none; }   /* en PC se cierra con [ ] o Esc; la X sobra */
       .fc-panel .body { flex:1; overflow:auto; padding:8px 12px; }
       .fc-row { padding:12px 8px; border-bottom:1px solid var(--line); font-size:14px; line-height:1.45; border-radius:8px; transition:background .15s ease; }
       .fc-row:hover { background:var(--btn); }
@@ -572,7 +573,7 @@
     const h = document.createElement('header');
     const t = document.createElement('div'); t.textContent = title;
     const s = document.createElement('div'); s.className = 'spacer';
-    const c = iconBtn('x', 'close', 'Cerrar', 'fc-icon'); c.addEventListener('click', closePanels);
+    const c = iconBtn('x', 'close', 'Cerrar', 'fc-icon fc-panel-close'); c.addEventListener('click', closePanels);
     h.append(t, s, c);
     const body = document.createElement('div'); body.className = 'body';
     p.append(h, body); document.body.appendChild(p); p._body = body; p._title = t; return p;
@@ -907,6 +908,7 @@
       LIST_ID = g('#f-listid').value.trim() || '174916';
       AUDIO_LANG = g('#f-audiolang').value;
       DESKTOP_MODE = g('#f-desktop').checked;
+      document.documentElement.classList.toggle('fc-desktop', DESKTOP_MODE);
       localStorage.setItem('sm-fc-listid', LIST_ID);
       localStorage.setItem('sm-fc-audiolang', AUDIO_LANG);
       localStorage.setItem('sm-fc-desktop', DESKTOP_MODE ? '1' : '0');
@@ -1001,6 +1003,7 @@
 
   /* ============ ARRANQUE ============ */
   injectStyles();
+  document.documentElement.classList.toggle('fc-desktop', DESKTOP_MODE);
   buildUI();
   setOpen(isOpen());
   resetDeck();
