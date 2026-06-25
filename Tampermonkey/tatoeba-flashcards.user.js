@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Tatoeba - Flashcards (Sentence Mining)
 // @namespace    https://tatoeba.org/
-// @version      4.25
+// @version      4.29
 // @description  Flashcards tipo Anki sobre la búsqueda filtrada de Tatoeba (mobile + teclado)
 // @icon         https://tatoeba.org/img/tatoeba.svg?1781334885
 // @match        https://tatoeba.org/*/sentences/search*
@@ -231,11 +231,15 @@
     a.addEventListener('error', () => stop(true), { once: true });
     a.play().catch(() => stop(true));
   }
-  async function listById(endpoint, id, msg, err) {
+  async function listAction(endpoint, id) {   // fetch crudo, sin notificar (lo usa el borrado masivo)
     try { const r = await fetch(`/${langSeg()}/sentences_lists/${endpoint}/${id}/${LIST_ID}`, { credentials: 'same-origin', headers: { 'X-Requested-With': 'XMLHttpRequest' } });
-      toast(r.ok ? `✓ Oración ${id} ${msg}` : 'No se pudo (¿logueado?)', r.ok);
       return r.ok;
-    } catch (e) { toast(err, false); return false; }
+    } catch (e) { return false; }
+  }
+  async function listById(endpoint, id, msg) {   // alta/baja individual con toast
+    const ok = await listAction(endpoint, id);
+    toast(ok ? `✓ Oración ${id} ${msg}` : 'No se pudo (¿logueado?)', ok);
+    return ok;
   }
   const addCurrent = () => { const c = currentCard(); if (c) listById('add_sentence_to_list', c.id, 'agregada', 'Error al agregar').then((ok) => { if (ok) syncListAdd(c); }); };
   const removeCurrent = () => { const c = currentCard(); if (c) listById('remove_sentence_from_list', c.id, 'quitada', 'Error al quitar').then((ok) => { if (ok) listRemoveRow(c.id); }); };
@@ -246,10 +250,10 @@
     const s = document.createElement('style');
     s.textContent = `
       /* Tema scopeado a MIS raíces (overlay/panel/modal viven en <body>, por eso las vars se definen en los 3). */
-      #fc-overlay, .fc-panel, #fc-modal { --bg:#fafafa; --fg:#222; --muted:#8a8a8a; --card:#fff; --line:#e6e6e6;
+      #fc-overlay, .fc-panel, #fc-modal, #fc-confirm { --bg:#fafafa; --fg:#222; --muted:#8a8a8a; --card:#fff; --line:#e6e6e6;
         --btn:#ececec; --btnfg:#444; --accent:#4b8b3b; --back:#2e7d32;
         --rm-bg:#fde7e7; --rm-fg:#c62828; --go-bg:#e8f0e6; --go-fg:#2e7d32; --shadow:rgba(0,0,0,.18); }
-      .fc-dark #fc-overlay, .fc-dark .fc-panel, .fc-dark #fc-modal { --bg:#16161a; --fg:#ececf0; --muted:#9a9aa3;
+      .fc-dark #fc-overlay, .fc-dark .fc-panel, .fc-dark #fc-modal, .fc-dark #fc-confirm { --bg:#16161a; --fg:#ececf0; --muted:#9a9aa3;
         --card:#26262b; --line:#34343b; --btn:#34343b; --btnfg:#e2e2e8; --accent:#6bbf59; --back:#7ecb6a;
         --rm-bg:rgba(229,115,115,.16); --rm-fg:#ef9a9a; --go-bg:rgba(124,203,106,.16); --go-fg:#a5d6a7; --shadow:rgba(0,0,0,.55); }
       #fc-overlay { position:fixed; inset:0; z-index:2147483000; background:var(--bg); color:var(--fg);
@@ -328,6 +332,23 @@
       .fc-row .acts { display:flex; gap:8px; margin-top:6px; }
       .fc-row .acts button { border:none; border-radius:6px; padding:4px 10px; font-size:12px; cursor:pointer; }
       .fc-row .acts .rm { background:var(--rm-bg); color:var(--rm-fg); } .fc-row .acts .go { background:var(--go-bg); color:var(--go-fg); }
+      #fc-list-area .fc-row { display:flex; gap:10px; align-items:flex-start; }
+      .fc-row-main { flex:1; min-width:0; }
+      .fc-row .sel { margin-top:1px; }
+      .fc-bulk { display:flex; align-items:center; gap:8px; padding:6px 4px 10px; border-bottom:1px solid var(--line); margin-bottom:6px; font-size:13px; }
+      .fc-bulk .spacer { flex:1; }
+      .fc-bulk label { display:flex; align-items:center; gap:8px; color:var(--fg); cursor:pointer; user-select:none; }
+      /* Checkbox custom: hereda el tema (claro/oscuro) en vez del nativo blanco */
+      .fc-row .sel, .fc-bulk .lb-all { -webkit-appearance:none; appearance:none; width:20px; height:20px; flex:0 0 auto; margin:0;
+        border:2px solid var(--line); border-radius:6px; background:var(--card); cursor:pointer; position:relative;
+        transition:background .15s ease, border-color .15s ease; }
+      .fc-row .sel:hover, .fc-bulk .lb-all:hover { border-color:var(--accent); }
+      .fc-row .sel:checked, .fc-bulk .lb-all:checked, .fc-bulk .lb-all:indeterminate { background:var(--accent); border-color:var(--accent); }
+      .fc-row .sel:checked::after, .fc-bulk .lb-all:checked::after { content:''; position:absolute; left:50%; top:50%; width:5px; height:10px;
+        border:solid #fff; border-width:0 2px 2px 0; transform:translate(-50%,-58%) rotate(45deg); }
+      .fc-bulk .lb-all:indeterminate::after { content:''; position:absolute; left:4px; right:4px; top:8px; height:2px; background:#fff; }
+      .bulk-del { border:none; border-radius:6px; padding:7px 14px; font-size:13px; cursor:pointer; background:var(--rm-bg); color:var(--rm-fg); font-weight:600; }
+      .bulk-del:disabled { opacity:.45; cursor:default; }
       .fc-list-ctrls { display:flex; flex-direction:column; gap:8px; padding:4px 4px 12px; border-bottom:1px solid var(--line); margin-bottom:6px; }
       .fc-list-ctrls label { font-size:12px; color:var(--muted); display:flex; flex-direction:column; gap:3px; }
       .fc-list-ctrls select { padding:7px; border:1px solid var(--line); border-radius:6px; font-size:14px; background:var(--card); color:var(--fg); }
@@ -364,6 +385,18 @@
       #fc-modal .actions { display:flex; gap:8px; padding:10px 18px; border-top:1px solid var(--line); background:var(--bg,#fff); }
       #fc-modal .actions button { flex:1; height:42px; border:none; border-radius:8px; cursor:pointer; font-size:15px; }
       #fc-apply { background:var(--accent,#4b8b3b); color:#fff; font-weight:600; } #fc-cancel { background:var(--btn); color:var(--btnfg); }
+      #fc-confirm { position:fixed; inset:0; z-index:2147483800; display:flex; align-items:center; justify-content:center;
+        background:rgba(0,0,0,.5); opacity:0; pointer-events:none; transition:opacity .18s ease; }
+      #fc-confirm.open { opacity:1; pointer-events:auto; }
+      #fc-confirm .cbox { background:var(--bg); color:var(--fg); border:1px solid var(--line); border-radius:14px; width:min(90vw,340px);
+        padding:24px 22px 18px; box-shadow:0 16px 48px var(--shadow); transform:scale(.92); transition:transform .18s ease;
+        display:flex; flex-direction:column; gap:20px; text-align:center; }
+      #fc-confirm.open .cbox { transform:scale(1); }
+      #fc-confirm .cmsg { font-size:15px; line-height:1.45; }
+      #fc-confirm .cbtns { display:flex; gap:10px; }
+      #fc-confirm .cbtns button { flex:1; height:42px; border:none; border-radius:8px; cursor:pointer; font-size:15px; font-weight:600; }
+      #fc-confirm .c-cancel { background:var(--btn); color:var(--btnfg); }
+      #fc-confirm .c-ok { background:#d33; color:#fff; }
     `;
     document.head.appendChild(s);
   }
@@ -587,6 +620,71 @@
     setTimeout(() => row.remove(), 200);
   }
 
+  // ===== Selección múltiple + borrado en lote (uno por uno: la API no tiene endpoint bulk) =====
+  function makeBulkBar(area) {
+    const bar = document.createElement('div'); bar.className = 'fc-bulk';
+    bar.innerHTML = `<label><input type="checkbox" class="lb-all"><span>Seleccionar todo</span></label>
+      <span class="spacer"></span>
+      <button type="button" class="lb-del bulk-del" disabled>Eliminar</button>`;
+    bar.querySelector('.lb-all').addEventListener('change', (e) => {
+      area.querySelectorAll('.sel').forEach((cb) => { cb.checked = e.target.checked; });
+      refreshBulk(area, bar);
+    });
+    bar.querySelector('.lb-del').addEventListener('click', () => bulkDelete(area, bar));
+    return bar;
+  }
+  function refreshBulk(area, bar) {
+    const sels = [...area.querySelectorAll('.sel')];
+    const checked = sels.filter((cb) => cb.checked);
+    const del = bar.querySelector('.lb-del');
+    del.disabled = !checked.length;
+    del.textContent = checked.length ? `Eliminar (${checked.length})` : 'Eliminar';
+    const all = bar.querySelector('.lb-all');
+    all.checked = sels.length > 0 && checked.length === sels.length;
+    all.indeterminate = checked.length > 0 && checked.length < sels.length;
+  }
+  function confirmDialog(msg, okLabel) {   // confirmación temática (reemplaza al confirm() nativo)
+    return new Promise((resolve) => {
+      let m = document.getElementById('fc-confirm');
+      if (!m) {
+        m = document.createElement('div'); m.id = 'fc-confirm';
+        m.innerHTML = `<div class="cbox"><div class="cmsg"></div><div class="cbtns"><button class="c-cancel">Cancelar</button><button class="c-ok"></button></div></div>`;
+        document.body.appendChild(m);
+      }
+      m.querySelector('.cmsg').textContent = msg;
+      m.querySelector('.c-ok').textContent = okLabel || 'Eliminar';
+      const onCancel = () => close(false), onOk = () => close(true);
+      const onBackdrop = (e) => { if (e.target === m) close(false); };
+      const onKey = (e) => { if (e.key === 'Escape') close(false); else if (e.key === 'Enter') close(true); };
+      function close(val) {
+        m.classList.remove('open');
+        m.querySelector('.c-cancel').removeEventListener('click', onCancel);
+        m.querySelector('.c-ok').removeEventListener('click', onOk);
+        m.removeEventListener('click', onBackdrop);
+        document.removeEventListener('keydown', onKey);
+        resolve(val);
+      }
+      m.querySelector('.c-cancel').addEventListener('click', onCancel);
+      m.querySelector('.c-ok').addEventListener('click', onOk);
+      m.addEventListener('click', onBackdrop);
+      document.addEventListener('keydown', onKey);
+      requestAnimationFrame(() => m.classList.add('open'));
+    });
+  }
+  async function bulkDelete(area, bar) {
+    const rows = [...area.querySelectorAll('.fc-row')].filter((r) => r.querySelector('.sel') && r.querySelector('.sel').checked);
+    if (!rows.length) return;
+    if (!(await confirmDialog(`¿Quitar ${rows.length} oración(es) de la lista?`, 'Eliminar'))) return;
+    const del = bar.querySelector('.lb-del'); del.disabled = true; del.textContent = 'Quitando…';
+    let ok = 0;
+    for (const row of rows) {   // secuencial: más suave con el servidor que disparar N a la vez
+      if (await listAction('remove_sentence_from_list', row.dataset.sid)) { ok++; row.remove(); }
+    }
+    toast(`✓ ${ok} quitada(s)`, ok > 0);
+    bar.querySelector('.lb-all').checked = false; bar.querySelector('.lb-all').indeterminate = false;
+    refreshBulk(area, bar);
+  }
+
   function listControls() {
     const wrap = document.createElement('div'); wrap.className = 'fc-list-ctrls';
     const so = (v, t) => `<option value="${v}" ${listSort === v ? 'selected' : ''}>${t}</option>`;
@@ -624,6 +722,7 @@
     const body = listPanel._body; body.innerHTML = '';
     body.appendChild(listControls());
     const area = document.createElement('div'); area.id = 'fc-list-area';
+    body.appendChild(makeBulkBar(area));
     area.innerHTML = '<div class="fc-list-load"><div class="fc-load-dots"><span></span><span></span><span></span></div><div class="lbl">Cargando lista…</div></div>';
     body.appendChild(area);
     try {
@@ -640,13 +739,17 @@
     const ft = getTextByLang(c, LIST_DISPLAY.front) || { text: c.text, id: c.id, owner: c.owner };
     const bt = getTextByLang(c, LIST_DISPLAY.back) || { text: '', id: null };
     const row = document.createElement('div'); row.className = 'fc-row'; row.dataset.sid = String(c.id);
-    row.innerHTML = `<div class="meta">Oración #${ft.id || '—'} · ${ft.owner || '—'}</div>
+    row.innerHTML = `<input type="checkbox" class="sel" title="Seleccionar">
+      <div class="fc-row-main">
+      <div class="meta">Oración #${ft.id || '—'} · ${ft.owner || '—'}</div>
       <div class="es">${ft.text}</div>
       <div class="en">${bt.text}</div>
       <div class="meta">Traducción #${bt.id || '—'} · ${bt.owner || '—'}</div>
-      <div class="acts"><button class="go">Abrir</button><button class="rm">Quitar</button></div>`;
+      <div class="acts"><button class="go">Abrir</button><button class="rm">Quitar</button></div>
+      </div>`;
     row.querySelector('.go').addEventListener('click', () => window.open(`/${langSeg()}/sentences/show/${c.id}`, '_blank'));
-    row.querySelector('.rm').addEventListener('click', async () => { if (await listById('remove_sentence_from_list', c.id, 'quitada', 'Error')) listRemoveRow(c.id); });
+    row.querySelector('.rm').addEventListener('click', async () => { if (await listById('remove_sentence_from_list', c.id, 'quitada')) listRemoveRow(c.id); });
+    row.querySelector('.sel').addEventListener('change', () => { const a = listArea(), b = listPanel._body.querySelector('.fc-bulk'); if (a && b) refreshBulk(a, b); });
     return row;
   }
   function renderListPage(area, all, hasNext) {
