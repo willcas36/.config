@@ -56,6 +56,10 @@
           } ],
           "to_if_alone" : [ {
             "key_code" : "slash"
+          } ],
+          "conditions" : [ {
+            "type" : "frontmost_application_unless",
+            "bundle_identifiers" : [ "^net\\.ankiweb\\.launcher" ]
           } ]
         } ]
       }, {

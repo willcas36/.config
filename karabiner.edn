@@ -49,7 +49,7 @@
            :internal-keyboard [{:vendor_id 1452 :product_id 835}]}
 
  :layers {:hyper-mode {:key :caps_lock :alone {:key :return_or_enter}}
-          :launch-mode {:key :slash}
+          :launch-mode {:key :slash :condi :!anki}
           :mouse-mode4 {:key :keypad_4 :condi :g305-device :alone {:key :!Tup_arrow}}}
  :simlayers {:tmux-winmove-mode {:key :q :condi :Terminals}
              :period-mode {:key :period}
