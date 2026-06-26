@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Tatoeba - Flashcards (Sentence Mining)
 // @namespace    https://tatoeba.org/
-// @version      4.64
+// @version      4.71
 // @description  Flashcards tipo Anki sobre la búsqueda filtrada de Tatoeba (mobile + teclado)
 // @icon         https://tatoeba.org/img/tatoeba.svg?1781334885
 // @match        https://tatoeba.org/*/sentences/search*
@@ -14,7 +14,7 @@
 
 (function () {
   'use strict';
-  const SCRIPT_VERSION = '4.64';
+  const SCRIPT_VERSION = '4.71';
   const GH_TOKEN = '';
 
   /* ============ STORAGE (backend local: GM_setValue, con fallback a localStorage) ============ */
@@ -45,6 +45,8 @@
     'sm-fc-profiles', // todos los perfiles (cada uno con su config completa)
     'sm-fc-active', // qué perfil está activo
     'sm-fc-dark', // modo oscuro (preferencia global sincronizada)
+    'sm-fc-keys', // atajos de teclado (global)
+    'sm-fc-gestures', // gestos mobile (global)
   ];
   // Migración única: pasa la config que estaba en localStorage al storage GM (el backend local del script).
   (function migrateStorage() {
@@ -195,16 +197,64 @@
   const DISPLAY_DEFAULT = { front: 'spa', back: 'eng' };
 
   // Teclado (valor de event.key): Enter, ' ' (espacio), ';', '/', '.', ',', etc.
-  const KEYS = {
-    reveal: 'Enter', // Enter: revela; y si ya está revelada, va a la siguiente
-    next: "'", // Siguiente oración
-    prev: ';', // Anterior oración
-    audio: '/', // Reproducir audio
-    addList: '.', // Agregar a la lista
-    removeList: ',', // Quitar de la lista
-    list: '[', // (modo ordenador) alterna abrir/cerrar Mi lista
-    history: ']', // (modo ordenador) alterna abrir/cerrar Historial
+  // Acciones disponibles para gestos y atajos (id -> etiqueta).
+  const ACTIONS = [
+    { id: '', label: 'Ninguno' },
+    { id: 'next', label: 'Siguiente' },
+    { id: 'prev', label: 'Anterior' },
+    { id: 'reveal', label: 'Revelar / Siguiente' },
+    { id: 'audio', label: 'Audio (play/stop)' },
+    { id: 'addList', label: 'Agregar a la lista' },
+    { id: 'removeList', label: 'Quitar de la lista' },
+    { id: 'list', label: 'Abrir/cerrar Mi lista' },
+    { id: 'history', label: 'Abrir/cerrar Historial' },
+    { id: 'config', label: 'Abrir configuración' },
+  ];
+  const actionLabel = (id) =>
+    (ACTIONS.find((a) => a.id === id) || { label: id }).label;
+  const KEY_ACTS = [
+    'reveal',
+    'next',
+    'prev',
+    'audio',
+    'addList',
+    'removeList',
+    'list',
+    'history',
+    'config',
+  ];
+  const keyLabel = (k) => (k === ' ' ? 'Espacio' : k || '—');
+  const gestOpts = (sel) =>
+    ACTIONS.map(
+      (a) =>
+        `<option value="${a.id}" ${a.id === sel ? 'selected' : ''}>${a.label}</option>`,
+    ).join('');
+  const KEYS_DEFAULT = {
+    reveal: 'Enter',
+    next: "'",
+    prev: ';',
+    audio: '/',
+    addList: '.',
+    removeList: ',',
+    list: '[',
+    history: ']',
+    config: '\\',
   };
+  const GESTURES_DEFAULT = {
+    up: 'removeList',
+    down: 'config',
+    left: 'next',
+    right: 'prev',
+  };
+  const loadObj = (k, def) => {
+    try {
+      return Object.assign({}, def, JSON.parse(LS.get(k) || '{}'));
+    } catch (e) {
+      return Object.assign({}, def);
+    }
+  };
+  let KEYS = loadObj('sm-fc-keys', KEYS_DEFAULT); // atajos de teclado (sincronizable)
+  let GESTURES = loadObj('sm-fc-gestures', GESTURES_DEFAULT); // gestos mobile (sincronizable)
 
   const TOP_ZONE_PERCENT = 45;
   const SIDE_ZONE_PERCENT = 30;
@@ -763,6 +813,12 @@
       #fc-modal .fc-prof-actions { animation:fc-actionsIn .2s ease; }
       @keyframes fc-actionsIn { from { opacity:0; transform:translateY(4px); } to { opacity:1; transform:translateY(0); } }
       #fc-modal .fc-ver { text-align:center; font-size:10px; color:var(--muted); opacity:.6; padding:3px 0 0; letter-spacing:.5px; }
+      #fc-modal .fc-keyrow { display:flex; align-items:center; justify-content:space-between; gap:10px; }
+      #fc-modal .fc-keyrow > span { font-size:14px; }
+      #fc-modal .fc-keycap { min-width:84px; height:34px; min-height:0; border:1px solid var(--line); border-radius:6px; background:var(--card); color:var(--fg); cursor:pointer; font-size:13px; font-weight:600; padding:0 12px; }
+      #fc-modal .fc-keycap.capturing { border-color:var(--accent); color:var(--accent); }
+      #fc-modal .fc-restore { width:100%; height:34px; margin-top:4px; border:1px solid var(--line); border-radius:6px; cursor:pointer; font-size:12px; font-weight:600; background:transparent; color:var(--muted); }
+      #fc-modal .fc-restore:hover { color:var(--fg); border-color:var(--accent); }
       #fc-modal .fc-tabs { display:flex; gap:2px; padding:8px 8px 0; border-bottom:1px solid var(--line); }
       #fc-modal .fc-tabs button { flex:1; padding:9px 4px; border:none; background:transparent; color:var(--muted);
         font-size:13px; cursor:pointer; border-bottom:2px solid transparent; border-radius:6px 6px 0 0; }
@@ -986,6 +1042,34 @@
       })[act] || (() => {})
     )();
   }
+
+  // Dispatcher por id de acción (lo usan gestos y atajos configurables).
+  function runAction(id) {
+    const map = {
+      next,
+      prev,
+      audio: playAudio,
+      addList: addCurrent,
+      removeList: removeCurrent,
+      list: toggleList,
+      history: toggleHistory,
+      config: openModal,
+      reveal: () => {
+        if (!revealed) reveal();
+        else next();
+      },
+    };
+    if (map[id]) map[id]();
+  }
+  // keymap: tecla -> acción, reconstruido desde KEYS (que se puede editar/sincronizar).
+  let keymap = {};
+  function rebuildKeymap() {
+    keymap = {};
+    Object.keys(KEYS).forEach((a) => {
+      if (KEYS[a]) keymap[KEYS[a]] = a;
+    });
+  }
+  rebuildKeymap();
 
   // Resuelve un tap (zona transparente o carta) sin depender del click sintético, que iOS cancela.
   function handleTap(target) {
@@ -1691,6 +1775,26 @@
     LS.set('sm-fc-desktop', DESKTOP_MODE ? '1' : '0'); // no está en SYNC_KEYS -> no se sube al gist
     document.documentElement.classList.toggle('fc-desktop', DESKTOP_MODE);
   }
+  // Lee gestos + atajos del modal y los aplica en vivo. Solo persiste (+ sincroniza) si persist=true.
+  function applyControls(m, persist) {
+    if (!m.querySelector('#g-up')) return;
+    GESTURES = {
+      up: m.querySelector('#g-up').value,
+      down: m.querySelector('#g-down').value,
+      left: m.querySelector('#g-left').value,
+      right: m.querySelector('#g-right').value,
+    };
+    const nk = {};
+    m.querySelectorAll('.fc-keycap').forEach((b) => {
+      nk[b.dataset.act] = b.dataset.key;
+    });
+    KEYS = Object.assign({}, KEYS_DEFAULT, nk);
+    rebuildKeymap(); // se aplican en vivo (para probar) siempre
+    if (persist) {
+      LS.set('sm-fc-gestures', JSON.stringify(GESTURES)); // persiste + SINCRONIZA
+      LS.set('sm-fc-keys', JSON.stringify(KEYS));
+    }
+  }
   // SOLO carga la config a los globals (working copy). NO persiste: persistir = saveActive() (Guardar).
   // DESKTOP_MODE no se toca acá (es local). Defaults para campos faltantes -> nunca "se pegan" del perfil anterior.
   function applyConfig(cfg) {
@@ -1857,6 +1961,7 @@
         <button type="button" class="active" data-pane="o">Oraciones</button>
         <button type="button" data-pane="t">Traducción</button>
         <button type="button" data-pane="e">Estudio</button>
+        <button type="button" data-pane="c">Controles</button>
       </div>
       <div class="box-scroll">
       <div class="fc-pane active" data-pane="o">
@@ -1922,6 +2027,18 @@
       <div class="row"><input type="checkbox" id="f-desktop" ${DESKTOP_MODE ? 'checked' : ''}><span>Modo ordenador (paneles laterales)</span></div>
       <div class="hint">En PC: Historial y Mi lista se abren al costado y empujan el contenido en vez de flotar. Atajos: <b>[</b> alterna Mi lista, <b>]</b> alterna Historial.</div>
       </div>
+      <div class="fc-pane" data-pane="c">
+      <h4>Gestos (deslizar, mobile)</h4>
+      <label>Arriba ↑:<select id="g-up">${gestOpts(GESTURES.up)}</select></label>
+      <label>Abajo ↓:<select id="g-down">${gestOpts(GESTURES.down)}</select></label>
+      <label>Izquierda ←:<select id="g-left">${gestOpts(GESTURES.left)}</select></label>
+      <label>Derecha →:<select id="g-right">${gestOpts(GESTURES.right)}</select></label>
+      <div class="hint">Las zonas de tap quedan fijas; acá configurás solo los deslizamientos.</div>
+      <h4>Atajos (teclado, escritorio)</h4>
+      ${KEY_ACTS.map((a) => `<div class="fc-keyrow"><span>${actionLabel(a)}</span><button type="button" class="fc-keycap" data-act="${a}" data-key="${escHtml(KEYS[a] || '')}">${escHtml(keyLabel(KEYS[a]))}</button></div>`).join('')}
+      <div class="hint">Tocá un atajo y apretá la tecla nueva (Esc cancela).</div>
+      <button type="button" id="ctrl-reset" class="fc-restore">↺ Restaurar controles por defecto</button>
+      </div>
       </div>
       <div class="fc-ver">v${SCRIPT_VERSION}</div>
       <div class="actions"><button id="fc-cancel">Cancelar</button><button id="fc-apply">Aplicar</button></div>
@@ -1936,6 +2053,36 @@
     m.addEventListener('input', () => updateRestoreBtn(m));
     m.addEventListener('change', () => updateRestoreBtn(m));
     updateRestoreBtn(m);
+    // Captura de tecla para los atajos: tocás el botón y apretás la tecla nueva.
+    m.querySelectorAll('.fc-keycap').forEach((btn) => {
+      btn.addEventListener('click', () => {
+        btn.classList.add('capturing');
+        btn.textContent = 'apretá una tecla…';
+        const onKey = (ev) => {
+          ev.preventDefault();
+          ev.stopPropagation();
+          document.removeEventListener('keydown', onKey, true);
+          btn.classList.remove('capturing');
+          if (ev.key !== 'Escape') btn.dataset.key = ev.key; // Esc cancela
+          btn.textContent = keyLabel(btn.dataset.key);
+        };
+        document.addEventListener('keydown', onKey, true); // captura: antes del handler global
+      });
+    });
+    // Restaurar controles por defecto (en el form; se guardan al Aplicar/Guardar).
+    const ctrlReset = m.querySelector('#ctrl-reset');
+    if (ctrlReset)
+      ctrlReset.addEventListener('click', () => {
+        ['up', 'down', 'left', 'right'].forEach((d) => {
+          const sel = m.querySelector('#g-' + d);
+          if (sel) sel.value = GESTURES_DEFAULT[d];
+        });
+        m.querySelectorAll('.fc-keycap').forEach((b) => {
+          b.dataset.key = KEYS_DEFAULT[b.dataset.act] || '';
+          b.textContent = keyLabel(b.dataset.key);
+        });
+        toast('Controles por defecto cargados — Guardá para confirmar', true);
+      });
     const profSel = m.querySelector('#prof-sel');
     refreshProfileSelect(profSel);
     profSel.value = activeProfile; // reflejá en qué perfil estamos
@@ -1968,6 +2115,7 @@
         return;
       applyConfig(snapshotFromModal(m)); // aplica el estado actual del modal a globals
       applyDesktopPref(m); // modo ordenador: local, aparte del perfil
+      applyControls(m, true); // controles: persistir + sincronizar
       setActiveProfile(name); // primero marcá el activo...
       saveActive(); // ...y guardá globals en ese nuevo perfil (persiste + sincroniza)
       refreshProfileSelect(profSel);
@@ -2000,6 +2148,7 @@
       const name = profSel.value;
       applyConfig(snapshotFromModal(m)); // carga el form a globals...
       applyDesktopPref(m); // modo ordenador: local
+      applyControls(m, true); // controles: persistir + sincronizar
       setActiveProfile(name);
       saveActive(); // ...y guarda globals en el perfil activo (persiste + SINCRONIZA)
       closePanels();
@@ -2096,6 +2245,7 @@
       // APLICAR = probar la config en la app, SIN guardar en el perfil ni subir al gist.
       applyConfig(snapshotFromModal(m)); // solo globals (working copy)
       applyDesktopPref(m); // modo ordenador: local
+      applyControls(m, false); // controles: aplicar EN VIVO para probar, sin persistir ni sincronizar
       dirty = true;
       updateId(); // marca "• sin guardar"
       closePanels();
@@ -2224,11 +2374,9 @@
           handleTap(e.target);
           return;
         } // tap -> resuelto acá (iOS)
-        if (adx > ady) {
-          if (dx < 0) next();
-          else prev();
-        } // ← siguiente · → anterior
-        else if (dy < 0) removeCurrent(); // ↑ quitar  (↓ = recarga nativa, no la tocamos)
+        // Deslizamientos -> acción configurable (las zonas de tap quedan fijas).
+        if (adx > ady) runAction(dx < 0 ? GESTURES.left : GESTURES.right);
+        else runAction(dy < 0 ? GESTURES.up : GESTURES.down);
       },
       { passive: true },
     );
@@ -2236,17 +2384,6 @@
 
   /* ============ TECLADO ============ */
   function setupKeyboard() {
-    const actions = {
-      [KEYS.reveal]: () => {
-        if (!revealed) reveal();
-        else next();
-      },
-      [KEYS.next]: next,
-      [KEYS.prev]: prev,
-      [KEYS.audio]: playAudio,
-      [KEYS.addList]: addCurrent,
-      [KEYS.removeList]: removeCurrent,
-    };
     document.addEventListener('keydown', (e) => {
       if (!isOpen() || uiBlocked) return;
       const el = document.activeElement;
@@ -2256,10 +2393,10 @@
       )
         return;
       if (e.ctrlKey || e.metaKey || e.altKey) return;
-      const a = actions[e.key];
-      if (!a) return;
+      const act = keymap[e.key]; // tecla -> acción (configurable)
+      if (!act || act === 'list' || act === 'history') return; // list/history van en el otro listener
       e.preventDefault();
-      a();
+      runAction(act);
     });
 
     // Atajos de panel (modo ordenador): viven aparte porque deben funcionar AUN con el panel abierto, para alternar/cerrar.
