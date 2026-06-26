@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Tatoeba - Flashcards (Sentence Mining)
 // @namespace    https://tatoeba.org/
-// @version      4.52
+// @version      4.62
 // @description  Flashcards tipo Anki sobre la búsqueda filtrada de Tatoeba (mobile + teclado)
 // @icon         https://tatoeba.org/img/tatoeba.svg?1781334885
 // @match        https://tatoeba.org/*/sentences/search*
@@ -14,6 +14,7 @@
 
 (function () {
   'use strict';
+  const SCRIPT_VERSION = '4.62';
   const GH_TOKEN = '';
 
   /* ============ STORAGE (backend local: GM_setValue, con fallback a localStorage) ============ */
@@ -136,6 +137,14 @@
     const payload = JSON.parse(file.content);
     const localTs = parseInt(LS.get('sm-fc-sync-ts') || '0', 10);
     if (!(payload.updated > localTs)) return false; // nada más nuevo
+    // PROTECCIÓN: si hay cambios sin guardar (Aplicar/dirty), avisá antes de pisarlos con lo de la nube.
+    if (dirty) {
+      const ok = await confirmDialog(
+        'Hay config más nueva en la nube, pero tenés cambios SIN GUARDAR. ¿Descartar los tuyos y bajar lo de la nube?',
+        'Descartar y bajar',
+      );
+      if (!ok) return false;
+    }
     suppressPush = true;
     try {
       Object.keys(payload.data || {})
@@ -488,8 +497,14 @@
       btn.innerHTML = '<span class="fc-spin"></span>';
     } else {
       btn.innerHTML = '';
-      btn.appendChild(makeIcon('volume_up'));
+      btn.appendChild(makeIcon('play_arrow'));
     }
+  }
+  function setAudioIcon(name) {
+    const btn = barEl && barEl.querySelector('[data-act="audio"]');
+    if (!btn) return;
+    btn.innerHTML = '';
+    btn.appendChild(makeIcon(name)); // 'play_arrow' (parado) o 'stop' (reproduciendo)
   }
 
   function playAudio() {
@@ -505,10 +520,15 @@
     }
     const url = `${API_BASE}/audios/${en.audios[0].id}/file`; // el download_url de la API viene roto (/audio/ singular -> 404); uso /audios/ (plural)
 
-    // Mismo audio ya cargado -> sólo reiniciar (sin re-fetch ni superponer).
+    // Mismo audio ya cargado -> TOGGLE: si está sonando, cancelar; si está parado, volver a empezar.
     if (currentAudio && currentAudioUrl === url) {
-      currentAudio.currentTime = 0;
-      currentAudio.play().catch(() => {});
+      if (!currentAudio.paused) {
+        currentAudio.pause(); // reproduciendo -> cancelar (el evento 'pause' pone el ícono ▶)
+        currentAudio.currentTime = 0; // la próxima empieza de cero
+      } else {
+        currentAudio.currentTime = 0;
+        currentAudio.play().catch(() => {}); // parado -> empezar de nuevo (el evento 'playing' pone ■)
+      }
       return;
     }
 
@@ -519,18 +539,33 @@
     currentAudioUrl = url;
 
     setAudioLoading(true);
-    let done = false;
-    const stop = (err) => {
-      if (done) return;
-      done = true;
+    let loaded = false;
+    const clearLoader = () => {
+      if (loaded) return;
+      loaded = true;
       clearTimeout(timer);
-      setAudioLoading(false);
-      if (err) toast('No se pudo reproducir', false);
     };
-    const timer = setTimeout(() => stop(false), 8000); // red colgada -> liberamos el loader igual
-    a.addEventListener('playing', () => stop(false), { once: true });
-    a.addEventListener('error', () => stop(true), { once: true });
-    a.play().catch(() => stop(true));
+    const timer = setTimeout(() => {
+      clearLoader();
+      setAudioIcon('play_arrow');
+    }, 8000); // red colgada -> liberamos el loader igual
+    // Listeners persistentes (no 'once') -> el ícono refleja play/stop en cada toggle.
+    a.addEventListener('playing', () => {
+      clearLoader();
+      setAudioIcon('stop');
+    });
+    a.addEventListener('pause', () => setAudioIcon('play_arrow'));
+    a.addEventListener('ended', () => setAudioIcon('play_arrow'));
+    a.addEventListener('error', () => {
+      clearLoader();
+      setAudioIcon('play_arrow');
+      toast('No se pudo reproducir', false);
+    });
+    a.play().catch(() => {
+      clearLoader();
+      setAudioIcon('play_arrow');
+      toast('No se pudo reproducir', false);
+    });
   }
   async function listAction(endpoint, id) {
     // fetch crudo, sin notificar (lo usa el borrado masivo)
@@ -595,8 +630,8 @@
       #fc-overlay.panel-push { padding-right:min(88vw,380px); }
       #fc-overlay.hidden { display:none; }
       #fc-overlay .material-icons { line-height:1; font-size:inherit; color:inherit; display:block; }
-      #fc-top { display:flex; align-items:center; gap:8px; padding:calc(env(safe-area-inset-top,0px) + 8px) 12px 8px; }
-      #fc-id { font-size:12px; color:var(--muted); font-weight:600; line-height:1.3; margin-right:auto; }
+      #fc-top { display:flex; align-items:flex-start; gap:8px; padding:calc(env(safe-area-inset-top,0px) + 8px) 12px 8px; }
+      #fc-id { font-size:12px; color:var(--muted); font-weight:600; line-height:1.2; margin-right:auto; padding-top:1px; }
       #fc-id .fc-prof { color:var(--fg); font-weight:700; font-size:13px; margin-bottom:2px; }
       #fc-id .fc-dirty { color:#e0a000; font-weight:600; font-size:11px; }
       #fc-id .fc-total { color:var(--accent); font-weight:700; margin-bottom:2px; }
@@ -612,9 +647,13 @@
       .fc-icon .material-icons { font-size:23px; }
       #fc-stage { position:relative; flex:1; }
       #fc-card { position:absolute; inset:0; display:flex; flex-direction:column; align-items:center;
-        justify-content:center; text-align:center; padding:22px; gap:16px; }
-      #fc-front { font-size:26px; line-height:1.35; font-weight:600; }
-      #fc-back { font-size:21px; line-height:1.35; color:var(--back); border-top:1px solid rgba(128,128,128,.35); padding-top:16px; }
+        justify-content:safe center; text-align:center; padding:22px; gap:18px; overflow:hidden;
+        font-family:-apple-system,BlinkMacSystemFont,"SF Pro Text","Segoe UI",system-ui,sans-serif; -webkit-font-smoothing:antialiased; }
+      #fc-front { font-size:31px; line-height:1.45; font-weight:700; letter-spacing:.2px; }
+      #fc-back { font-size:24px; line-height:1.5; font-weight:500; color:var(--back); border-top:1px solid rgba(128,128,128,.35); padding-top:16px; }
+      #fc-back.fc-reveal, #fc-owners.fc-reveal { animation:fc-revealIn .26s cubic-bezier(.2,.7,.3,1) both; }
+      #fc-owners.fc-reveal { animation-delay:.07s; }
+      @keyframes fc-revealIn { from { opacity:0; transform:translateY(9px); } to { opacity:1; transform:translateY(0); } }
       #fc-owners { font-size:12px; color:var(--muted); min-height:1.3em; }
       #fc-hint { font-size:13px; color:var(--muted); opacity:.7; }
       .fc-dots::after { content:'•••'; letter-spacing:2px; animation:fc-blink 1.1s ease-in-out infinite; }
@@ -708,17 +747,21 @@
       #fc-modal .fc-prof-row { display:flex; gap:6px; align-items:center; }
       #fc-modal .fc-prof-row select { flex:1; min-width:0; }
       #fc-modal #prof-new { background:var(--accent); color:#fff; border:none; border-radius:6px; width:36px; height:36px; flex:0 0 auto; cursor:pointer; display:flex; align-items:center; justify-content:center; }
+      #fc-modal #gh-sync { flex:0 0 auto; height:36px; padding:0 14px; border:1px solid var(--accent); border-radius:6px; cursor:pointer; font-size:13px; font-weight:600; background:transparent; color:var(--accent); }
+      #fc-modal #gh-sync:hover { background:var(--accent); color:#fff; }
       #fc-modal .fc-prof-actions { display:flex; gap:6px; align-items:center; }
       #fc-modal #prof-save, #fc-modal #prof-rename { flex:1; height:36px; border:none; border-radius:6px; cursor:pointer; font-size:13px; font-weight:600; }
       #fc-modal #prof-save { background:var(--accent); color:#fff; }
       #fc-modal #prof-rename { background:var(--btn); color:var(--btnfg); }
-      #fc-modal #prof-del { background:transparent; color:var(--muted); border:none; border-radius:6px; width:36px; height:36px; cursor:pointer; flex:0 0 auto; display:flex; align-items:center; justify-content:center; transition:color .15s, background .15s; }
-      #fc-modal #prof-del:hover { color:#d33; background:var(--btn); }
-      #fc-modal .fc-restore { width:100%; height:32px; border:1px solid var(--line); border-radius:6px; cursor:pointer; font-size:12px; font-weight:600; background:transparent; color:var(--muted); }
-      #fc-modal .fc-restore:hover { color:var(--fg); border-color:var(--accent); }
-      #fc-modal .fc-prof-cloud { display:flex; gap:6px; align-items:center; }
-      #fc-modal .fc-prof-cloud input { flex:1; min-width:0; min-height:32px; font-size:12px; }
-      #fc-modal #gh-sync { flex:0 0 auto; height:32px; min-height:0; padding:0 14px; border:none; border-radius:6px; cursor:pointer; font-size:12px; font-weight:600; background:var(--accent); color:#fff; }
+      #fc-modal .fc-icobtn { background:transparent; color:var(--muted); border:none; border-radius:6px; width:36px; height:36px; cursor:pointer; flex:0 0 auto; display:flex; align-items:center; justify-content:center; transition:color .15s, background .15s; }
+      #fc-modal .fc-icobtn:hover { color:var(--fg); background:var(--btn); }
+      #fc-modal .fc-del:hover { color:#d33; }
+      #fc-modal .fc-icobtn .material-icons { font-size:20px; line-height:1; }
+      #fc-modal .fc-icobtn.fc-disabled { opacity:.35; }
+      #fc-modal .fc-icobtn.fc-disabled:hover { color:var(--muted); background:transparent; }
+      #fc-modal .fc-prof-actions { animation:fc-actionsIn .2s ease; }
+      @keyframes fc-actionsIn { from { opacity:0; transform:translateY(4px); } to { opacity:1; transform:translateY(0); } }
+      #fc-modal .fc-ver { text-align:center; font-size:10px; color:var(--muted); opacity:.6; padding:3px 0 0; letter-spacing:.5px; }
       #fc-modal .fc-tabs { display:flex; gap:2px; padding:8px 8px 0; border-bottom:1px solid var(--line); }
       #fc-modal .fc-tabs button { flex:1; padding:9px 4px; border:none; background:transparent; color:var(--muted);
         font-size:13px; cursor:pointer; border-bottom:2px solid transparent; border-radius:6px 6px 0 0; }
@@ -734,6 +777,9 @@
       #fc-modal .row { display:flex; align-items:center; gap:8px; }
       #fc-modal select, #fc-modal input { padding:9px 10px; min-height:40px; box-sizing:border-box; border:1px solid var(--line); border-radius:6px; font-size:15px;
         background:var(--card,#fff); color:var(--fg,#222); transition:border-color .15s ease; }
+      #fc-modal select { -webkit-appearance:none; appearance:none; padding-right:34px;
+        background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%23888' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E");
+        background-repeat:no-repeat; background-position:right 12px center; }
       #fc-modal select:focus, #fc-modal input:focus { outline:none; border-color:var(--accent); }
       #fc-modal input[type=checkbox] { width:auto; min-height:0; accent-color:var(--accent); }
       #fc-modal .fc-tagbox { display:flex; flex-wrap:wrap; gap:6px; padding:7px; border:1px solid var(--line); border-radius:6px; background:var(--card); min-height:40px; align-items:center; cursor:text; }
@@ -795,7 +841,9 @@
     b.dataset.act = act;
     b.title = title;
     b.setAttribute('aria-label', title);
-    b.appendChild(makeIcon(icon));
+    if (icon.trim().startsWith('<svg'))
+      b.innerHTML = icon; // ícono SVG propio (para los que la fuente material no tiene)
+    else b.appendChild(makeIcon(icon));
     return b;
   }
 
@@ -838,7 +886,7 @@
     ownersEl.id = 'fc-owners';
     hintEl = document.createElement('div');
     hintEl.id = 'fc-hint';
-    hintEl.textContent = 'Tocá para revelar';
+    hintEl.textContent = ''; // sin "Tocá para revelar"
     card.append(frontEl, backEl, ownersEl, hintEl);
 
     zonesEl = document.createElement('div');
@@ -875,7 +923,7 @@
     barEl.id = 'fc-bar';
     barEl.append(
       iconBtn('prev', 'chevron_left', 'Anterior'),
-      iconBtn('audio', 'volume_up', 'Audio'),
+      iconBtn('audio', 'play_arrow', 'Audio'),
       iconBtn('add', 'playlist_add', 'Agregar'),
       iconBtn('remove', 'remove_circle_outline', 'Quitar'),
       iconBtn('next', 'chevron_right', 'Siguiente', 'fc-btn fc-primary'),
@@ -925,8 +973,8 @@
         add: addCurrent,
         remove: removeCurrent,
         filters: openModal,
-        history: openHistory,
-        list: openList,
+        history: toggleHistory, // el botón alterna abrir/cerrar (igual que el atajo)
+        list: toggleList,
         exit: () => setOpen(false),
         dark: toggleDark,
       })[act] || (() => {})
@@ -944,22 +992,13 @@
   }
 
   function updateId() {
-    const c = currentCard();
     if (!idEl) return;
-    const head =
-      `<div class="fc-prof">${escHtml(activeProfile)}${dirty ? ' <span class="fc-dirty">• sin guardar</span>' : ''}</div>` +
-      (totalCount != null
-        ? `<div class="fc-total">${totalCount.toLocaleString('es')} en Tatoeba</div>`
-        : ''); // perfil, y total debajo
-    if (!c) {
-      idEl.innerHTML = head;
-      return;
-    }
-    const f = frontOf(c),
-      b = backOf(c);
-    idEl.innerHTML =
-      head +
-      `<div>Oración #${f.id || '—'}</div><div>Traducción #${b.id || '—'}${fetching ? ' …' : ''}</div>`;
+    // 1) nombre del perfil/lista · 2) nº de oraciones · 3) "sin guardar" (último, solo si hay cambios)
+    let html = `<div class="fc-prof">${escHtml(activeProfile)}</div>`;
+    if (totalCount != null)
+      html += `<div class="fc-total">${totalCount.toLocaleString('es')} en Tatoeba</div>`;
+    if (dirty) html += `<div class="fc-dirty">• sin guardar</div>`;
+    idEl.innerHTML = html;
   }
 
   function showLoading(on) {
@@ -967,6 +1006,12 @@
     if (el) el.classList.toggle('on', on);
   }
 
+  // Tamaño de fuente según el largo del texto: corto = base, largo = se achica (raíz cuadrada, con piso).
+  function fitFont(text, base, min) {
+    const len = (text || '').length;
+    if (len <= 60) return base;
+    return Math.max(min, Math.round(base * Math.sqrt(60 / len)));
+  }
   function render() {
     const c = currentCard();
     if (!c) {
@@ -984,6 +1029,9 @@
       b = backOf(c);
     frontEl.textContent = f.text;
     backEl.textContent = b.text;
+    // Oraciones largas -> achicar la fuente para que entren cómodas (escala suave por largo).
+    frontEl.style.fontSize = fitFont(f.text, 31, 15) + 'px';
+    backEl.style.fontSize = fitFont(b.text, 24, 14) + 'px';
     backEl.style.visibility = 'hidden'; // reservado: el reverso no mueve nada al revelar
     ownersEl.textContent = ''; // los dueños aparecen recién AL revelar (junto con la traducción)
     ownersEl.style.transition = '';
@@ -991,6 +1039,7 @@
     hintEl.style.visibility = 'visible';
     updateId();
     updateBar();
+    setAudioIcon('play_arrow'); // carta nueva -> ícono de reproducir
     syncHistory(); // historial sigue en vivo a la oración actual
     if (START_REVEALED) reveal(); // modo "ya revelada": mostrá el reverso de entrada
   }
@@ -1009,15 +1058,19 @@
   function reveal() {
     const c = currentCard();
     if (!c || revealed) return;
-    const oldLeft = ownersEl.getBoundingClientRect().left;
     revealed = true;
     backEl.style.visibility = 'visible';
+    backEl.classList.remove('fc-reveal');
+    void backEl.offsetWidth; // reflow para re-disparar la animación
+    backEl.classList.add('fc-reveal'); // fade+slide rápido de la traducción
     hintEl.style.visibility = 'hidden';
     zonesEl.classList.add('on');
     updateBar();
 
     ownersEl.textContent = `Oración: ${frontOf(c).owner || '—'} · Traducción: ${backOf(c).owner || '—'}`;
-    flipOwners(oldLeft); // anima el corrimiento horizontal de la línea (aparece junto con la traducción)
+    ownersEl.classList.remove('fc-reveal');
+    void ownersEl.offsetWidth;
+    ownersEl.classList.add('fc-reveal'); // misma animación que la traducción (con leve retraso por CSS)
   }
 
   function updateBar() {
@@ -1528,9 +1581,13 @@
     x.type = 'button';
     x.textContent = '×';
     x.setAttribute('aria-label', 'Quitar');
-    x.addEventListener('click', () => tag.remove());
+    x.addEventListener('click', () => {
+      tag.remove();
+      box.dispatchEvent(new Event('input', { bubbles: true }));
+    });
     tag.append(lbl, x);
     box.insertBefore(tag, input);
+    box.dispatchEvent(new Event('input', { bubbles: true }));
   }
   function initTagBox(box, input, chips) {
     chips.forEach((c) => addTag(box, input, c));
@@ -1642,6 +1699,24 @@
       startRevealed: START_REVEALED,
     };
   }
+  // Compara una config con los predeterminados, sin depender del orden de claves del nivel superior.
+  function isDefaultCfg(cfg) {
+    const d = DEFAULT_CONFIG;
+    return (
+      JSON.stringify(cfg.filters || {}) === JSON.stringify(d.filters) &&
+      JSON.stringify(cfg.display || {}) === JSON.stringify(d.display) &&
+      JSON.stringify(cfg.listDisplay || {}) === JSON.stringify(d.listDisplay) &&
+      (cfg.listId || '174916') === d.listId &&
+      (cfg.audioLang || 'eng') === d.audioLang &&
+      (cfg.listSort || '-created') === d.listSort &&
+      !!cfg.startRevealed === !!d.startRevealed
+    );
+  }
+  // Habilita/inhabilita visualmente el botón Restaurar según si el form difiere de los defaults.
+  function updateRestoreBtn(m) {
+    const btn = m.querySelector('#prof-restore');
+    if (btn) btn.classList.toggle('fc-disabled', isDefaultCfg(snapshotFromModal(m)));
+  }
   function ensureDefaultProfile() {
     const profs = loadProfiles();
     if (!profs[PROFILE_DEFAULT]) {
@@ -1722,22 +1797,20 @@
         `<option value="${val}" ${v === val ? 'selected' : ''}>${t}</option>`;
       return `<select id="${id}">${o('', 'Cualquiera')}${o('original', 'Original')}${o('translation', 'Traducción')}${o('known', 'Conocido')}${o('unknown', 'Desconocido')}</select>`;
     };
+    const atDefaults = JSON.stringify(snapshotFromGlobals()) === JSON.stringify(DEFAULT_CONFIG); // ¿el perfil ya está en los predeterminados?
     m.innerHTML = `<div class="box">
       <div class="fc-profiles">
         <div class="fc-prof-row">
           <select id="prof-sel"></select>
           <button type="button" id="prof-new" title="Nuevo perfil" aria-label="Nuevo perfil"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg></button>
-        </div>
-        <div class="fc-prof-cloud">
-          <input type="password" id="gh-token" placeholder="GitHub token (auto-sync)…" autocomplete="off">
-          <button type="button" id="gh-sync" title="Sincronizar ahora">Sync</button>
+          <button type="button" id="gh-sync" title="Sincronizar con la nube">Sync</button>
         </div>
         <div class="fc-prof-actions">
           <button type="button" id="prof-save">Guardar</button>
           <button type="button" id="prof-rename">Renombrar</button>
-          <button type="button" id="prof-del" title="Borrar perfil" aria-label="Borrar perfil"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M4 7h16"/><path d="M10 11v6M14 11v6"/><path d="M6 7l1 13h10l1-13"/><path d="M9 7V4h6v3"/></svg></button>
+          ${activeProfile === PROFILE_DEFAULT ? `<button type="button" id="prof-restore" class="fc-icobtn${atDefaults ? ' fc-disabled' : ''}" title="Restaurar predeterminados" aria-label="Restaurar predeterminados"><span class="material-icons">settings_backup_restore</span></button>` : ''}
+          <button type="button" id="prof-del" class="fc-icobtn fc-del" title="Borrar perfil" aria-label="Borrar perfil"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M4 7h16"/><path d="M10 11v6M14 11v6"/><path d="M6 7l1 13h10l1-13"/><path d="M9 7V4h6v3"/></svg></button>
         </div>
-        ${activeProfile === PROFILE_DEFAULT ? '<button type="button" id="prof-restore" class="fc-restore">↺ Restaurar predeterminados</button>' : ''}
       </div>
       <div class="fc-tabs">
         <button type="button" class="active" data-pane="o">Oraciones</button>
@@ -1809,6 +1882,7 @@
       <div class="hint">En PC: Historial y Mi lista se abren al costado y empujan el contenido en vez de flotar. Atajos: <b>[</b> alterna Mi lista, <b>]</b> alterna Historial.</div>
       </div>
       </div>
+      <div class="fc-ver">v${SCRIPT_VERSION}</div>
       <div class="actions"><button id="fc-cancel">Cancelar</button><button id="fc-apply">Aplicar</button></div>
     </div>`;
     document.body.appendChild(m);
@@ -1817,6 +1891,10 @@
       m.querySelector('#f-query-input'),
       parseQueryChips(f.query),
     );
+    // El botón Restaurar se habilita/inhabilita en vivo según si el form difiere de los defaults.
+    m.addEventListener('input', () => updateRestoreBtn(m));
+    m.addEventListener('change', () => updateRestoreBtn(m));
+    updateRestoreBtn(m);
     const profSel = m.querySelector('#prof-sel');
     refreshProfileSelect(profSel);
     profSel.value = activeProfile; // reflejá en qué perfil estamos
@@ -1861,6 +1939,10 @@
     const restoreBtn = m.querySelector('#prof-restore');
     if (restoreBtn)
       restoreBtn.addEventListener('click', async () => {
+        if (isDefaultCfg(snapshotFromModal(m))) {
+          toast('Sin cambios — ya estás en los predeterminados', true);
+          return;
+        }
         if (!(await confirmDialog('¿Restaurar la config de fábrica del perfil Predeterminado?', 'Restaurar'))) return;
         applyConfig(DEFAULT_CONFIG); // carga defaults a globals (no toca el modo ordenador, que es local)
         setActiveProfile(PROFILE_DEFAULT);
@@ -1921,27 +2003,15 @@
       if (activeProfile === name) setActiveProfile(PROFILE_DEFAULT);
       toast(`Perfil "${name}" borrado`, true);
     });
-    const tkEl = m.querySelector('#gh-token');
-    if (GH_TOKEN) {
-      tkEl.value = '';
-      tkEl.disabled = true;
-      tkEl.placeholder = 'usando el token del script (variable GH_TOKEN)';
-    } else {
-      tkEl.value = LS.get('sm-fc-gh-token') || '';
-    }
     m.querySelector('#gh-sync').addEventListener('click', async () => {
-      // Solo guardamos lo del campo si NO hay token hardcodeado (la variable manda).
-      if (!GH_TOKEN)
-        LS.set('sm-fc-gh-token', m.querySelector('#gh-token').value.trim());
       if (!ghToken()) {
-        // efectivo: GH_TOKEN || el guardado por UI
-        toast('Pegá tu token de GitHub (scope gist)', false);
+        toast('Falta el token de GitHub (variable GH_TOKEN en el script)', false);
         return;
       }
       toast('Sincronizando…', true);
       try {
         if (await gistPull()) {
-          toast('Bajé config remota — recargando…', true);
+          toast('Config remota más nueva — recargando…', true);
           setTimeout(() => location.reload(), 800);
           return;
         }
