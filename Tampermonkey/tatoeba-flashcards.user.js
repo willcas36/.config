@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Tatoeba - Flashcards (Sentence Mining)
 // @namespace    https://tatoeba.org/
-// @version      4.47
+// @version      4.52
 // @description  Flashcards tipo Anki sobre la búsqueda filtrada de Tatoeba (mobile + teclado)
 // @icon         https://tatoeba.org/img/tatoeba.svg?1781334885
 // @match        https://tatoeba.org/*/sentences/search*
@@ -39,19 +39,11 @@
       else localStorage.removeItem(k);
     },
   };
+  // FUENTE ÚNICA: la config de estudio vive SOLO en los perfiles. Esto es lo que se sincroniza:
   const SYNC_KEYS = [
-    'sm-fc-listid',
-    'sm-fc-audiolang',
-    'sm-fc-desktop',
-    'sm-fc-startrevealed',
-    'sm-fc-listsort',
-    'sm-fc-active',
-    'sm-fc-profiles',
-    'sm-fc-filters',
-    'sm-fc-display',
-    'sm-fc-list-display',
-    'sm-fc-dark',
-    'sm-fc-open',
+    'sm-fc-profiles', // todos los perfiles (cada uno con su config completa)
+    'sm-fc-active', // qué perfil está activo
+    'sm-fc-dark', // modo oscuro (preferencia global sincronizada)
   ];
   // Migración única: pasa la config que estaba en localStorage al storage GM (el backend local del script).
   (function migrateStorage() {
@@ -75,14 +67,18 @@
     return new Promise((resolve, reject) => {
       if (typeof GM_xmlhttpRequest !== 'function')
         return reject(new Error('sin GM_xmlhttpRequest'));
+      let url = 'https://api.github.com' + path;
+      if (method === 'GET') url += (path.includes('?') ? '&' : '?') + '_=' + Date.now(); // cache-bust: GitHub sirve el gist cacheado tras un PATCH
       GM_xmlhttpRequest({
         method,
-        url: 'https://api.github.com' + path,
+        url,
         timeout: 15000,
+        nocache: true,
         headers: {
           Authorization: 'token ' + ghToken(),
           Accept: 'application/vnd.github+json',
           'Content-Type': 'application/json',
+          'Cache-Control': 'no-cache',
         },
         data: body ? JSON.stringify(body) : undefined,
         onload: (r) => {
@@ -142,9 +138,9 @@
     if (!(payload.updated > localTs)) return false; // nada más nuevo
     suppressPush = true;
     try {
-      Object.keys(payload.data || {}).forEach((k) =>
-        LS.set(k, String(payload.data[k])),
-      );
+      Object.keys(payload.data || {})
+        .filter((k) => SYNC_KEYS.includes(k)) // ignorá claves que no se sincronizan (ej. sm-fc-desktop viejo)
+        .forEach((k) => LS.set(k, String(payload.data[k])));
     } finally {
       suppressPush = false;
     }
@@ -167,7 +163,7 @@
   const FETCH_DEFAULTS = {
     query: '',
     from: 'eng',
-    word_min: '2',
+    word_min: '5',
     word_max: '',
     user: '',
     origin: 'original',
@@ -214,6 +210,7 @@
   let START_REVEALED = LS.get('sm-fc-startrevealed') === '1'; // al navegar, mostrar la carta ya revelada (default: oculta)
   const PROFILE_DEFAULT = 'Predeterminado'; // perfil base, no se puede borrar
   let activeProfile = LS.get('sm-fc-active') || PROFILE_DEFAULT;
+  let dirty = false; // hay cambios aplicados (Aplicar) pero NO guardados en el perfil (no subidos)
   const API_BASE = 'https://api.tatoeba.org/v1'; // API oficial ESTABLE y versionada (no /unstable, que cambia)
 
   const LANGUAGES = [
@@ -234,6 +231,16 @@
     'spa,eng,fra,ita,deu,por,jpn,rus,cmn,kor,epo,nld,tur,pol,ukr,heb,ara,fin,hun,ces,swe,ell,ron,lat,cat,ind,vie,dan,nob,lit';
 
   const LIST_DISPLAY_DEFAULT = { front: 'spa', back: 'eng' };
+  // Config de fábrica (la del perfil Predeterminado). Coincide con la URL base de la API.
+  const DEFAULT_CONFIG = {
+    filters: { ...FETCH_DEFAULTS },
+    display: { ...DISPLAY_DEFAULT },
+    listDisplay: { ...LIST_DISPLAY_DEFAULT },
+    listId: '174916',
+    audioLang: 'eng',
+    listSort: '-created',
+    startRevealed: false,
+  };
 
   const K = {
     filters: 'sm-fc-filters',
@@ -255,7 +262,8 @@
       return Object.assign({}, FETCH_DEFAULTS);
     }
   })();
-  const saveFilters = () => LS.set(K.filters, JSON.stringify(filters));
+  // Toda persistencia de config va al PERFIL ACTIVO (fuente única). saveActive() lo escribe (y dispara el sync).
+  const saveFilters = () => saveActive();
 
   let DISPLAY = (() => {
     try {
@@ -268,7 +276,7 @@
       return Object.assign({}, DISPLAY_DEFAULT);
     }
   })();
-  const saveDisplay = () => LS.set(K.display, JSON.stringify(DISPLAY));
+  const saveDisplay = () => saveActive();
 
   let LIST_DISPLAY = (() => {
     try {
@@ -281,9 +289,16 @@
       return Object.assign({}, LIST_DISPLAY_DEFAULT);
     }
   })();
-  const saveListDisplay = () =>
-    LS.set(K.listDisplay, JSON.stringify(LIST_DISPLAY));
+  const saveListDisplay = () => saveActive();
   let listSort = LS.get('sm-fc-listsort') || '-created'; // orden de "Mi lista" (sort de la API)
+  // Escribe el estado actual (globals) en el perfil activo y persiste el mapa de perfiles -> dispara el sync.
+  function saveActive() {
+    const profs = loadProfiles();
+    profs[activeProfile] = snapshotFromGlobals();
+    saveProfilesMap(profs);
+    dirty = false;
+    updateId();
+  }
 
   const langSeg = () =>
     (location.pathname.match(/^\/([a-z]{2,3})\//) || [, 'es'])[1];
@@ -583,6 +598,7 @@
       #fc-top { display:flex; align-items:center; gap:8px; padding:calc(env(safe-area-inset-top,0px) + 8px) 12px 8px; }
       #fc-id { font-size:12px; color:var(--muted); font-weight:600; line-height:1.3; margin-right:auto; }
       #fc-id .fc-prof { color:var(--fg); font-weight:700; font-size:13px; margin-bottom:2px; }
+      #fc-id .fc-dirty { color:#e0a000; font-weight:600; font-size:11px; }
       #fc-id .fc-total { color:var(--accent); font-weight:700; margin-bottom:2px; }
       .fc-dot-load { display:inline-flex; gap:3px; vertical-align:middle; }
       .fc-dot-load i { width:4px; height:4px; border-radius:50%; background:currentColor; opacity:.4; animation:fc-bounce 1s ease-in-out infinite; }
@@ -680,11 +696,12 @@
       .fc-pager .pg { width:40px; height:40px; border:none; border-radius:50%; background:var(--btn); color:var(--btnfg);
         cursor:pointer; display:flex; align-items:center; justify-content:center; }
       .fc-pager .pg:disabled { opacity:.3; }
-      #fc-modal { position:fixed; inset:0; z-index:2147483600; display:flex; align-items:center; justify-content:center;
+      #fc-modal { position:fixed; inset:0; z-index:2147483600; display:flex; align-items:center; justify-content:center; box-sizing:border-box;
+        padding:calc(env(safe-area-inset-top,0px) + 3vh) calc(env(safe-area-inset-right,0px) + 7vw) calc(env(safe-area-inset-bottom,0px) + 3vh) calc(env(safe-area-inset-left,0px) + 7vw);
         background:rgba(0,0,0,.5); opacity:0; pointer-events:none; transition:opacity .2s ease; }
       #fc-modal.open { opacity:1; pointer-events:auto; }
-      #fc-modal .box { background:var(--bg,#fff); color:var(--fg,#222); border:1px solid var(--line); border-radius:14px; width:min(92vw,400px);
-        height:min(90vh,780px); overflow:hidden; display:flex; flex-direction:column; font-size:14px; box-shadow:0 16px 48px var(--shadow);
+      #fc-modal .box { background:var(--bg,#fff); color:var(--fg,#222); border:1px solid var(--line); border-radius:14px; width:min(100%,480px);
+        height:min(100%,820px); overflow:hidden; display:flex; flex-direction:column; font-size:14px; box-shadow:0 16px 48px var(--shadow);
         transform:scale(.94); transition:transform .2s ease; }
       #fc-modal.open .box { transform:scale(1); }
       #fc-modal .fc-profiles { display:flex; flex-direction:column; gap:8px; padding:10px; border-bottom:1px solid var(--line); }
@@ -697,6 +714,8 @@
       #fc-modal #prof-rename { background:var(--btn); color:var(--btnfg); }
       #fc-modal #prof-del { background:transparent; color:var(--muted); border:none; border-radius:6px; width:36px; height:36px; cursor:pointer; flex:0 0 auto; display:flex; align-items:center; justify-content:center; transition:color .15s, background .15s; }
       #fc-modal #prof-del:hover { color:#d33; background:var(--btn); }
+      #fc-modal .fc-restore { width:100%; height:32px; border:1px solid var(--line); border-radius:6px; cursor:pointer; font-size:12px; font-weight:600; background:transparent; color:var(--muted); }
+      #fc-modal .fc-restore:hover { color:var(--fg); border-color:var(--accent); }
       #fc-modal .fc-prof-cloud { display:flex; gap:6px; align-items:center; }
       #fc-modal .fc-prof-cloud input { flex:1; min-width:0; min-height:32px; font-size:12px; }
       #fc-modal #gh-sync { flex:0 0 auto; height:32px; min-height:0; padding:0 14px; border:none; border-radius:6px; cursor:pointer; font-size:12px; font-weight:600; background:var(--accent); color:#fff; }
@@ -928,7 +947,7 @@
     const c = currentCard();
     if (!idEl) return;
     const head =
-      `<div class="fc-prof">${escHtml(activeProfile)}</div>` +
+      `<div class="fc-prof">${escHtml(activeProfile)}${dirty ? ' <span class="fc-dirty">• sin guardar</span>' : ''}</div>` +
       (totalCount != null
         ? `<div class="fc-total">${totalCount.toLocaleString('es')} en Tatoeba</div>`
         : ''); // perfil, y total debajo
@@ -1289,7 +1308,7 @@
     });
     wrap.querySelector('#ld-sort').addEventListener('change', (e) => {
       listSort = e.target.value;
-      LS.set('sm-fc-listsort', listSort);
+      saveActive(); // persiste al perfil activo (+ sincroniza)
       listPage = 1;
       listUrls = [];
       loadListPage();
@@ -1564,31 +1583,27 @@
       display: { front: g('#d-front').value, back: g('#d-back').value },
       listId: g('#f-listid').value.trim() || '174916',
       audioLang: g('#f-audiolang').value,
-      desktop: g('#f-desktop').checked,
       startRevealed: g('#f-startrev').checked,
+      // 'desktop' NO va en el perfil (es local, no se sincroniza) -> se maneja con applyDesktopPref
     };
   }
-  function applyConfig(cfg, persist) {
-    // Booleanos SIEMPRE coercionados (perfiles viejos sin el campo -> default false, no se "pegan" del anterior).
-    filters = cfg.filters;
-    DISPLAY = cfg.display;
-    LIST_ID = cfg.listId;
-    AUDIO_LANG = cfg.audioLang;
-    DESKTOP_MODE = !!cfg.desktop;
-    START_REVEALED = !!cfg.startRevealed;
-    if (cfg.listDisplay) LIST_DISPLAY = cfg.listDisplay;
-    if (cfg.listSort) listSort = cfg.listSort;
+  // Modo ordenador: preferencia LOCAL por dispositivo, fuera del perfil y del sync.
+  function applyDesktopPref(m) {
+    DESKTOP_MODE = m.querySelector('#f-desktop').checked;
+    LS.set('sm-fc-desktop', DESKTOP_MODE ? '1' : '0'); // no está en SYNC_KEYS -> no se sube al gist
     document.documentElement.classList.toggle('fc-desktop', DESKTOP_MODE);
-    if (persist) {
-      LS.set('sm-fc-listid', LIST_ID);
-      LS.set('sm-fc-audiolang', AUDIO_LANG);
-      LS.set('sm-fc-desktop', DESKTOP_MODE ? '1' : '0');
-      LS.set('sm-fc-listsort', listSort);
-      LS.set('sm-fc-startrevealed', START_REVEALED ? '1' : '0');
-      saveFilters();
-      saveDisplay();
-      saveListDisplay();
-    }
+  }
+  // SOLO carga la config a los globals (working copy). NO persiste: persistir = saveActive() (Guardar).
+  // DESKTOP_MODE no se toca acá (es local). Defaults para campos faltantes -> nunca "se pegan" del perfil anterior.
+  function applyConfig(cfg) {
+    cfg = cfg || {};
+    filters = Object.assign({}, FETCH_DEFAULTS, cfg.filters || {});
+    DISPLAY = Object.assign({}, DISPLAY_DEFAULT, cfg.display || {});
+    LIST_DISPLAY = Object.assign({}, LIST_DISPLAY_DEFAULT, cfg.listDisplay || {});
+    LIST_ID = cfg.listId || '174916';
+    AUDIO_LANG = cfg.audioLang || 'eng';
+    listSort = cfg.listSort || '-created';
+    START_REVEALED = !!cfg.startRevealed;
   }
   const PROF_KEY = 'sm-fc-profiles';
   function loadProfiles() {
@@ -1624,7 +1639,6 @@
       listId: LIST_ID,
       audioLang: AUDIO_LANG,
       listSort,
-      desktop: DESKTOP_MODE,
       startRevealed: START_REVEALED,
     };
   }
@@ -1638,6 +1652,7 @@
   function setActiveProfile(name) {
     activeProfile = name;
     LS.set('sm-fc-active', name);
+    dirty = false;
     updateId();
   }
   function rebuildModal(keepOpen) {
@@ -1722,6 +1737,7 @@
           <button type="button" id="prof-rename">Renombrar</button>
           <button type="button" id="prof-del" title="Borrar perfil" aria-label="Borrar perfil"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M4 7h16"/><path d="M10 11v6M14 11v6"/><path d="M6 7l1 13h10l1-13"/><path d="M9 7V4h6v3"/></svg></button>
         </div>
+        ${activeProfile === PROFILE_DEFAULT ? '<button type="button" id="prof-restore" class="fc-restore">↺ Restaurar predeterminados</button>' : ''}
       </div>
       <div class="fc-tabs">
         <button type="button" class="active" data-pane="o">Oraciones</button>
@@ -1809,7 +1825,7 @@
       if (!name) return;
       const cfg = loadProfiles()[name];
       if (!cfg) return;
-      applyConfig(cfg, true);
+      applyConfig(cfg); // carga el perfil a globals (ya está guardado/sincronizado)
       setActiveProfile(name);
       closePanels();
       listUrls = [];
@@ -1831,30 +1847,42 @@
         ))
       )
         return;
-      const cfg = snapshotFromModal(m);
-      applyConfig(cfg, true); // aplica el estado actual del modal al crear el perfil
-      profs[name] = cfg;
-      saveProfilesMap(profs);
+      applyConfig(snapshotFromModal(m)); // aplica el estado actual del modal a globals
+      applyDesktopPref(m); // modo ordenador: local, aparte del perfil
+      setActiveProfile(name); // primero marcá el activo...
+      saveActive(); // ...y guardá globals en ese nuevo perfil (persiste + sincroniza)
       refreshProfileSelect(profSel);
       profSel.value = name;
-      setActiveProfile(name);
       closePanels();
       listUrls = [];
       resetDeck();
       toast(`Perfil "${name}" creado`, true);
     });
+    const restoreBtn = m.querySelector('#prof-restore');
+    if (restoreBtn)
+      restoreBtn.addEventListener('click', async () => {
+        if (!(await confirmDialog('¿Restaurar la config de fábrica del perfil Predeterminado?', 'Restaurar'))) return;
+        applyConfig(DEFAULT_CONFIG); // carga defaults a globals (no toca el modo ordenador, que es local)
+        setActiveProfile(PROFILE_DEFAULT);
+        saveActive(); // guarda los defaults en Predeterminado (+ sincroniza)
+        closePanels();
+        listUrls = [];
+        resetDeck();
+        rebuildModal(true); // refresca el form con los defaults
+        const ns = document.getElementById('fc-modal');
+        if (ns) ns.querySelector('#prof-sel').value = PROFILE_DEFAULT;
+        toast('Predeterminados restaurados', true);
+      });
     m.querySelector('#prof-save').addEventListener('click', () => {
       const name = profSel.value;
-      const cfg = snapshotFromModal(m);
-      applyConfig(cfg, true); // <- APLICA a la config viva + persiste (antes solo guardaba en el perfil)
-      const profs = loadProfiles();
-      profs[name] = cfg;
-      saveProfilesMap(profs);
+      applyConfig(snapshotFromModal(m)); // carga el form a globals...
+      applyDesktopPref(m); // modo ordenador: local
       setActiveProfile(name);
+      saveActive(); // ...y guarda globals en el perfil activo (persiste + SINCRONIZA)
       closePanels();
       listUrls = [];
       resetDeck();
-      toast(`"${name}" guardado y aplicado`, true);
+      toast(`"${name}" guardado y sincronizado ☁︎`, true);
     });
     m.querySelector('#prof-rename').addEventListener('click', async () => {
       const old = profSel.value;
@@ -1942,13 +1970,13 @@
     });
     m.querySelector('#fc-cancel').addEventListener('click', closeModal);
     m.querySelector('#fc-apply').addEventListener('click', () => {
-      const cfg = snapshotFromModal(m);
-      applyConfig(cfg, true);
-      const profs = loadProfiles();
-      profs[activeProfile] = cfg; // mantené el perfil activo SIEMPRE en sync con la config viva
-      saveProfilesMap(profs);
-      closePanels(); // si cambió el modo, dejá los paneles en estado limpio
-      listUrls = []; // cambió la lista objetivo -> invalida los cursores de "Mi lista"
+      // APLICAR = probar la config en la app, SIN guardar en el perfil ni subir al gist.
+      applyConfig(snapshotFromModal(m)); // solo globals (working copy)
+      applyDesktopPref(m); // modo ordenador: local
+      dirty = true;
+      updateId(); // marca "• sin guardar"
+      closePanels();
+      listUrls = [];
       closeModal();
       resetDeck();
     });
@@ -2136,7 +2164,12 @@
   /* ============ ARRANQUE ============ */
   injectStyles();
   document.documentElement.classList.toggle('fc-desktop', DESKTOP_MODE);
-  ensureDefaultProfile(); // garantiza el perfil base no borrable
+  ensureDefaultProfile(); // garantiza el perfil base (lo crea desde los globals iniciales si no existe)
+  {
+    const _p = loadProfiles();
+    if (!_p[activeProfile]) activeProfile = PROFILE_DEFAULT; // activo inválido -> default
+    applyConfig(_p[activeProfile] || {}); // FUENTE ÚNICA: cargá el perfil activo a los globals
+  }
   buildUI();
   setOpen(isOpen());
   resetDeck();
