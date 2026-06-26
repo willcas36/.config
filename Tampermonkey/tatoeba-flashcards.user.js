@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Tatoeba - Flashcards (Sentence Mining)
 // @namespace    https://tatoeba.org/
-// @version      4.62
+// @version      4.64
 // @description  Flashcards tipo Anki sobre la búsqueda filtrada de Tatoeba (mobile + teclado)
 // @icon         https://tatoeba.org/img/tatoeba.svg?1781334885
 // @match        https://tatoeba.org/*/sentences/search*
@@ -14,7 +14,7 @@
 
 (function () {
   'use strict';
-  const SCRIPT_VERSION = '4.62';
+  const SCRIPT_VERSION = '4.64';
   const GH_TOKEN = '';
 
   /* ============ STORAGE (backend local: GM_setValue, con fallback a localStorage) ============ */
@@ -654,7 +654,8 @@
       #fc-back.fc-reveal, #fc-owners.fc-reveal { animation:fc-revealIn .26s cubic-bezier(.2,.7,.3,1) both; }
       #fc-owners.fc-reveal { animation-delay:.07s; }
       @keyframes fc-revealIn { from { opacity:0; transform:translateY(9px); } to { opacity:1; transform:translateY(0); } }
-      #fc-owners { font-size:12px; color:var(--muted); min-height:1.3em; }
+      #fc-owners { font-size:12px; color:var(--muted); min-height:1.3em; position:relative; z-index:5; }
+      #fc-owners .fc-owner-link { color:var(--accent); text-decoration:none; cursor:pointer; }
       #fc-hint { font-size:13px; color:var(--muted); opacity:.7; }
       .fc-dots::after { content:'•••'; letter-spacing:2px; animation:fc-blink 1.1s ease-in-out infinite; }
       @keyframes fc-blink { 0%,100%{opacity:.25} 50%{opacity:1} }
@@ -949,6 +950,11 @@
 
     overlay.addEventListener('click', (e) => {
       // Si fue un toque reciente sobre la carta/zonas, ya lo resolvió touchend -> no duplicar.
+      const ul = e.target.closest('.fc-owner-link');
+      if (ul) {
+        openOwner(ul.dataset.user);
+        return;
+      }
       if (e.target.closest('#fc-stage') && Date.now() - lastTouch < 600) return;
       const b = e.target.closest('button[data-act]');
       if (b) {
@@ -983,12 +989,31 @@
 
   // Resuelve un tap (zona transparente o carta) sin depender del click sintético, que iOS cancela.
   function handleTap(target) {
+    const ul = target.closest && target.closest('.fc-owner-link');
+    if (ul) {
+      openOwner(ul.dataset.user);
+      return;
+    }
     const b = target.closest && target.closest('button[data-act]');
     if (b) {
       handleAction(b.dataset.act);
       return;
     }
     if (target.closest && target.closest('#fc-card') && !revealed) reveal();
+  }
+
+  const ownerLink = (name) =>
+    name && name !== '—'
+      ? `<a class="fc-owner-link" data-user="${escHtml(name)}">${escHtml(name)}</a>`
+      : '—';
+
+  // Abre el perfil oficial del dueño en una pestaña nueva.
+  function openOwner(user) {
+    if (user && user !== '—')
+      window.open(
+        `/${langSeg()}/user/profile/${encodeURIComponent(user)}`,
+        '_blank',
+      );
   }
 
   function updateId() {
@@ -1022,6 +1047,10 @@
       return;
     }
     showLoading(false);
+    if (currentAudio) {
+      currentAudio.pause();
+      currentAudio.currentTime = 0;
+    } // cortá el audio al cambiar de oración
     if (index > maxSeen) maxSeen = index; // marca de agua: el historial conserva todas las vistas
     revealed = false;
     zonesEl.classList.remove('on');
@@ -1067,7 +1096,7 @@
     zonesEl.classList.add('on');
     updateBar();
 
-    ownersEl.textContent = `Oración: ${frontOf(c).owner || '—'} · Traducción: ${backOf(c).owner || '—'}`;
+    ownersEl.innerHTML = `Oración: ${ownerLink(frontOf(c).owner)} · Traducción: ${ownerLink(backOf(c).owner)}`;
     ownersEl.classList.remove('fc-reveal');
     void ownersEl.offsetWidth;
     ownersEl.classList.add('fc-reveal'); // misma animación que la traducción (con leve retraso por CSS)
@@ -1221,6 +1250,10 @@
     void row.offsetWidth;
     row.style.transition = 'opacity .25s ease';
     row.style.opacity = '1';
+    if (listTotal != null) {
+      listTotal += 1;
+      applyListTitle();
+    } // truco local: +1 sin re-fetch
   }
   function listRemoveRow(id) {
     // saca la fila puntual SIN recargar
@@ -1231,6 +1264,10 @@
     row.style.transition = 'opacity .2s ease';
     row.style.opacity = '0';
     setTimeout(() => row.remove(), 200);
+    if (listTotal != null) {
+      listTotal = Math.max(0, listTotal - 1);
+      applyListTitle();
+    } // truco local: -1 sin re-fetch
   }
 
   // ===== Selección múltiple + borrado en lote (uno por uno: la API no tiene endpoint bulk) =====
@@ -1322,6 +1359,10 @@
         row.remove();
       }
     }
+    if (listTotal != null && ok) {
+      listTotal = Math.max(0, listTotal - ok);
+      applyListTitle();
+    } // truco local: -N sin re-fetch
     toast(`✓ ${ok} quitada(s)`, ok > 0);
     bar.querySelector('.lb-all').checked = false;
     bar.querySelector('.lb-all').indeterminate = false;
@@ -1998,9 +2039,21 @@
       const profs = loadProfiles();
       delete profs[name];
       saveProfilesMap(profs);
+      const wasActive = activeProfile === name;
       refreshProfileSelect(profSel);
-      profSel.value = activeProfile === name ? PROFILE_DEFAULT : activeProfile;
-      if (activeProfile === name) setActiveProfile(PROFILE_DEFAULT);
+      if (wasActive) {
+        // pasamos al Predeterminado: cargá su config y reconstruí el modal (así aparece el botón restaurar)
+        applyConfig(loadProfiles()[PROFILE_DEFAULT] || {});
+        setActiveProfile(PROFILE_DEFAULT);
+        closePanels();
+        listUrls = [];
+        resetDeck();
+        rebuildModal(true);
+        const ns = document.getElementById('fc-modal');
+        if (ns) ns.querySelector('#prof-sel').value = PROFILE_DEFAULT;
+      } else {
+        profSel.value = activeProfile;
+      }
       toast(`Perfil "${name}" borrado`, true);
     });
     m.querySelector('#gh-sync').addEventListener('click', async () => {
