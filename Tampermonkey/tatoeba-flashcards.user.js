@@ -1,10 +1,13 @@
 // ==UserScript==
 // @name         Tatoeba - Flashcards (Sentence Mining)
 // @namespace    https://tatoeba.org/
-// @version      4.71
+// @version      4.82
 // @description  Flashcards tipo Anki sobre la búsqueda filtrada de Tatoeba (mobile + teclado)
 // @icon         https://tatoeba.org/img/tatoeba.svg?1781334885
 // @match        https://tatoeba.org/*/sentences/search*
+// @homepageURL  https://github.com/willcas36/tatoeba-flashcards
+// @updateURL    https://raw.githubusercontent.com/willcas36/tatoeba-flashcards/main/tatoeba-flashcards.user.js
+// @downloadURL  https://raw.githubusercontent.com/willcas36/tatoeba-flashcards/main/tatoeba-flashcards.user.js
 // @grant        GM_setValue
 // @grant        GM_getValue
 // @grant        GM_deleteValue
@@ -14,7 +17,7 @@
 
 (function () {
   'use strict';
-  const SCRIPT_VERSION = '4.71';
+  const SCRIPT_VERSION = '4.82';
   const GH_TOKEN = '';
 
   /* ============ STORAGE (backend local: GM_setValue, con fallback a localStorage) ============ */
@@ -223,7 +226,7 @@
     'history',
     'config',
   ];
-  const keyLabel = (k) => (k === ' ' ? 'Espacio' : k || '—');
+  const keyLabel = (k) => (k === ' ' ? 'Espacio' : k || 'Sin asignar');
   const gestOpts = (sel) =>
     ACTIONS.map(
       (a) =>
@@ -779,7 +782,7 @@
       .bulk-del:disabled { opacity:.45; cursor:default; }
       .fc-list-ctrls { display:flex; flex-direction:column; gap:8px; padding:4px 4px 12px; border-bottom:1px solid var(--line); margin-bottom:6px; }
       .fc-list-ctrls label { font-size:12px; color:var(--muted); display:flex; flex-direction:column; gap:3px; }
-      .fc-list-ctrls select { padding:7px; border:1px solid var(--line); border-radius:6px; font-size:14px; background:var(--card); color:var(--fg); }
+      .fc-list-ctrls select { padding:7px; border:1px solid var(--line); border-radius:6px; font-size:16px; background:var(--card); color:var(--fg); }
       .fc-list-load { display:flex; flex-direction:column; align-items:center; gap:14px; padding:44px 0; }
       .fc-list-load .lbl { font-size:13px; color:var(--muted); animation:fc-blink 1.4s ease-in-out infinite; }
       .fc-pager { display:flex; align-items:center; justify-content:center; gap:16px; padding:14px; color:var(--muted); font-size:13px; }
@@ -809,14 +812,16 @@
       #fc-modal .fc-del:hover { color:#d33; }
       #fc-modal .fc-icobtn .material-icons { font-size:20px; line-height:1; }
       #fc-modal .fc-icobtn.fc-disabled { opacity:.35; }
+      #fc-modal .fc-restore-toggle { max-width:36px; overflow:hidden; transition:max-width .28s cubic-bezier(.2,.85,.3,1), opacity .22s ease, margin-left .28s cubic-bezier(.2,.85,.3,1); }
+      #fc-modal .fc-restore-toggle.collapsed { max-width:0; opacity:0; margin-left:-6px; pointer-events:none; }
+      #fc-modal .fc-restore-toggle.collapsed.fc-disabled { opacity:0; }
       #fc-modal .fc-icobtn.fc-disabled:hover { color:var(--muted); background:transparent; }
-      #fc-modal .fc-prof-actions { animation:fc-actionsIn .2s ease; }
-      @keyframes fc-actionsIn { from { opacity:0; transform:translateY(4px); } to { opacity:1; transform:translateY(0); } }
       #fc-modal .fc-ver { text-align:center; font-size:10px; color:var(--muted); opacity:.6; padding:3px 0 0; letter-spacing:.5px; }
       #fc-modal .fc-keyrow { display:flex; align-items:center; justify-content:space-between; gap:10px; }
       #fc-modal .fc-keyrow > span { font-size:14px; }
-      #fc-modal .fc-keycap { min-width:84px; height:34px; min-height:0; border:1px solid var(--line); border-radius:6px; background:var(--card); color:var(--fg); cursor:pointer; font-size:13px; font-weight:600; padding:0 12px; }
+      #fc-modal .fc-keycap { width:108px; box-sizing:border-box; height:34px; min-height:0; flex:0 0 auto; border:1px solid var(--line); border-radius:6px; background:var(--card); color:var(--fg); cursor:pointer; font-size:13px; font-weight:600; padding:0 8px; text-align:center; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
       #fc-modal .fc-keycap.capturing { border-color:var(--accent); color:var(--accent); }
+      #fc-modal .fc-keycap.empty { color:var(--muted); font-weight:400; font-style:italic; }
       #fc-modal .fc-restore { width:100%; height:34px; margin-top:4px; border:1px solid var(--line); border-radius:6px; cursor:pointer; font-size:12px; font-weight:600; background:transparent; color:var(--muted); }
       #fc-modal .fc-restore:hover { color:var(--fg); border-color:var(--accent); }
       #fc-modal .fc-tabs { display:flex; gap:2px; padding:8px 8px 0; border-bottom:1px solid var(--line); }
@@ -832,7 +837,7 @@
       #fc-modal label { display:flex; flex-direction:column; gap:3px; }
       #fc-modal .hint { font-size:11px; color:var(--muted); margin:-3px 0 4px; line-height:1.35; }
       #fc-modal .row { display:flex; align-items:center; gap:8px; }
-      #fc-modal select, #fc-modal input { padding:9px 10px; min-height:40px; box-sizing:border-box; border:1px solid var(--line); border-radius:6px; font-size:15px;
+      #fc-modal select, #fc-modal input { padding:9px 10px; min-height:40px; box-sizing:border-box; border:1px solid var(--line); border-radius:6px; font-size:16px;
         background:var(--card,#fff); color:var(--fg,#222); transition:border-color .15s ease; }
       #fc-modal select { -webkit-appearance:none; appearance:none; padding-right:34px;
         background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%23888' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E");
@@ -841,7 +846,7 @@
       #fc-modal input[type=checkbox] { width:auto; min-height:0; accent-color:var(--accent); }
       #fc-modal .fc-tagbox { display:flex; flex-wrap:wrap; gap:6px; padding:7px; border:1px solid var(--line); border-radius:6px; background:var(--card); min-height:40px; align-items:center; cursor:text; }
       #fc-modal .fc-tagbox:focus-within { border-color:var(--accent); }
-      #fc-modal .fc-tagbox input { border:none; outline:none; min-height:0; background:transparent; flex:1; min-width:90px; padding:2px; color:var(--fg); font-size:15px; }
+      #fc-modal .fc-tagbox input { border:none; outline:none; min-height:0; background:transparent; flex:1; min-width:90px; padding:2px; color:var(--fg); font-size:16px; }
       .fc-tag { display:inline-flex; align-items:center; gap:5px; background:var(--accent); color:#fff; border-radius:6px; padding:3px 5px 3px 9px; font-size:13px; }
       .fc-tag button { border:none; background:transparent; color:#fff; cursor:pointer; font-size:16px; line-height:1; padding:0 2px; opacity:.85; }
       .fc-tag button:hover { opacity:1; }
@@ -867,7 +872,7 @@
         padding:22px; box-shadow:0 16px 48px var(--shadow); transform:scale(.92); transition:transform .18s ease; display:flex; flex-direction:column; gap:14px; }
       #fc-prompt.open .cbox { transform:scale(1); }
       #fc-prompt .cmsg { font-size:15px; font-weight:600; }
-      #fc-prompt .pinput { padding:9px; border:1px solid var(--line); border-radius:8px; background:var(--card); color:var(--fg); font-size:15px; }
+      #fc-prompt .pinput { padding:9px; border:1px solid var(--line); border-radius:8px; background:var(--card); color:var(--fg); font-size:16px; }
       #fc-prompt .pinput:focus { outline:none; border-color:var(--accent); }
       #fc-prompt .cbtns { display:flex; gap:10px; }
       #fc-prompt .cbtns button { flex:1; height:40px; border:none; border-radius:8px; cursor:pointer; font-size:15px; font-weight:600; }
@@ -1034,7 +1039,7 @@
         audio: playAudio,
         add: addCurrent,
         remove: removeCurrent,
-        filters: openModal,
+        filters: toggleModal,
         history: toggleHistory, // el botón alterna abrir/cerrar (igual que el atajo)
         list: toggleList,
         exit: () => setOpen(false),
@@ -1053,7 +1058,7 @@
       removeList: removeCurrent,
       list: toggleList,
       history: toggleHistory,
-      config: openModal,
+      config: toggleModal,
       reveal: () => {
         if (!revealed) reveal();
         else next();
@@ -1770,10 +1775,10 @@
     };
   }
   // Modo ordenador: preferencia LOCAL por dispositivo, fuera del perfil y del sync.
-  function applyDesktopPref(m) {
+  function applyDesktopPref(m, persist) {
     DESKTOP_MODE = m.querySelector('#f-desktop').checked;
-    LS.set('sm-fc-desktop', DESKTOP_MODE ? '1' : '0'); // no está en SYNC_KEYS -> no se sube al gist
     document.documentElement.classList.toggle('fc-desktop', DESKTOP_MODE);
+    if (persist) LS.set('sm-fc-desktop', DESKTOP_MODE ? '1' : '0'); // local (no en SYNC_KEYS). Solo Guardar persiste -> Cancelar puede revertir.
   }
   // Lee gestos + atajos del modal y los aplica en vivo. Solo persiste (+ sincroniza) si persist=true.
   function applyControls(m, persist) {
@@ -1794,6 +1799,62 @@
       LS.set('sm-fc-gestures', JSON.stringify(GESTURES)); // persiste + SINCRONIZA
       LS.set('sm-fc-keys', JSON.stringify(KEYS));
     }
+  }
+  // Actualiza TODOS los campos del modal desde los globals actuales, SIN reconstruirlo (evita el "pop" y permite animar el botón restaurar).
+  function populateModal(m) {
+    const g = (id) => m.querySelector(id);
+    const setV = (id, v) => {
+      const el = g(id);
+      if (el) el.value = v == null ? '' : v;
+    };
+    const setC = (id, v) => {
+      const el = g(id);
+      if (el) el.checked = !!v;
+    };
+    const f = filters;
+    const box = g('#f-query-box'),
+      inp = g('#f-query-input');
+    if (box && inp) {
+      box.querySelectorAll('.fc-tag').forEach((t) => t.remove());
+      inp.value = '';
+      parseQueryChips(f.query).forEach((c) => addTag(box, inp, c));
+    }
+    setV('#f-from', f.from);
+    setV('#f-wmin', f.word_min);
+    setV('#f-wmax', f.word_max);
+    setV('#f-user', f.user);
+    setV('#f-origin', f.origin);
+    setV('#f-orphans', f.orphans);
+    setV('#f-unapproved', f.unapproved);
+    setV('#f-native', f.native);
+    setV('#f-audio', f.has_audio);
+    setV('#f-tags', f.tags);
+    setV('#f-list', f.list);
+    setV('#f-tto', f.trans_to);
+    setV('#f-tlink', f.trans_link);
+    setV('#f-tuser', f.trans_user);
+    setV('#f-torphan', f.trans_orphan);
+    setV('#f-tunap', f.trans_unapproved);
+    setV('#f-tnative', f.trans_native);
+    setV('#f-thas', f.trans_has_audio);
+    setV('#f-sort', f.sort);
+    setC('#f-reverse', f.sort_reverse);
+    setV('#d-front', DISPLAY.front);
+    setV('#d-back', DISPLAY.back);
+    setV('#f-audiolang', AUDIO_LANG);
+    setC('#f-startrev', START_REVEALED);
+    setC('#f-desktop', DESKTOP_MODE);
+    populateListSelect(); // re-puebla "Lista objetivo" y selecciona el LIST_ID actual
+    ['up', 'down', 'left', 'right'].forEach((d) => setV('#g-' + d, GESTURES[d]));
+    m.querySelectorAll('.fc-keycap').forEach((b) => {
+      const k = KEYS[b.dataset.act] || '';
+      b.dataset.key = k;
+      b.textContent = keyLabel(k);
+      b.classList.toggle('empty', !k);
+    });
+    const rb = g('#prof-restore'); // colapsa/expande con transición
+    if (rb) rb.classList.toggle('collapsed', activeProfile !== PROFILE_DEFAULT);
+    updateRestoreBtn(m);
   }
   // SOLO carga la config a los globals (working copy). NO persiste: persistir = saveActive() (Guardar).
   // DESKTOP_MODE no se toca acá (es local). Defaults para campos faltantes -> nunca "se pegan" del perfil anterior.
@@ -1953,7 +2014,7 @@
         <div class="fc-prof-actions">
           <button type="button" id="prof-save">Guardar</button>
           <button type="button" id="prof-rename">Renombrar</button>
-          ${activeProfile === PROFILE_DEFAULT ? `<button type="button" id="prof-restore" class="fc-icobtn${atDefaults ? ' fc-disabled' : ''}" title="Restaurar predeterminados" aria-label="Restaurar predeterminados"><span class="material-icons">settings_backup_restore</span></button>` : ''}
+          <button type="button" id="prof-restore" class="fc-icobtn fc-restore-toggle${activeProfile === PROFILE_DEFAULT ? '' : ' collapsed'}${atDefaults ? ' fc-disabled' : ''}" title="Restaurar predeterminados" aria-label="Restaurar predeterminados"><span class="material-icons">settings_backup_restore</span></button>
           <button type="button" id="prof-del" class="fc-icobtn fc-del" title="Borrar perfil" aria-label="Borrar perfil"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M4 7h16"/><path d="M10 11v6M14 11v6"/><path d="M6 7l1 13h10l1-13"/><path d="M9 7V4h6v3"/></svg></button>
         </div>
       </div>
@@ -2035,8 +2096,8 @@
       <label>Derecha →:<select id="g-right">${gestOpts(GESTURES.right)}</select></label>
       <div class="hint">Las zonas de tap quedan fijas; acá configurás solo los deslizamientos.</div>
       <h4>Atajos (teclado, escritorio)</h4>
-      ${KEY_ACTS.map((a) => `<div class="fc-keyrow"><span>${actionLabel(a)}</span><button type="button" class="fc-keycap" data-act="${a}" data-key="${escHtml(KEYS[a] || '')}">${escHtml(keyLabel(KEYS[a]))}</button></div>`).join('')}
-      <div class="hint">Tocá un atajo y apretá la tecla nueva (Esc cancela).</div>
+      ${KEY_ACTS.map((a) => `<div class="fc-keyrow"><span>${actionLabel(a)}</span><button type="button" class="fc-keycap${KEYS[a] ? '' : ' empty'}" data-act="${a}" data-key="${escHtml(KEYS[a] || '')}">${escHtml(keyLabel(KEYS[a]))}</button></div>`).join('')}
+      <div class="hint">Tocá un atajo y apretá la tecla nueva. <b>Backspace</b> = sin asignar · <b>Esc</b> = cancelar. Las teclas no se repiten (se mueven al nuevo atajo).</div>
       <button type="button" id="ctrl-reset" class="fc-restore">↺ Restaurar controles por defecto</button>
       </div>
       </div>
@@ -2057,14 +2118,33 @@
     m.querySelectorAll('.fc-keycap').forEach((btn) => {
       btn.addEventListener('click', () => {
         btn.classList.add('capturing');
-        btn.textContent = 'apretá una tecla…';
+        btn.textContent = 'apretá…';
         const onKey = (ev) => {
           ev.preventDefault();
           ev.stopPropagation();
           document.removeEventListener('keydown', onKey, true);
           btn.classList.remove('capturing');
-          if (ev.key !== 'Escape') btn.dataset.key = ev.key; // Esc cancela
-          btn.textContent = keyLabel(btn.dataset.key);
+          if (ev.key === 'Escape') {
+            btn.textContent = keyLabel(btn.dataset.key); // Esc cancela
+            return;
+          }
+          if (ev.key === 'Backspace' || ev.key === 'Delete') {
+            btn.dataset.key = ''; // Backspace/Supr -> sin asignar
+            btn.textContent = keyLabel('');
+            btn.classList.add('empty');
+            return;
+          }
+          // Sin duplicados: si la tecla ya está en otro atajo, se la saco (la tecla se "mueve" acá).
+          m.querySelectorAll('.fc-keycap').forEach((other) => {
+            if (other !== btn && other.dataset.key === ev.key) {
+              other.dataset.key = '';
+              other.textContent = keyLabel('');
+              other.classList.add('empty');
+            }
+          });
+          btn.dataset.key = ev.key;
+          btn.textContent = keyLabel(ev.key);
+          btn.classList.remove('empty');
         };
         document.addEventListener('keydown', onKey, true); // captura: antes del handler global
       });
@@ -2096,9 +2176,7 @@
       closePanels();
       listUrls = [];
       resetDeck();
-      rebuildModal(true);
-      const ns = document.getElementById('fc-modal');
-      if (ns) ns.querySelector('#prof-sel').value = name; // mantené el seleccionado tras el rebuild
+      populateModal(m); // actualiza campos EN SU LUGAR (sin pop) -> el botón restaurar anima colapso/expansión
       toast(`Perfil "${name}" cargado`, true);
     });
     m.querySelector('#prof-new').addEventListener('click', async () => {
@@ -2114,7 +2192,7 @@
       )
         return;
       applyConfig(snapshotFromModal(m)); // aplica el estado actual del modal a globals
-      applyDesktopPref(m); // modo ordenador: local, aparte del perfil
+      applyDesktopPref(m, true); // modo ordenador: local, persiste
       applyControls(m, true); // controles: persistir + sincronizar
       setActiveProfile(name); // primero marcá el activo...
       saveActive(); // ...y guardá globals en ese nuevo perfil (persiste + sincroniza)
@@ -2139,15 +2217,14 @@
         closePanels();
         listUrls = [];
         resetDeck();
-        rebuildModal(true); // refresca el form con los defaults
-        const ns = document.getElementById('fc-modal');
-        if (ns) ns.querySelector('#prof-sel').value = PROFILE_DEFAULT;
+        profSel.value = PROFILE_DEFAULT;
+        populateModal(m); // refresca el form con los defaults en su lugar
         toast('Predeterminados restaurados', true);
       });
     m.querySelector('#prof-save').addEventListener('click', () => {
       const name = profSel.value;
       applyConfig(snapshotFromModal(m)); // carga el form a globals...
-      applyDesktopPref(m); // modo ordenador: local
+      applyDesktopPref(m, true); // modo ordenador: local, persiste
       applyControls(m, true); // controles: persistir + sincronizar
       setActiveProfile(name);
       saveActive(); // ...y guarda globals en el perfil activo (persiste + SINCRONIZA)
@@ -2191,15 +2268,14 @@
       const wasActive = activeProfile === name;
       refreshProfileSelect(profSel);
       if (wasActive) {
-        // pasamos al Predeterminado: cargá su config y reconstruí el modal (así aparece el botón restaurar)
+        // pasamos al Predeterminado: cargá su config y actualizá el form en su lugar (el botón restaurar anima su aparición)
         applyConfig(loadProfiles()[PROFILE_DEFAULT] || {});
         setActiveProfile(PROFILE_DEFAULT);
         closePanels();
         listUrls = [];
         resetDeck();
-        rebuildModal(true);
-        const ns = document.getElementById('fc-modal');
-        if (ns) ns.querySelector('#prof-sel').value = PROFILE_DEFAULT;
+        profSel.value = PROFILE_DEFAULT;
+        populateModal(m);
       } else {
         profSel.value = activeProfile;
       }
@@ -2240,11 +2316,11 @@
     document.addEventListener('keydown', (e) => {
       if (e.key === 'Escape' && m.classList.contains('open')) closeModal();
     });
-    m.querySelector('#fc-cancel').addEventListener('click', closeModal);
+    m.querySelector('#fc-cancel').addEventListener('click', cancelModal);
     m.querySelector('#fc-apply').addEventListener('click', () => {
       // APLICAR = probar la config en la app, SIN guardar en el perfil ni subir al gist.
       applyConfig(snapshotFromModal(m)); // solo globals (working copy)
-      applyDesktopPref(m); // modo ordenador: local
+      applyDesktopPref(m, false); // modo ordenador: aplicar EN VIVO para probar, sin persistir
       applyControls(m, false); // controles: aplicar EN VIVO para probar, sin persistir ni sincronizar
       dirty = true;
       updateId(); // marca "• sin guardar"
@@ -2272,6 +2348,27 @@
   const closeModal = () => {
     uiBlocked = false;
     document.getElementById('fc-modal').classList.remove('open');
+  };
+  // Cancelar = descartar lo no guardado y volver TODO a lo guardado (perfil activo + controles + modo ordenador).
+  const cancelModal = () => {
+    const wasDirty = dirty;
+    applyConfig(loadProfiles()[activeProfile] || {}); // config del perfil guardado
+    KEYS = loadObj('sm-fc-keys', KEYS_DEFAULT); // atajos guardados
+    GESTURES = loadObj('sm-fc-gestures', GESTURES_DEFAULT); // gestos guardados
+    rebuildKeymap();
+    DESKTOP_MODE = LS.get('sm-fc-desktop') === '1'; // modo ordenador guardado
+    document.documentElement.classList.toggle('fc-desktop', DESKTOP_MODE);
+    dirty = false;
+    closePanels();
+    listUrls = [];
+    rebuildModal(false); // reconstruye el modal (cerrado) con los valores guardados
+    if (wasDirty) resetDeck(); // solo recargá si había cambios aplicados que revertir
+  };
+  // El botón/tecla de config alterna abrir/cerrar.
+  const toggleModal = () => {
+    const m = document.getElementById('fc-modal');
+    if (m && m.classList.contains('open')) closeModal();
+    else openModal();
   };
 
   async function resetDeck() {
@@ -2351,9 +2448,8 @@
           dy = t.clientY - sy;
         const adx = Math.abs(dx),
           ady = Math.abs(dy);
-        if (adx < 10 && ady < 10) return; // todavía no es gesto
-        if (ady > adx && dy > 0) return; // deslizá hacia ABAJO -> lo deja para el pull-to-refresh nativo de iOS
-        if (e.cancelable) e.preventDefault(); // bloquea horizontal y hacia ARRIBA -> página fija
+        if (adx < 10 && ady < 10) return; // todavía no es movimiento real (deja pasar el tap)
+        if (e.cancelable) e.preventDefault(); // MEDIO (#fc-stage): scroll/refresh totalmente bloqueado -> gestos limpios. El scroll nativo vive en las barras de arriba/abajo (no se trackean); el edge-guard deja los gestos del navegador.
       },
       { passive: false },
     );
@@ -2394,9 +2490,24 @@
         return;
       if (e.ctrlKey || e.metaKey || e.altKey) return;
       const act = keymap[e.key]; // tecla -> acción (configurable)
-      if (!act || act === 'list' || act === 'history') return; // list/history van en el otro listener
+      if (!act || act === 'list' || act === 'history' || act === 'config')
+        return; // list/history/config van en listeners aparte (deben togglear con el modal/panel abierto)
       e.preventDefault();
       runAction(act);
+    });
+
+    // Tecla de config: aparte, porque debe ALTERNAR abrir/cerrar (funciona con el modal abierto también).
+    document.addEventListener('keydown', (e) => {
+      if (!isOpen() || !KEYS.config || e.key !== KEYS.config) return;
+      const el = document.activeElement;
+      if (
+        el &&
+        (/^(INPUT|TEXTAREA|SELECT)$/.test(el.tagName) || el.isContentEditable)
+      )
+        return; // si estás tipeando en un campo, la tecla escribe (no togglea)
+      if (e.ctrlKey || e.metaKey || e.altKey) return;
+      e.preventDefault();
+      toggleModal();
     });
 
     // Atajos de panel (modo ordenador): viven aparte porque deben funcionar AUN con el panel abierto, para alternar/cerrar.
