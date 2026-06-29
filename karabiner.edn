@@ -343,9 +343,11 @@
 
                                       [{:pkey :button1} :return_or_enter :anki-layer]
                                       [{:pkey :button2} :semicolon :anki-layer]
-                                      [:#Pquote :i :anki-layer]
+                                      [:#Pquote [:i ["inf" 1]] [:anki-layer :!inf]]
+                                      [:#Pquote [:escape ["inf" 0]] [:anki-layer :inf]]
+                                      [:close_bracket [:t ["stats" 1]] [:anki-layer :!stats]]
+                                      [:close_bracket [:escape ["stats" 0]] [:anki-layer :stats]]
                                       [:#Pslash :r :anki-layer]
-                                      [:close_bracket :t :anki-layer]
                                       [:backslash :escape :anki-layer]
                                       [:comma :!C#Pz :anki-layer]
                                       [:period :!SC#Pz :anki-layer]]}

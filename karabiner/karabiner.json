@@ -2710,12 +2710,99 @@
           },
           "to" : [ {
             "key_code" : "i"
+          }, {
+            "set_variable" : {
+              "name" : "inf",
+              "value" : 1
+            }
           } ],
           "conditions" : [ {
             "type" : "frontmost_application_if",
             "bundle_identifiers" : [ "^net\\.ankiweb\\.launcher" ]
           }, {
             "name" : "anki-layer",
+            "value" : 1,
+            "type" : "variable_if"
+          }, {
+            "name" : "inf",
+            "value" : 1,
+            "type" : "variable_unless"
+          } ],
+          "type" : "basic"
+        }, {
+          "from" : {
+            "key_code" : "quote",
+            "modifiers" : {
+              "optional" : [ "caps_lock" ]
+            }
+          },
+          "to" : [ {
+            "key_code" : "escape"
+          }, {
+            "set_variable" : {
+              "name" : "inf",
+              "value" : 0
+            }
+          } ],
+          "conditions" : [ {
+            "type" : "frontmost_application_if",
+            "bundle_identifiers" : [ "^net\\.ankiweb\\.launcher" ]
+          }, {
+            "name" : "anki-layer",
+            "value" : 1,
+            "type" : "variable_if"
+          }, {
+            "name" : "inf",
+            "value" : 1,
+            "type" : "variable_if"
+          } ],
+          "type" : "basic"
+        }, {
+          "from" : {
+            "key_code" : "close_bracket"
+          },
+          "to" : [ {
+            "key_code" : "t"
+          }, {
+            "set_variable" : {
+              "name" : "stats",
+              "value" : 1
+            }
+          } ],
+          "conditions" : [ {
+            "type" : "frontmost_application_if",
+            "bundle_identifiers" : [ "^net\\.ankiweb\\.launcher" ]
+          }, {
+            "name" : "anki-layer",
+            "value" : 1,
+            "type" : "variable_if"
+          }, {
+            "name" : "stats",
+            "value" : 1,
+            "type" : "variable_unless"
+          } ],
+          "type" : "basic"
+        }, {
+          "from" : {
+            "key_code" : "close_bracket"
+          },
+          "to" : [ {
+            "key_code" : "escape"
+          }, {
+            "set_variable" : {
+              "name" : "stats",
+              "value" : 0
+            }
+          } ],
+          "conditions" : [ {
+            "type" : "frontmost_application_if",
+            "bundle_identifiers" : [ "^net\\.ankiweb\\.launcher" ]
+          }, {
+            "name" : "anki-layer",
+            "value" : 1,
+            "type" : "variable_if"
+          }, {
+            "name" : "stats",
             "value" : 1,
             "type" : "variable_if"
           } ],
@@ -2729,22 +2816,6 @@
           },
           "to" : [ {
             "key_code" : "r"
-          } ],
-          "conditions" : [ {
-            "type" : "frontmost_application_if",
-            "bundle_identifiers" : [ "^net\\.ankiweb\\.launcher" ]
-          }, {
-            "name" : "anki-layer",
-            "value" : 1,
-            "type" : "variable_if"
-          } ],
-          "type" : "basic"
-        }, {
-          "from" : {
-            "key_code" : "close_bracket"
-          },
-          "to" : [ {
-            "key_code" : "t"
           } ],
           "conditions" : [ {
             "type" : "frontmost_application_if",
