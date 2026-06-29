@@ -58,7 +58,8 @@
              :x-mode {:key :x}
              :c-mode {:key :c}}
  :main [{:des "Capslock to Hyper, Return if alone" :rules [[:##caps_lock :fn nil {:alone :return_or_enter}]]}
-        {:des "Toggle Anki" :rules [[[:right_control {:pkey :button2}] [:yabai "window --toggle anki || open -a Anki"]]]}
+        {:des "Toggle Anki" :rules [[[:right_control {:pkey :button2}] [:yabai "window --toggle anki || open -a Anki"]]
+                                    [:open_bracket [:yabai "window --toggle anki || open -a Anki"] :anki-layer]]}
         {:des "Mouse mode" :rules [:g305-device
                                    [:right_command :right_command :!anki {:alone :!C#Pclose_bracket}]
                                    [:right_control :right_control :!anki {:alone :!C#Popen_bracket}]
@@ -344,8 +345,7 @@
                                       [{:pkey :button2} :semicolon :anki-layer]
                                       [:#Pquote :i :anki-layer]
                                       [:#Pslash :r :anki-layer]
-                                      [:open_bracket :t :anki-layer]
-                                      [:close_bracket :o :anki-layer]
+                                      [:close_bracket :t :anki-layer]
                                       [:backslash :escape :anki-layer]
                                       [:comma :!C#Pz :anki-layer]
                                       [:period :!SC#Pz :anki-layer]]}

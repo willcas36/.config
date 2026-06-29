@@ -99,6 +99,19 @@
             "shell_command" : "/opt/homebrew/bin/yabai -m window --toggle anki || open -a Anki"
           } ],
           "type" : "basic"
+        }, {
+          "from" : {
+            "key_code" : "open_bracket"
+          },
+          "to" : [ {
+            "shell_command" : "/opt/homebrew/bin/yabai -m window --toggle anki || open -a Anki"
+          } ],
+          "conditions" : [ {
+            "name" : "anki-layer",
+            "value" : 1,
+            "type" : "variable_if"
+          } ],
+          "type" : "basic"
         } ]
       }, {
         "description" : "Mouse mode",
@@ -2728,26 +2741,10 @@
           "type" : "basic"
         }, {
           "from" : {
-            "key_code" : "open_bracket"
-          },
-          "to" : [ {
-            "key_code" : "t"
-          } ],
-          "conditions" : [ {
-            "type" : "frontmost_application_if",
-            "bundle_identifiers" : [ "^net\\.ankiweb\\.launcher" ]
-          }, {
-            "name" : "anki-layer",
-            "value" : 1,
-            "type" : "variable_if"
-          } ],
-          "type" : "basic"
-        }, {
-          "from" : {
             "key_code" : "close_bracket"
           },
           "to" : [ {
-            "key_code" : "o"
+            "key_code" : "t"
           } ],
           "conditions" : [ {
             "type" : "frontmost_application_if",
