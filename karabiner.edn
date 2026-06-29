@@ -59,7 +59,11 @@
              :c-mode {:key :c}}
  :main [{:des "Capslock to Hyper, Return if alone" :rules [[:##caps_lock :fn nil {:alone :return_or_enter}]]}
         {:des "Toggle Anki" :rules [[[:right_control {:pkey :button2}] [:yabai "window --toggle anki || open -a Anki"]]
-                                    [:open_bracket [:yabai "window --toggle anki || open -a Anki"] :anki-layer]]}
+                                    [:open_bracket [:yabai "window --toggle anki || open -a Anki"] :anki-layer]
+                                    ;; [:hyphen :hyphen :!anki-layer {:held ["anki-layer" 1] :params {:held 500}}]
+                                    [[:hyphen :equal_sign] ["anki-layer" 1] :!anki-layer]
+                                    [[:hyphen :equal_sign] ["anki-layer" 0] :anki-layer]
+                                    ]}
         {:des "Mouse mode" :rules [:g305-device
                                    [:right_command :right_command :!anki {:alone :!C#Pclose_bracket}]
                                    [:right_control :right_control :!anki {:alone :!C#Popen_bracket}]
