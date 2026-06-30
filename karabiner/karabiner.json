@@ -2580,25 +2580,6 @@
           "type" : "basic"
         }, {
           "from" : {
-            "key_code" : "hyphen"
-          },
-          "to" : [ {
-            "pointing_button" : "button1"
-          }, {
-            "pointing_button" : "button1"
-          }, {
-            "pointing_button" : "button1"
-          }, {
-            "key_code" : "t",
-            "modifiers" : [ "left_command", "left_control", "left_option" ]
-          } ],
-          "conditions" : [ {
-            "type" : "frontmost_application_if",
-            "bundle_identifiers" : [ "^net\\.ankiweb\\.launcher" ]
-          } ],
-          "type" : "basic"
-        }, {
-          "from" : {
             "simultaneous" : [ {
               "key_code" : "right_command"
             }, {
@@ -2855,6 +2836,82 @@
             "type" : "variable_if"
           }, {
             "name" : "stats",
+            "value" : 1,
+            "type" : "variable_if"
+          } ],
+          "type" : "basic"
+        }, {
+          "from" : {
+            "key_code" : "hyphen"
+          },
+          "to" : [ {
+            "mouse_key" : {
+              "vertical_wheel" : -30,
+              "speed_multiplier" : 2
+            }
+          } ],
+          "conditions" : [ {
+            "type" : "frontmost_application_if",
+            "bundle_identifiers" : [ "^net\\.ankiweb\\.launcher" ]
+          }, {
+            "name" : "stats",
+            "value" : 1,
+            "type" : "variable_if"
+          } ],
+          "type" : "basic"
+        }, {
+          "from" : {
+            "key_code" : "hyphen"
+          },
+          "to" : [ {
+            "mouse_key" : {
+              "vertical_wheel" : -30,
+              "speed_multiplier" : 2
+            }
+          } ],
+          "conditions" : [ {
+            "type" : "frontmost_application_if",
+            "bundle_identifiers" : [ "^net\\.ankiweb\\.launcher" ]
+          }, {
+            "name" : "inf",
+            "value" : 1,
+            "type" : "variable_if"
+          } ],
+          "type" : "basic"
+        }, {
+          "from" : {
+            "key_code" : "equal_sign"
+          },
+          "to" : [ {
+            "mouse_key" : {
+              "vertical_wheel" : 30,
+              "speed_multiplier" : 2
+            }
+          } ],
+          "conditions" : [ {
+            "type" : "frontmost_application_if",
+            "bundle_identifiers" : [ "^net\\.ankiweb\\.launcher" ]
+          }, {
+            "name" : "stats",
+            "value" : 1,
+            "type" : "variable_if"
+          } ],
+          "type" : "basic"
+        }, {
+          "from" : {
+            "key_code" : "equal_sign"
+          },
+          "to" : [ {
+            "mouse_key" : {
+              "vertical_wheel" : 30,
+              "speed_multiplier" : 2
+            }
+          } ],
+          "conditions" : [ {
+            "type" : "frontmost_application_if",
+            "bundle_identifiers" : [ "^net\\.ankiweb\\.launcher" ]
+          }, {
+            "name" : "inf",
             "value" : 1,
             "type" : "variable_if"
           } ],

@@ -336,7 +336,6 @@
                                       [:!REQa ["anki-layer" 1] :!anki-layer]
                                       [:!REQa ["anki-layer" 0] :anki-layer]
                                       [[{:pkey :button1} {:pkey :button2}] [{:pkey :button1} {:pkey :button1} {:pkey :button1} :!CTOt]]
-                                      [:hyphen [{:pkey :button1} {:pkey :button1} {:pkey :button1} :!CTOt]]
                                       [[:right_command {:pkey :button1}] :rewind]
                                       [[:right_command {:pkey :button2}] :fast_forward]
                                       [[:right_control {:pkey :button1}] :play_or_pause]
@@ -347,10 +346,17 @@
 
                                       [{:pkey :button1} :return_or_enter :anki-layer]
                                       [{:pkey :button2} :semicolon :anki-layer]
+
                                       [:#Pquote [:i ["inf" 1]] [:anki-layer :!inf]]
                                       [:#Pquote [:escape ["inf" 0]] [:anki-layer :inf]]
+
                                       [:close_bracket [:t ["stats" 1]] [:anki-layer :!stats]]
                                       [:close_bracket [:escape ["stats" 0]] [:anki-layer :stats]]
+                                      [:hyphen {:mkey {:vwheel -30 :speed 2}} [:stats]]
+                                      [:hyphen {:mkey {:vwheel -30 :speed 2}} [:inf]]
+                                      [:equal_sign {:mkey {:vwheel 30 :speed 2}} [:stats]]
+                                      [:equal_sign {:mkey {:vwheel 30 :speed 2}} [:inf]]
+
                                       [:#Pslash :r :anki-layer]
                                       [:backslash :escape :anki-layer]
                                       [:comma :!C#Pz :anki-layer]
