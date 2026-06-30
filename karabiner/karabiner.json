@@ -80,6 +80,155 @@
           "type" : "basic"
         } ]
       }, {
+        "description" : "Command to option, option to Command",
+        "manipulators" : [ {
+          "from" : {
+            "key_code" : "m",
+            "modifiers" : {
+              "mandatory" : [ "left_command" ]
+            }
+          },
+          "to" : [ ],
+          "type" : "basic"
+        }, {
+          "from" : {
+            "key_code" : "h",
+            "modifiers" : {
+              "mandatory" : [ "left_command" ]
+            }
+          },
+          "to" : [ ],
+          "type" : "basic"
+        } ]
+      }, {
+        "description" : "Toggle caps_lock by pressing left_shift then right_shift",
+        "manipulators" : [ {
+          "from" : {
+            "key_code" : "right_shift",
+            "modifiers" : {
+              "mandatory" : [ "left_shift" ],
+              "optional" : [ "caps_lock" ]
+            }
+          },
+          "to" : [ {
+            "key_code" : "caps_lock"
+          } ],
+          "type" : "basic"
+        }, {
+          "from" : {
+            "key_code" : "left_shift",
+            "modifiers" : {
+              "mandatory" : [ "right_shift" ],
+              "optional" : [ "caps_lock" ]
+            }
+          },
+          "to" : [ {
+            "key_code" : "caps_lock"
+          } ],
+          "type" : "basic"
+        } ]
+      }, {
+        "description" : "Function to ESC",
+        "manipulators" : [ {
+          "to_if_held_down" : [ {
+            "key_code" : "fn"
+          } ],
+          "parameters" : {
+            "basic.to_if_held_down_threshold_milliseconds" : 100
+          },
+          "from" : {
+            "key_code" : "fn"
+          },
+          "to" : [ {
+            "key_code" : "escape"
+          } ],
+          "type" : "basic"
+        } ]
+      }, {
+        "description" : "Shift deletes Forward and Backward",
+        "manipulators" : [ {
+          "to_if_alone" : [ {
+            "key_code" : "delete_or_backspace",
+            "modifiers" : [ "left_option", "fn" ]
+          } ],
+          "from" : {
+            "key_code" : "right_shift",
+            "modifiers" : {
+              "optional" : [ "caps_lock" ]
+            }
+          },
+          "to" : [ {
+            "key_code" : "right_shift"
+          } ],
+          "type" : "basic"
+        }, {
+          "to_if_alone" : [ {
+            "key_code" : "delete_or_backspace",
+            "modifiers" : [ "left_option" ]
+          } ],
+          "from" : {
+            "key_code" : "left_shift",
+            "modifiers" : {
+              "optional" : [ "caps_lock" ]
+            }
+          },
+          "to" : [ {
+            "key_code" : "left_shift"
+          } ],
+          "type" : "basic"
+        } ]
+      }, {
+        "description" : "Directional Keys",
+        "manipulators" : [ {
+          "from" : {
+            "key_code" : "j",
+            "modifiers" : {
+              "mandatory" : [ "fn" ],
+              "optional" : [ "any" ]
+            }
+          },
+          "to" : [ {
+            "key_code" : "up_arrow"
+          } ],
+          "type" : "basic"
+        }, {
+          "from" : {
+            "key_code" : "k",
+            "modifiers" : {
+              "mandatory" : [ "fn" ],
+              "optional" : [ "any" ]
+            }
+          },
+          "to" : [ {
+            "key_code" : "left_arrow"
+          } ],
+          "type" : "basic"
+        }, {
+          "from" : {
+            "key_code" : "l",
+            "modifiers" : {
+              "mandatory" : [ "fn" ],
+              "optional" : [ "any" ]
+            }
+          },
+          "to" : [ {
+            "key_code" : "right_arrow"
+          } ],
+          "type" : "basic"
+        }, {
+          "from" : {
+            "key_code" : "semicolon",
+            "modifiers" : {
+              "mandatory" : [ "fn" ],
+              "optional" : [ "any" ]
+            }
+          },
+          "to" : [ {
+            "key_code" : "down_arrow"
+          } ],
+          "type" : "basic"
+        } ]
+      }, {
         "description" : "Toggle Anki",
         "manipulators" : [ {
           "from" : {
@@ -159,6 +308,547 @@
             }
           } ],
           "conditions" : [ {
+            "name" : "anki-layer",
+            "value" : 1,
+            "type" : "variable_if"
+          } ],
+          "type" : "basic"
+        } ]
+      }, {
+        "description" : "Anki controls",
+        "manipulators" : [ {
+          "from" : {
+            "simultaneous" : [ {
+              "key_code" : "right_control"
+            }, {
+              "key_code" : "right_command"
+            } ],
+            "simultaneous_options" : {
+              "detect_key_down_uninterruptedly" : false,
+              "key_down_order" : "insensitive",
+              "key_up_order" : "insensitive",
+              "key_up_when" : "any"
+            }
+          },
+          "to" : [ {
+            "set_variable" : {
+              "name" : "anki-layer",
+              "value" : 1
+            }
+          } ],
+          "conditions" : [ {
+            "type" : "frontmost_application_if",
+            "bundle_identifiers" : [ "^net\\.ankiweb\\.launcher" ]
+          }, {
+            "name" : "anki-layer",
+            "value" : 1,
+            "type" : "variable_unless"
+          } ],
+          "type" : "basic"
+        }, {
+          "from" : {
+            "simultaneous" : [ {
+              "key_code" : "right_control"
+            }, {
+              "key_code" : "right_command"
+            } ],
+            "simultaneous_options" : {
+              "detect_key_down_uninterruptedly" : false,
+              "key_down_order" : "insensitive",
+              "key_up_order" : "insensitive",
+              "key_up_when" : "any"
+            }
+          },
+          "to" : [ {
+            "set_variable" : {
+              "name" : "anki-layer",
+              "value" : 0
+            }
+          } ],
+          "conditions" : [ {
+            "type" : "frontmost_application_if",
+            "bundle_identifiers" : [ "^net\\.ankiweb\\.launcher" ]
+          }, {
+            "name" : "anki-layer",
+            "value" : 1,
+            "type" : "variable_if"
+          } ],
+          "type" : "basic"
+        }, {
+          "from" : {
+            "key_code" : "a",
+            "modifiers" : {
+              "mandatory" : [ "right_command", "right_option", "right_shift" ]
+            }
+          },
+          "to" : [ {
+            "set_variable" : {
+              "name" : "anki-layer",
+              "value" : 1
+            }
+          } ],
+          "conditions" : [ {
+            "type" : "frontmost_application_if",
+            "bundle_identifiers" : [ "^net\\.ankiweb\\.launcher" ]
+          }, {
+            "name" : "anki-layer",
+            "value" : 1,
+            "type" : "variable_unless"
+          } ],
+          "type" : "basic"
+        }, {
+          "from" : {
+            "key_code" : "a",
+            "modifiers" : {
+              "mandatory" : [ "right_command", "right_option", "right_shift" ]
+            }
+          },
+          "to" : [ {
+            "set_variable" : {
+              "name" : "anki-layer",
+              "value" : 0
+            }
+          } ],
+          "conditions" : [ {
+            "type" : "frontmost_application_if",
+            "bundle_identifiers" : [ "^net\\.ankiweb\\.launcher" ]
+          }, {
+            "name" : "anki-layer",
+            "value" : 1,
+            "type" : "variable_if"
+          } ],
+          "type" : "basic"
+        }, {
+          "from" : {
+            "simultaneous" : [ {
+              "pointing_button" : "button1"
+            }, {
+              "pointing_button" : "button2"
+            } ],
+            "simultaneous_options" : {
+              "detect_key_down_uninterruptedly" : false,
+              "key_down_order" : "insensitive",
+              "key_up_order" : "insensitive",
+              "key_up_when" : "any"
+            }
+          },
+          "to" : [ {
+            "pointing_button" : "button1"
+          }, {
+            "pointing_button" : "button1"
+          }, {
+            "pointing_button" : "button1"
+          }, {
+            "key_code" : "t",
+            "modifiers" : [ "left_command", "left_control", "left_option" ]
+          } ],
+          "conditions" : [ {
+            "type" : "frontmost_application_if",
+            "bundle_identifiers" : [ "^net\\.ankiweb\\.launcher" ]
+          } ],
+          "type" : "basic"
+        }, {
+          "from" : {
+            "simultaneous" : [ {
+              "key_code" : "right_command"
+            }, {
+              "pointing_button" : "button1"
+            } ],
+            "simultaneous_options" : {
+              "detect_key_down_uninterruptedly" : false,
+              "key_down_order" : "insensitive",
+              "key_up_order" : "insensitive",
+              "key_up_when" : "any"
+            }
+          },
+          "to" : [ {
+            "consumer_key_code" : "rewind"
+          } ],
+          "conditions" : [ {
+            "type" : "frontmost_application_if",
+            "bundle_identifiers" : [ "^net\\.ankiweb\\.launcher" ]
+          } ],
+          "type" : "basic"
+        }, {
+          "from" : {
+            "simultaneous" : [ {
+              "key_code" : "right_command"
+            }, {
+              "pointing_button" : "button2"
+            } ],
+            "simultaneous_options" : {
+              "detect_key_down_uninterruptedly" : false,
+              "key_down_order" : "insensitive",
+              "key_up_order" : "insensitive",
+              "key_up_when" : "any"
+            }
+          },
+          "to" : [ {
+            "consumer_key_code" : "fast_forward"
+          } ],
+          "conditions" : [ {
+            "type" : "frontmost_application_if",
+            "bundle_identifiers" : [ "^net\\.ankiweb\\.launcher" ]
+          } ],
+          "type" : "basic"
+        }, {
+          "from" : {
+            "simultaneous" : [ {
+              "key_code" : "right_control"
+            }, {
+              "pointing_button" : "button1"
+            } ],
+            "simultaneous_options" : {
+              "detect_key_down_uninterruptedly" : false,
+              "key_down_order" : "insensitive",
+              "key_up_order" : "insensitive",
+              "key_up_when" : "any"
+            }
+          },
+          "to" : [ {
+            "consumer_key_code" : "play_or_pause"
+          } ],
+          "conditions" : [ {
+            "type" : "frontmost_application_if",
+            "bundle_identifiers" : [ "^net\\.ankiweb\\.launcher" ]
+          } ],
+          "type" : "basic"
+        }, {
+          "from" : {
+            "key_code" : "right_command"
+          },
+          "to" : [ {
+            "key_code" : "z",
+            "modifiers" : [ "left_command", "left_shift" ]
+          } ],
+          "conditions" : [ {
+            "type" : "frontmost_application_if",
+            "bundle_identifiers" : [ "^net\\.ankiweb\\.launcher" ]
+          }, {
+            "name" : "anki-layer",
+            "value" : 1,
+            "type" : "variable_if"
+          } ],
+          "type" : "basic"
+        }, {
+          "from" : {
+            "key_code" : "right_control"
+          },
+          "to" : [ {
+            "key_code" : "z",
+            "modifiers" : [ "left_command" ]
+          } ],
+          "conditions" : [ {
+            "type" : "frontmost_application_if",
+            "bundle_identifiers" : [ "^net\\.ankiweb\\.launcher" ]
+          }, {
+            "name" : "anki-layer",
+            "value" : 1,
+            "type" : "variable_if"
+          } ],
+          "type" : "basic"
+        }, {
+          "from" : {
+            "key_code" : "right_command"
+          },
+          "to" : [ {
+            "consumer_key_code" : "volume_decrement"
+          } ],
+          "conditions" : [ {
+            "type" : "frontmost_application_if",
+            "bundle_identifiers" : [ "^net\\.ankiweb\\.launcher" ]
+          } ],
+          "type" : "basic"
+        }, {
+          "from" : {
+            "key_code" : "right_control"
+          },
+          "to" : [ {
+            "consumer_key_code" : "volume_increment"
+          } ],
+          "conditions" : [ {
+            "type" : "frontmost_application_if",
+            "bundle_identifiers" : [ "^net\\.ankiweb\\.launcher" ]
+          } ],
+          "type" : "basic"
+        }, {
+          "from" : {
+            "pointing_button" : "button1"
+          },
+          "to" : [ {
+            "key_code" : "return_or_enter"
+          } ],
+          "conditions" : [ {
+            "type" : "frontmost_application_if",
+            "bundle_identifiers" : [ "^net\\.ankiweb\\.launcher" ]
+          }, {
+            "name" : "anki-layer",
+            "value" : 1,
+            "type" : "variable_if"
+          } ],
+          "type" : "basic"
+        }, {
+          "from" : {
+            "pointing_button" : "button2"
+          },
+          "to" : [ {
+            "key_code" : "semicolon"
+          } ],
+          "conditions" : [ {
+            "type" : "frontmost_application_if",
+            "bundle_identifiers" : [ "^net\\.ankiweb\\.launcher" ]
+          }, {
+            "name" : "anki-layer",
+            "value" : 1,
+            "type" : "variable_if"
+          } ],
+          "type" : "basic"
+        }, {
+          "from" : {
+            "key_code" : "quote",
+            "modifiers" : {
+              "optional" : [ "caps_lock" ]
+            }
+          },
+          "to" : [ {
+            "key_code" : "i"
+          }, {
+            "set_variable" : {
+              "name" : "inf",
+              "value" : 1
+            }
+          } ],
+          "conditions" : [ {
+            "type" : "frontmost_application_if",
+            "bundle_identifiers" : [ "^net\\.ankiweb\\.launcher" ]
+          }, {
+            "name" : "anki-layer",
+            "value" : 1,
+            "type" : "variable_if"
+          }, {
+            "name" : "inf",
+            "value" : 1,
+            "type" : "variable_unless"
+          } ],
+          "type" : "basic"
+        }, {
+          "from" : {
+            "key_code" : "quote",
+            "modifiers" : {
+              "optional" : [ "caps_lock" ]
+            }
+          },
+          "to" : [ {
+            "key_code" : "escape"
+          }, {
+            "set_variable" : {
+              "name" : "inf",
+              "value" : 0
+            }
+          } ],
+          "conditions" : [ {
+            "type" : "frontmost_application_if",
+            "bundle_identifiers" : [ "^net\\.ankiweb\\.launcher" ]
+          }, {
+            "name" : "anki-layer",
+            "value" : 1,
+            "type" : "variable_if"
+          }, {
+            "name" : "inf",
+            "value" : 1,
+            "type" : "variable_if"
+          } ],
+          "type" : "basic"
+        }, {
+          "from" : {
+            "key_code" : "close_bracket"
+          },
+          "to" : [ {
+            "key_code" : "t"
+          }, {
+            "set_variable" : {
+              "name" : "stats",
+              "value" : 1
+            }
+          } ],
+          "conditions" : [ {
+            "type" : "frontmost_application_if",
+            "bundle_identifiers" : [ "^net\\.ankiweb\\.launcher" ]
+          }, {
+            "name" : "anki-layer",
+            "value" : 1,
+            "type" : "variable_if"
+          }, {
+            "name" : "stats",
+            "value" : 1,
+            "type" : "variable_unless"
+          } ],
+          "type" : "basic"
+        }, {
+          "from" : {
+            "key_code" : "close_bracket"
+          },
+          "to" : [ {
+            "key_code" : "escape"
+          }, {
+            "set_variable" : {
+              "name" : "stats",
+              "value" : 0
+            }
+          } ],
+          "conditions" : [ {
+            "type" : "frontmost_application_if",
+            "bundle_identifiers" : [ "^net\\.ankiweb\\.launcher" ]
+          }, {
+            "name" : "anki-layer",
+            "value" : 1,
+            "type" : "variable_if"
+          }, {
+            "name" : "stats",
+            "value" : 1,
+            "type" : "variable_if"
+          } ],
+          "type" : "basic"
+        }, {
+          "from" : {
+            "key_code" : "hyphen"
+          },
+          "to" : [ {
+            "mouse_key" : {
+              "vertical_wheel" : -30,
+              "speed_multiplier" : 2
+            }
+          } ],
+          "conditions" : [ {
+            "type" : "frontmost_application_if",
+            "bundle_identifiers" : [ "^net\\.ankiweb\\.launcher" ]
+          }, {
+            "name" : "stats",
+            "value" : 1,
+            "type" : "variable_if"
+          } ],
+          "type" : "basic"
+        }, {
+          "from" : {
+            "key_code" : "hyphen"
+          },
+          "to" : [ {
+            "mouse_key" : {
+              "vertical_wheel" : -30,
+              "speed_multiplier" : 2
+            }
+          } ],
+          "conditions" : [ {
+            "type" : "frontmost_application_if",
+            "bundle_identifiers" : [ "^net\\.ankiweb\\.launcher" ]
+          }, {
+            "name" : "inf",
+            "value" : 1,
+            "type" : "variable_if"
+          } ],
+          "type" : "basic"
+        }, {
+          "from" : {
+            "key_code" : "equal_sign"
+          },
+          "to" : [ {
+            "mouse_key" : {
+              "vertical_wheel" : 30,
+              "speed_multiplier" : 2
+            }
+          } ],
+          "conditions" : [ {
+            "type" : "frontmost_application_if",
+            "bundle_identifiers" : [ "^net\\.ankiweb\\.launcher" ]
+          }, {
+            "name" : "stats",
+            "value" : 1,
+            "type" : "variable_if"
+          } ],
+          "type" : "basic"
+        }, {
+          "from" : {
+            "key_code" : "equal_sign"
+          },
+          "to" : [ {
+            "mouse_key" : {
+              "vertical_wheel" : 30,
+              "speed_multiplier" : 2
+            }
+          } ],
+          "conditions" : [ {
+            "type" : "frontmost_application_if",
+            "bundle_identifiers" : [ "^net\\.ankiweb\\.launcher" ]
+          }, {
+            "name" : "inf",
+            "value" : 1,
+            "type" : "variable_if"
+          } ],
+          "type" : "basic"
+        }, {
+          "from" : {
+            "key_code" : "slash",
+            "modifiers" : {
+              "optional" : [ "caps_lock" ]
+            }
+          },
+          "to" : [ {
+            "key_code" : "r"
+          } ],
+          "conditions" : [ {
+            "type" : "frontmost_application_if",
+            "bundle_identifiers" : [ "^net\\.ankiweb\\.launcher" ]
+          }, {
+            "name" : "anki-layer",
+            "value" : 1,
+            "type" : "variable_if"
+          } ],
+          "type" : "basic"
+        }, {
+          "from" : {
+            "key_code" : "backslash"
+          },
+          "to" : [ {
+            "key_code" : "escape"
+          } ],
+          "conditions" : [ {
+            "type" : "frontmost_application_if",
+            "bundle_identifiers" : [ "^net\\.ankiweb\\.launcher" ]
+          }, {
+            "name" : "anki-layer",
+            "value" : 1,
+            "type" : "variable_if"
+          } ],
+          "type" : "basic"
+        }, {
+          "from" : {
+            "key_code" : "comma"
+          },
+          "to" : [ {
+            "key_code" : "z",
+            "modifiers" : [ "left_command" ]
+          } ],
+          "conditions" : [ {
+            "type" : "frontmost_application_if",
+            "bundle_identifiers" : [ "^net\\.ankiweb\\.launcher" ]
+          }, {
+            "name" : "anki-layer",
+            "value" : 1,
+            "type" : "variable_if"
+          } ],
+          "type" : "basic"
+        }, {
+          "from" : {
+            "key_code" : "period"
+          },
+          "to" : [ {
+            "key_code" : "z",
+            "modifiers" : [ "left_command", "left_shift" ]
+          } ],
+          "conditions" : [ {
+            "type" : "frontmost_application_if",
+            "bundle_identifiers" : [ "^net\\.ankiweb\\.launcher" ]
+          }, {
             "name" : "anki-layer",
             "value" : 1,
             "type" : "variable_if"
@@ -955,18 +1645,6 @@
           "type" : "basic"
         }, {
           "from" : {
-            "key_code" : "z",
-            "modifiers" : {
-              "mandatory" : [ "fn" ],
-              "optional" : [ "caps_lock" ]
-            }
-          },
-          "to" : [ {
-            "shell_command" : "/opt/homebrew/bin/yabai -m window --toggle vocabsieve || open -a vocabsieve"
-          } ],
-          "type" : "basic"
-        }, {
-          "from" : {
             "key_code" : "s",
             "modifiers" : {
               "mandatory" : [ "fn" ],
@@ -975,18 +1653,6 @@
           },
           "to" : [ {
             "shell_command" : "/opt/homebrew/bin/yabai -m window --toggle sticky"
-          } ],
-          "type" : "basic"
-        }, {
-          "from" : {
-            "key_code" : "z",
-            "modifiers" : {
-              "mandatory" : [ "fn" ],
-              "optional" : [ "caps_lock" ]
-            }
-          },
-          "to" : [ {
-            "shell_command" : "/opt/homebrew/bin/yabai -m window --toggle pip"
           } ],
           "type" : "basic"
         }, {
@@ -1288,27 +1954,6 @@
           "to" : [ {
             "shell_command" : "/opt/homebrew/bin/yabai -m window --move rel:0:150"
           } ],
-          "type" : "basic"
-        } ]
-      }, {
-        "description" : "Command to option, option to Command",
-        "manipulators" : [ {
-          "from" : {
-            "key_code" : "m",
-            "modifiers" : {
-              "mandatory" : [ "left_command" ]
-            }
-          },
-          "to" : [ ],
-          "type" : "basic"
-        }, {
-          "from" : {
-            "key_code" : "h",
-            "modifiers" : {
-              "mandatory" : [ "left_command" ]
-            }
-          },
-          "to" : [ ],
           "type" : "basic"
         } ]
       }, {
@@ -1701,136 +2346,6 @@
             "name" : "mouse-mode4",
             "value" : 1,
             "type" : "variable_if"
-          } ],
-          "type" : "basic"
-        } ]
-      }, {
-        "description" : "Clean Keyboard mode",
-        "manipulators" : [ {
-          "from" : {
-            "key_code" : "c",
-            "modifiers" : {
-              "optional" : [ "caps_lock" ]
-            }
-          },
-          "to" : [ {
-            "set_variable" : {
-              "name" : "clean-mode",
-              "value" : 1
-            }
-          }, {
-            "shell_command" : "open -a 'KeyboardCleanTool'"
-          } ],
-          "conditions" : [ {
-            "name" : "launch-mode",
-            "value" : 1,
-            "type" : "variable_if"
-          }, {
-            "name" : "clean-mode",
-            "value" : 1,
-            "type" : "variable_unless"
-          } ],
-          "type" : "basic"
-        }, {
-          "from" : {
-            "key_code" : "c",
-            "modifiers" : {
-              "optional" : [ "caps_lock" ]
-            }
-          },
-          "to" : [ {
-            "set_variable" : {
-              "name" : "clean-mode",
-              "value" : 0
-            }
-          }, {
-            "shell_command" : "osascript -e 'quit app \"KeyboardCleanTool\"'"
-          } ],
-          "conditions" : [ {
-            "name" : "launch-mode",
-            "value" : 1,
-            "type" : "variable_if"
-          }, {
-            "name" : "clean-mode",
-            "value" : 1,
-            "type" : "variable_if"
-          } ],
-          "type" : "basic"
-        } ]
-      }, {
-        "description" : "Toggle caps_lock by pressing left_shift then right_shift",
-        "manipulators" : [ {
-          "from" : {
-            "key_code" : "right_shift",
-            "modifiers" : {
-              "mandatory" : [ "left_shift" ],
-              "optional" : [ "caps_lock" ]
-            }
-          },
-          "to" : [ {
-            "key_code" : "caps_lock"
-          } ],
-          "type" : "basic"
-        }, {
-          "from" : {
-            "key_code" : "left_shift",
-            "modifiers" : {
-              "mandatory" : [ "right_shift" ],
-              "optional" : [ "caps_lock" ]
-            }
-          },
-          "to" : [ {
-            "key_code" : "caps_lock"
-          } ],
-          "type" : "basic"
-        } ]
-      }, {
-        "description" : "Function to ESQ",
-        "manipulators" : [ {
-          "to_if_held_down" : [ {
-            "key_code" : "fn"
-          } ],
-          "parameters" : {
-            "basic.to_if_held_down_threshold_milliseconds" : 100
-          },
-          "from" : {
-            "key_code" : "fn"
-          },
-          "to" : [ {
-            "key_code" : "escape"
-          } ],
-          "type" : "basic"
-        } ]
-      }, {
-        "description" : "Shift deletes Forward and Backward",
-        "manipulators" : [ {
-          "to_if_alone" : [ {
-            "key_code" : "delete_or_backspace",
-            "modifiers" : [ "left_option", "fn" ]
-          } ],
-          "from" : {
-            "key_code" : "right_shift",
-            "modifiers" : {
-              "optional" : [ "caps_lock" ]
-            }
-          },
-          "to" : [ {
-            "key_code" : "right_shift"
-          } ],
-          "type" : "basic"
-        }, {
-          "to_if_alone" : [ {
-            "key_code" : "delete_or_backspace",
-            "modifiers" : [ "left_option" ]
-          } ],
-          "from" : {
-            "key_code" : "left_shift",
-            "modifiers" : {
-              "optional" : [ "caps_lock" ]
-            }
-          },
-          "to" : [ {
-            "key_code" : "left_shift"
           } ],
           "type" : "basic"
         } ]
@@ -2262,86 +2777,6 @@
           "type" : "basic"
         } ]
       }, {
-        "description" : "Directional Keys",
-        "manipulators" : [ {
-          "from" : {
-            "key_code" : "j",
-            "modifiers" : {
-              "mandatory" : [ "fn" ],
-              "optional" : [ "any" ]
-            }
-          },
-          "to" : [ {
-            "key_code" : "up_arrow"
-          } ],
-          "type" : "basic"
-        }, {
-          "from" : {
-            "key_code" : "k",
-            "modifiers" : {
-              "mandatory" : [ "fn" ],
-              "optional" : [ "any" ]
-            }
-          },
-          "to" : [ {
-            "key_code" : "left_arrow"
-          } ],
-          "type" : "basic"
-        }, {
-          "from" : {
-            "key_code" : "l",
-            "modifiers" : {
-              "mandatory" : [ "fn" ],
-              "optional" : [ "any" ]
-            }
-          },
-          "to" : [ {
-            "key_code" : "right_arrow"
-          } ],
-          "type" : "basic"
-        }, {
-          "from" : {
-            "key_code" : "semicolon",
-            "modifiers" : {
-              "mandatory" : [ "fn" ],
-              "optional" : [ "any" ]
-            }
-          },
-          "to" : [ {
-            "key_code" : "down_arrow"
-          } ],
-          "type" : "basic"
-        } ]
-      }, {
-        "description" : "Navigation Tabs",
-        "manipulators" : [ {
-          "from" : {
-            "key_code" : "i",
-            "modifiers" : {
-              "mandatory" : [ "fn" ],
-              "optional" : [ "caps_lock" ]
-            }
-          },
-          "to" : [ {
-            "key_code" : "open_bracket",
-            "modifiers" : [ "left_command", "left_shift" ]
-          } ],
-          "type" : "basic"
-        }, {
-          "from" : {
-            "key_code" : "o",
-            "modifiers" : {
-              "mandatory" : [ "fn" ],
-              "optional" : [ "caps_lock" ]
-            }
-          },
-          "to" : [ {
-            "key_code" : "close_bracket",
-            "modifiers" : [ "left_command", "left_shift" ]
-          } ],
-          "type" : "basic"
-        } ]
-      }, {
         "description" : "Scroll control",
         "manipulators" : [ {
           "from" : {
@@ -2371,6 +2806,88 @@
               "vertical_wheel" : -30,
               "speed_multiplier" : 2
             }
+          } ],
+          "type" : "basic"
+        } ]
+      }, {
+        "description" : "Clean Keyboard mode",
+        "manipulators" : [ {
+          "from" : {
+            "key_code" : "c",
+            "modifiers" : {
+              "optional" : [ "caps_lock" ]
+            }
+          },
+          "to" : [ {
+            "set_variable" : {
+              "name" : "clean-mode",
+              "value" : 1
+            }
+          }, {
+            "shell_command" : "open -a 'KeyboardCleanTool'"
+          } ],
+          "conditions" : [ {
+            "name" : "launch-mode",
+            "value" : 1,
+            "type" : "variable_if"
+          }, {
+            "name" : "clean-mode",
+            "value" : 1,
+            "type" : "variable_unless"
+          } ],
+          "type" : "basic"
+        }, {
+          "from" : {
+            "key_code" : "c",
+            "modifiers" : {
+              "optional" : [ "caps_lock" ]
+            }
+          },
+          "to" : [ {
+            "set_variable" : {
+              "name" : "clean-mode",
+              "value" : 0
+            }
+          }, {
+            "shell_command" : "osascript -e 'quit app \"KeyboardCleanTool\"'"
+          } ],
+          "conditions" : [ {
+            "name" : "launch-mode",
+            "value" : 1,
+            "type" : "variable_if"
+          }, {
+            "name" : "clean-mode",
+            "value" : 1,
+            "type" : "variable_if"
+          } ],
+          "type" : "basic"
+        } ]
+      }, {
+        "description" : "Navigation Tabs",
+        "manipulators" : [ {
+          "from" : {
+            "key_code" : "i",
+            "modifiers" : {
+              "mandatory" : [ "fn" ],
+              "optional" : [ "caps_lock" ]
+            }
+          },
+          "to" : [ {
+            "key_code" : "open_bracket",
+            "modifiers" : [ "left_command", "left_shift" ]
+          } ],
+          "type" : "basic"
+        }, {
+          "from" : {
+            "key_code" : "o",
+            "modifiers" : {
+              "mandatory" : [ "fn" ],
+              "optional" : [ "caps_lock" ]
+            }
+          },
+          "to" : [ {
+            "key_code" : "close_bracket",
+            "modifiers" : [ "left_command", "left_shift" ]
           } ],
           "type" : "basic"
         } ]
@@ -2442,547 +2959,6 @@
           "conditions" : [ {
             "type" : "frontmost_application_if",
             "bundle_identifiers" : [ "^com\\.visualstudio\\.code\\.oss$", "^com\\.microsoft\\.VSCode(Insiders)?$", "^com\\.microsoft\\.VSCode?$", "com\\.exafunction\\.windsurf", "com.google.antigravity", "com.todesktop.230313mzl4w4u92" ]
-          } ],
-          "type" : "basic"
-        } ]
-      }, {
-        "description" : "Anki controls",
-        "manipulators" : [ {
-          "from" : {
-            "simultaneous" : [ {
-              "key_code" : "right_control"
-            }, {
-              "key_code" : "right_command"
-            } ],
-            "simultaneous_options" : {
-              "detect_key_down_uninterruptedly" : false,
-              "key_down_order" : "insensitive",
-              "key_up_order" : "insensitive",
-              "key_up_when" : "any"
-            }
-          },
-          "to" : [ {
-            "set_variable" : {
-              "name" : "anki-layer",
-              "value" : 1
-            }
-          } ],
-          "conditions" : [ {
-            "type" : "frontmost_application_if",
-            "bundle_identifiers" : [ "^net\\.ankiweb\\.launcher" ]
-          }, {
-            "name" : "anki-layer",
-            "value" : 1,
-            "type" : "variable_unless"
-          } ],
-          "type" : "basic"
-        }, {
-          "from" : {
-            "simultaneous" : [ {
-              "key_code" : "right_control"
-            }, {
-              "key_code" : "right_command"
-            } ],
-            "simultaneous_options" : {
-              "detect_key_down_uninterruptedly" : false,
-              "key_down_order" : "insensitive",
-              "key_up_order" : "insensitive",
-              "key_up_when" : "any"
-            }
-          },
-          "to" : [ {
-            "set_variable" : {
-              "name" : "anki-layer",
-              "value" : 0
-            }
-          } ],
-          "conditions" : [ {
-            "type" : "frontmost_application_if",
-            "bundle_identifiers" : [ "^net\\.ankiweb\\.launcher" ]
-          }, {
-            "name" : "anki-layer",
-            "value" : 1,
-            "type" : "variable_if"
-          } ],
-          "type" : "basic"
-        }, {
-          "from" : {
-            "key_code" : "a",
-            "modifiers" : {
-              "mandatory" : [ "right_command", "right_option", "right_shift" ]
-            }
-          },
-          "to" : [ {
-            "set_variable" : {
-              "name" : "anki-layer",
-              "value" : 1
-            }
-          } ],
-          "conditions" : [ {
-            "type" : "frontmost_application_if",
-            "bundle_identifiers" : [ "^net\\.ankiweb\\.launcher" ]
-          }, {
-            "name" : "anki-layer",
-            "value" : 1,
-            "type" : "variable_unless"
-          } ],
-          "type" : "basic"
-        }, {
-          "from" : {
-            "key_code" : "a",
-            "modifiers" : {
-              "mandatory" : [ "right_command", "right_option", "right_shift" ]
-            }
-          },
-          "to" : [ {
-            "set_variable" : {
-              "name" : "anki-layer",
-              "value" : 0
-            }
-          } ],
-          "conditions" : [ {
-            "type" : "frontmost_application_if",
-            "bundle_identifiers" : [ "^net\\.ankiweb\\.launcher" ]
-          }, {
-            "name" : "anki-layer",
-            "value" : 1,
-            "type" : "variable_if"
-          } ],
-          "type" : "basic"
-        }, {
-          "from" : {
-            "simultaneous" : [ {
-              "pointing_button" : "button1"
-            }, {
-              "pointing_button" : "button2"
-            } ],
-            "simultaneous_options" : {
-              "detect_key_down_uninterruptedly" : false,
-              "key_down_order" : "insensitive",
-              "key_up_order" : "insensitive",
-              "key_up_when" : "any"
-            }
-          },
-          "to" : [ {
-            "pointing_button" : "button1"
-          }, {
-            "pointing_button" : "button1"
-          }, {
-            "pointing_button" : "button1"
-          }, {
-            "key_code" : "t",
-            "modifiers" : [ "left_command", "left_control", "left_option" ]
-          } ],
-          "conditions" : [ {
-            "type" : "frontmost_application_if",
-            "bundle_identifiers" : [ "^net\\.ankiweb\\.launcher" ]
-          } ],
-          "type" : "basic"
-        }, {
-          "from" : {
-            "simultaneous" : [ {
-              "key_code" : "right_command"
-            }, {
-              "pointing_button" : "button1"
-            } ],
-            "simultaneous_options" : {
-              "detect_key_down_uninterruptedly" : false,
-              "key_down_order" : "insensitive",
-              "key_up_order" : "insensitive",
-              "key_up_when" : "any"
-            }
-          },
-          "to" : [ {
-            "consumer_key_code" : "rewind"
-          } ],
-          "conditions" : [ {
-            "type" : "frontmost_application_if",
-            "bundle_identifiers" : [ "^net\\.ankiweb\\.launcher" ]
-          } ],
-          "type" : "basic"
-        }, {
-          "from" : {
-            "simultaneous" : [ {
-              "key_code" : "right_command"
-            }, {
-              "pointing_button" : "button2"
-            } ],
-            "simultaneous_options" : {
-              "detect_key_down_uninterruptedly" : false,
-              "key_down_order" : "insensitive",
-              "key_up_order" : "insensitive",
-              "key_up_when" : "any"
-            }
-          },
-          "to" : [ {
-            "consumer_key_code" : "fast_forward"
-          } ],
-          "conditions" : [ {
-            "type" : "frontmost_application_if",
-            "bundle_identifiers" : [ "^net\\.ankiweb\\.launcher" ]
-          } ],
-          "type" : "basic"
-        }, {
-          "from" : {
-            "simultaneous" : [ {
-              "key_code" : "right_control"
-            }, {
-              "pointing_button" : "button1"
-            } ],
-            "simultaneous_options" : {
-              "detect_key_down_uninterruptedly" : false,
-              "key_down_order" : "insensitive",
-              "key_up_order" : "insensitive",
-              "key_up_when" : "any"
-            }
-          },
-          "to" : [ {
-            "consumer_key_code" : "play_or_pause"
-          } ],
-          "conditions" : [ {
-            "type" : "frontmost_application_if",
-            "bundle_identifiers" : [ "^net\\.ankiweb\\.launcher" ]
-          } ],
-          "type" : "basic"
-        }, {
-          "from" : {
-            "key_code" : "right_command"
-          },
-          "to" : [ {
-            "key_code" : "z",
-            "modifiers" : [ "left_command", "left_shift" ]
-          } ],
-          "conditions" : [ {
-            "type" : "frontmost_application_if",
-            "bundle_identifiers" : [ "^net\\.ankiweb\\.launcher" ]
-          }, {
-            "name" : "anki-layer",
-            "value" : 1,
-            "type" : "variable_if"
-          } ],
-          "type" : "basic"
-        }, {
-          "from" : {
-            "key_code" : "right_control"
-          },
-          "to" : [ {
-            "key_code" : "z",
-            "modifiers" : [ "left_command" ]
-          } ],
-          "conditions" : [ {
-            "type" : "frontmost_application_if",
-            "bundle_identifiers" : [ "^net\\.ankiweb\\.launcher" ]
-          }, {
-            "name" : "anki-layer",
-            "value" : 1,
-            "type" : "variable_if"
-          } ],
-          "type" : "basic"
-        }, {
-          "from" : {
-            "key_code" : "right_command"
-          },
-          "to" : [ {
-            "consumer_key_code" : "volume_decrement"
-          } ],
-          "conditions" : [ {
-            "type" : "frontmost_application_if",
-            "bundle_identifiers" : [ "^net\\.ankiweb\\.launcher" ]
-          } ],
-          "type" : "basic"
-        }, {
-          "from" : {
-            "key_code" : "right_control"
-          },
-          "to" : [ {
-            "consumer_key_code" : "volume_increment"
-          } ],
-          "conditions" : [ {
-            "type" : "frontmost_application_if",
-            "bundle_identifiers" : [ "^net\\.ankiweb\\.launcher" ]
-          } ],
-          "type" : "basic"
-        }, {
-          "from" : {
-            "pointing_button" : "button1"
-          },
-          "to" : [ {
-            "key_code" : "return_or_enter"
-          } ],
-          "conditions" : [ {
-            "type" : "frontmost_application_if",
-            "bundle_identifiers" : [ "^net\\.ankiweb\\.launcher" ]
-          }, {
-            "name" : "anki-layer",
-            "value" : 1,
-            "type" : "variable_if"
-          } ],
-          "type" : "basic"
-        }, {
-          "from" : {
-            "pointing_button" : "button2"
-          },
-          "to" : [ {
-            "key_code" : "semicolon"
-          } ],
-          "conditions" : [ {
-            "type" : "frontmost_application_if",
-            "bundle_identifiers" : [ "^net\\.ankiweb\\.launcher" ]
-          }, {
-            "name" : "anki-layer",
-            "value" : 1,
-            "type" : "variable_if"
-          } ],
-          "type" : "basic"
-        }, {
-          "from" : {
-            "key_code" : "quote",
-            "modifiers" : {
-              "optional" : [ "caps_lock" ]
-            }
-          },
-          "to" : [ {
-            "key_code" : "i"
-          }, {
-            "set_variable" : {
-              "name" : "inf",
-              "value" : 1
-            }
-          } ],
-          "conditions" : [ {
-            "type" : "frontmost_application_if",
-            "bundle_identifiers" : [ "^net\\.ankiweb\\.launcher" ]
-          }, {
-            "name" : "anki-layer",
-            "value" : 1,
-            "type" : "variable_if"
-          }, {
-            "name" : "inf",
-            "value" : 1,
-            "type" : "variable_unless"
-          } ],
-          "type" : "basic"
-        }, {
-          "from" : {
-            "key_code" : "quote",
-            "modifiers" : {
-              "optional" : [ "caps_lock" ]
-            }
-          },
-          "to" : [ {
-            "key_code" : "escape"
-          }, {
-            "set_variable" : {
-              "name" : "inf",
-              "value" : 0
-            }
-          } ],
-          "conditions" : [ {
-            "type" : "frontmost_application_if",
-            "bundle_identifiers" : [ "^net\\.ankiweb\\.launcher" ]
-          }, {
-            "name" : "anki-layer",
-            "value" : 1,
-            "type" : "variable_if"
-          }, {
-            "name" : "inf",
-            "value" : 1,
-            "type" : "variable_if"
-          } ],
-          "type" : "basic"
-        }, {
-          "from" : {
-            "key_code" : "close_bracket"
-          },
-          "to" : [ {
-            "key_code" : "t"
-          }, {
-            "set_variable" : {
-              "name" : "stats",
-              "value" : 1
-            }
-          } ],
-          "conditions" : [ {
-            "type" : "frontmost_application_if",
-            "bundle_identifiers" : [ "^net\\.ankiweb\\.launcher" ]
-          }, {
-            "name" : "anki-layer",
-            "value" : 1,
-            "type" : "variable_if"
-          }, {
-            "name" : "stats",
-            "value" : 1,
-            "type" : "variable_unless"
-          } ],
-          "type" : "basic"
-        }, {
-          "from" : {
-            "key_code" : "close_bracket"
-          },
-          "to" : [ {
-            "key_code" : "escape"
-          }, {
-            "set_variable" : {
-              "name" : "stats",
-              "value" : 0
-            }
-          } ],
-          "conditions" : [ {
-            "type" : "frontmost_application_if",
-            "bundle_identifiers" : [ "^net\\.ankiweb\\.launcher" ]
-          }, {
-            "name" : "anki-layer",
-            "value" : 1,
-            "type" : "variable_if"
-          }, {
-            "name" : "stats",
-            "value" : 1,
-            "type" : "variable_if"
-          } ],
-          "type" : "basic"
-        }, {
-          "from" : {
-            "key_code" : "hyphen"
-          },
-          "to" : [ {
-            "mouse_key" : {
-              "vertical_wheel" : -30,
-              "speed_multiplier" : 2
-            }
-          } ],
-          "conditions" : [ {
-            "type" : "frontmost_application_if",
-            "bundle_identifiers" : [ "^net\\.ankiweb\\.launcher" ]
-          }, {
-            "name" : "stats",
-            "value" : 1,
-            "type" : "variable_if"
-          } ],
-          "type" : "basic"
-        }, {
-          "from" : {
-            "key_code" : "hyphen"
-          },
-          "to" : [ {
-            "mouse_key" : {
-              "vertical_wheel" : -30,
-              "speed_multiplier" : 2
-            }
-          } ],
-          "conditions" : [ {
-            "type" : "frontmost_application_if",
-            "bundle_identifiers" : [ "^net\\.ankiweb\\.launcher" ]
-          }, {
-            "name" : "inf",
-            "value" : 1,
-            "type" : "variable_if"
-          } ],
-          "type" : "basic"
-        }, {
-          "from" : {
-            "key_code" : "equal_sign"
-          },
-          "to" : [ {
-            "mouse_key" : {
-              "vertical_wheel" : 30,
-              "speed_multiplier" : 2
-            }
-          } ],
-          "conditions" : [ {
-            "type" : "frontmost_application_if",
-            "bundle_identifiers" : [ "^net\\.ankiweb\\.launcher" ]
-          }, {
-            "name" : "stats",
-            "value" : 1,
-            "type" : "variable_if"
-          } ],
-          "type" : "basic"
-        }, {
-          "from" : {
-            "key_code" : "equal_sign"
-          },
-          "to" : [ {
-            "mouse_key" : {
-              "vertical_wheel" : 30,
-              "speed_multiplier" : 2
-            }
-          } ],
-          "conditions" : [ {
-            "type" : "frontmost_application_if",
-            "bundle_identifiers" : [ "^net\\.ankiweb\\.launcher" ]
-          }, {
-            "name" : "inf",
-            "value" : 1,
-            "type" : "variable_if"
-          } ],
-          "type" : "basic"
-        }, {
-          "from" : {
-            "key_code" : "slash",
-            "modifiers" : {
-              "optional" : [ "caps_lock" ]
-            }
-          },
-          "to" : [ {
-            "key_code" : "r"
-          } ],
-          "conditions" : [ {
-            "type" : "frontmost_application_if",
-            "bundle_identifiers" : [ "^net\\.ankiweb\\.launcher" ]
-          }, {
-            "name" : "anki-layer",
-            "value" : 1,
-            "type" : "variable_if"
-          } ],
-          "type" : "basic"
-        }, {
-          "from" : {
-            "key_code" : "backslash"
-          },
-          "to" : [ {
-            "key_code" : "escape"
-          } ],
-          "conditions" : [ {
-            "type" : "frontmost_application_if",
-            "bundle_identifiers" : [ "^net\\.ankiweb\\.launcher" ]
-          }, {
-            "name" : "anki-layer",
-            "value" : 1,
-            "type" : "variable_if"
-          } ],
-          "type" : "basic"
-        }, {
-          "from" : {
-            "key_code" : "comma"
-          },
-          "to" : [ {
-            "key_code" : "z",
-            "modifiers" : [ "left_command" ]
-          } ],
-          "conditions" : [ {
-            "type" : "frontmost_application_if",
-            "bundle_identifiers" : [ "^net\\.ankiweb\\.launcher" ]
-          }, {
-            "name" : "anki-layer",
-            "value" : 1,
-            "type" : "variable_if"
-          } ],
-          "type" : "basic"
-        }, {
-          "from" : {
-            "key_code" : "period"
-          },
-          "to" : [ {
-            "key_code" : "z",
-            "modifiers" : [ "left_command", "left_shift" ]
-          } ],
-          "conditions" : [ {
-            "type" : "frontmost_application_if",
-            "bundle_identifiers" : [ "^net\\.ankiweb\\.launcher" ]
-          }, {
-            "name" : "anki-layer",
-            "value" : 1,
-            "type" : "variable_if"
           } ],
           "type" : "basic"
         } ]
@@ -4162,47 +4138,11 @@
           },
           "to" : [ {
             "key_code" : "b",
-            "modifiers" : [ "left_command", "left_control" ]
-          } ],
-          "conditions" : [ {
-            "name" : "nova",
-            "value" : 1,
-            "type" : "variable_if"
-          } ],
-          "type" : "basic"
-        }, {
-          "from" : {
-            "key_code" : "b",
-            "modifiers" : {
-              "mandatory" : [ "fn" ],
-              "optional" : [ "caps_lock" ]
-            }
-          },
-          "to" : [ {
-            "key_code" : "b",
             "modifiers" : [ "left_command" ]
           } ],
           "conditions" : [ {
             "type" : "frontmost_application_if",
             "bundle_identifiers" : [ "^com\\.visualstudio\\.code\\.oss$", "^com\\.microsoft\\.VSCode(Insiders)?$", "^com\\.microsoft\\.VSCode?$", "com\\.exafunction\\.windsurf", "com.google.antigravity", "com.todesktop.230313mzl4w4u92" ]
-          } ],
-          "type" : "basic"
-        }, {
-          "from" : {
-            "key_code" : "b",
-            "modifiers" : {
-              "mandatory" : [ "fn" ],
-              "optional" : [ "caps_lock" ]
-            }
-          },
-          "to" : [ {
-            "key_code" : "b",
-            "modifiers" : [ "left_command" ]
-          } ],
-          "conditions" : [ {
-            "name" : "windsurf",
-            "value" : 1,
-            "type" : "variable_if"
           } ],
           "type" : "basic"
         }, {
@@ -4271,23 +4211,6 @@
           "conditions" : [ {
             "type" : "frontmost_application_if",
             "bundle_identifiers" : [ "^md\\.obsidian$" ]
-          } ],
-          "type" : "basic"
-        }, {
-          "from" : {
-            "key_code" : "b",
-            "modifiers" : {
-              "mandatory" : [ "fn" ],
-              "optional" : [ "caps_lock" ]
-            }
-          },
-          "to" : [ {
-            "key_code" : "p",
-            "modifiers" : [ "left_command", "left_shift" ]
-          } ],
-          "conditions" : [ {
-            "type" : "frontmost_application_if",
-            "bundle_identifiers" : [ "^com\\.apple\\.finder$" ]
           } ],
           "type" : "basic"
         }, {
