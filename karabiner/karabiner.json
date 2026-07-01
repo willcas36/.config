@@ -715,7 +715,7 @@
           },
           "to" : [ {
             "mouse_key" : {
-              "vertical_wheel" : -30,
+              "vertical_wheel" : -40,
               "speed_multiplier" : 2
             }
           } ],
@@ -734,7 +734,7 @@
           },
           "to" : [ {
             "mouse_key" : {
-              "vertical_wheel" : -30,
+              "vertical_wheel" : -40,
               "speed_multiplier" : 2
             }
           } ],
@@ -753,7 +753,7 @@
           },
           "to" : [ {
             "mouse_key" : {
-              "vertical_wheel" : 30,
+              "vertical_wheel" : 40,
               "speed_multiplier" : 2
             }
           } ],
@@ -772,7 +772,7 @@
           },
           "to" : [ {
             "mouse_key" : {
-              "vertical_wheel" : 30,
+              "vertical_wheel" : 40,
               "speed_multiplier" : 2
             }
           } ],

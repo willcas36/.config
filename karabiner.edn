@@ -124,10 +124,10 @@
            [:close_bracket [:t ["stats" 1]] [:anki-layer :!stats]]
            [:close_bracket [:escape ["stats" 0]] [:anki-layer :stats]]
            ;; ── scroll while stats OR inf is active (separate manipulators = OR) ──
-           [:hyphen {:mkey {:vwheel -30 :speed 2}} [:stats]]
-           [:hyphen {:mkey {:vwheel -30 :speed 2}} [:inf]]
-           [:equal_sign {:mkey {:vwheel 30 :speed 2}} [:stats]]
-           [:equal_sign {:mkey {:vwheel 30 :speed 2}} [:inf]]
+           [:hyphen {:mkey {:vwheel -40 :speed 2}} [:stats]]
+           [:hyphen {:mkey {:vwheel -40 :speed 2}} [:inf]]
+           [:equal_sign {:mkey {:vwheel 40 :speed 2}} [:stats]]
+           [:equal_sign {:mkey {:vwheel 40 :speed 2}} [:inf]]
            ;; ── misc ──
            [:#Pslash :r :anki-layer]
            [:backslash :escape :anki-layer]
